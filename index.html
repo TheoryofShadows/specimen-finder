@@ -1,0 +1,2821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Specimen Finder &mdash; Find unusual plant records in herbaria worldwide</title>
+<meta name="description" content="Identify any plant from a photo, then search 1,800+ herbaria for unusual records of that species. Free tool using GBIF and Pl@ntNet data." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --bg-card: #ffffff;
+    --text: #0a0a0a;
+    --text-soft: #2f2f2f;
+    --text-muted: #5a5a5a;
+    --line: #d8d4cc;
+    --line-strong: #b8b3a8;
+    --accent: #c2410c;
+    --accent-light: #fff1e6;
+    --accent-dark: #9a3208;
+    --green: #166534;
+    --green-light: #e6f4ea;
+    --red: #991b1b;
+    --red-light: #fee2e2;
+    --yellow: #92400e;
+    --yellow-light: #fef3c7;
+    --blue: #1e40af;
+    --blue-light: #dbeafe;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header {
+    padding: 24px 0;
+    border-bottom: 2px solid var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 40px; height: 40px;
+    background: var(--text);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    font-style: italic;
+  }
+  .brand-text { line-height: 1.2; }
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .brand-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .header-right {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 13px;
+  }
+  .api-status { display: flex; align-items: center; gap: 8px; color: var(--text-soft); }
+  .api-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+  .api-dot.connected { background: var(--green); }
+  .header-link {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  .header-link:hover { background: var(--bg-card); }
+  .header-link.accent { color: var(--accent); }
+  .header-link.accent:hover { background: var(--accent-light); }
+
+  /* Hero */
+  .hero { padding: 56px 0 36px; }
+  .hero-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--accent-light);
+    padding: 6px 12px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 52px;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-weight: 500;
+    margin-bottom: 20px;
+    max-width: 900px;
+    color: var(--text);
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-lead {
+    font-size: 19px;
+    color: var(--text-soft);
+    max-width: 760px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  .hero-stat {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .hero-stat strong {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  /* How it works */
+  .how {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  .how-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    cursor: pointer;
+  }
+  .how-header h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .how-toggle {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .how-body { display: none; }
+  .how.open .how-body { display: block; }
+  .how.open .how-toggle::after { content: ' \25B4'; }
+  .how:not(.open) .how-toggle::after { content: ' \25BE'; }
+  .how-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 6px;
+  }
+  .how-step {
+    padding-left: 44px;
+    position: relative;
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.55;
+  }
+  .how-step::before {
+    content: attr(data-num);
+    position: absolute;
+    left: 0; top: -2px;
+    width: 32px; height: 32px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .how-step strong {
+    display: block;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  /* Input card */
+  .input-card {
+    background: var(--bg-card);
+    border: 2px solid var(--text);
+    border-radius: 12px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+  }
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .tab {
+    padding: 18px 24px;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-muted);
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--text);
+    background: var(--bg-card);
+    border-bottom-color: var(--accent);
+  }
+  .tab-icon { width: 20px; height: 20px; flex-shrink: 0; }
+  .tab-panel { display: none; padding: 28px 32px; }
+  .tab-panel.active { display: block; }
+
+  /* upload zone */
+  .upload-zone {
+    border: 2px dashed var(--line-strong);
+    border-radius: 10px;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .upload-icon {
+    width: 48px; height: 48px;
+    margin: 0 auto 12px;
+    color: var(--text-muted);
+  }
+  .upload-zone:hover .upload-icon { color: var(--accent); }
+  .upload-text { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .upload-hint { font-size: 13px; color: var(--text-muted); }
+  .upload-buttons {
+    display: flex; gap: 10px; justify-content: center;
+    margin-top: 18px; flex-wrap: wrap;
+  }
+  .upload-btn {
+    background: var(--text);
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+  }
+  .upload-btn:hover { background: var(--accent); }
+  .upload-btn.secondary {
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1.5px solid var(--line-strong);
+  }
+  .upload-btn.secondary:hover { border-color: var(--text); background: var(--bg); }
+
+  .preview-area { display: none; margin-top: 20px; }
+  .preview-area.visible { display: block; }
+  .preview-img-wrap { text-align: center; margin-bottom: 16px; }
+  .preview-img {
+    max-width: 100%;
+    max-height: 280px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+
+  .organ-select { margin-top: 12px; margin-bottom: 16px; }
+  .organ-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .organ-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .organ-pill {
+    padding: 8px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 100px;
+    background: var(--bg-card);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-soft);
+    transition: all 0.15s;
+  }
+  .organ-pill:hover { border-color: var(--text); }
+  .organ-pill.selected {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+
+  .identify-btn, .search-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .identify-btn { width: 100%; }
+  .identify-btn:hover, .search-btn:hover { background: var(--accent-dark); }
+  .identify-btn:disabled, .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .id-results {
+    display: none;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .id-results.visible { display: block; }
+  .id-results h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .id-candidate {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+    background: var(--bg);
+    transition: all 0.15s;
+  }
+  .id-candidate.best {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .candidate-name {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .candidate-common {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-style: normal;
+  }
+  .candidate-confidence {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+  }
+  .candidate-confidence-bar {
+    width: 80px; height: 6px;
+    background: var(--line);
+    border-radius: 100px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .candidate-confidence-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+  }
+  .candidate-use {
+    background: var(--text);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .candidate-use:hover { background: var(--accent); }
+
+  .search-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+  .search-input {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    color: var(--text);
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .examples { margin-top: 16px; font-size: 14px; color: var(--text-soft); }
+  .example-pill {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 6px 14px;
+    margin: 4px 4px 4px 0;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .example-pill:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border-radius: 12px;
+    max-width: 540px;
+    width: 100%;
+    padding: 36px 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .modal p { color: var(--text-soft); margin-bottom: 16px; font-size: 15px; line-height: 1.6; }
+  .modal ol {
+    background: var(--bg);
+    padding: 18px 22px 18px 42px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .modal ol li { margin-bottom: 8px; font-size: 14px; color: var(--text-soft); }
+  .modal ol li:last-child { margin-bottom: 0; }
+  .modal ol a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+  .modal-input {
+    width: 100%;
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  .modal-input:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+  .modal-btn {
+    padding: 11px 22px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+  .modal-btn.cancel { background: transparent; color: var(--text-muted); }
+  .modal-btn.save { background: var(--accent); color: white; }
+  .modal-btn.save:hover { background: var(--accent-dark); }
+
+  /* Status */
+  .status-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    display: none;
+  }
+  .status-panel.visible { display: block; }
+  .status-line {
+    font-size: 14px;
+    color: var(--text-soft);
+    padding: 5px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .status-icon {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    margin-top: 1px;
+  }
+  .status-icon.working { background: var(--accent); }
+  .status-icon.done { background: var(--green); }
+  .status-icon.error { background: var(--red); }
+  .status-icon.info { background: var(--blue); }
+
+  /* Species banner */
+  .species-banner {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 22px 26px;
+    margin-bottom: 24px;
+  }
+  .species-banner.visible { display: block; }
+  .species-banner-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .species-info { flex: 1; min-width: 280px; }
+  .species-sci {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .species-common {
+    font-size: 15px;
+    color: var(--text-soft);
+    margin-bottom: 8px;
+  }
+  .species-tax {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+  }
+  .species-tax span { color: var(--text-soft); font-weight: 600; }
+  .species-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .species-link {
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 100px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .species-link:hover {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+  .species-summary {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.55;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: none;
+  }
+  .species-summary.visible { display: block; }
+
+  /* Summary cards */
+  .summary {
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .summary.visible { display: grid; }
+  .summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .summary-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .summary-value {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .summary-sub { font-size: 12px; color: var(--text-soft); margin-top: 6px; }
+
+  /* Results */
+  .results-header {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--text);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .results-header.visible { display: flex; }
+  .results-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .results-count { color: var(--accent); }
+  .results-actions { display: flex; gap: 8px; }
+  .results-action {
+    padding: 8px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--bg-card);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .results-action:hover { background: var(--bg); border-color: var(--text); }
+
+  .filters-bar {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    align-items: center;
+  }
+  .filters-bar.visible { display: flex; }
+  .filters-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .filter-chip {
+    padding: 5px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 100px;
+    background: var(--bg-card);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-soft);
+    transition: all 0.15s;
+  }
+  .filter-chip:hover { border-color: var(--text); }
+  .filter-chip.active {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+
+  /* Specimen card */
+  .specimen-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .specimen-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  }
+  .specimen-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 12px;
+  }
+  .specimen-name {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .specimen-meta { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .specimen-meta strong { color: var(--text-soft); font-weight: 600; }
+  .priority-badge {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .priority-badge.high { background: var(--red-light); color: var(--red); }
+  .priority-badge.med { background: var(--yellow-light); color: var(--yellow); }
+  .priority-badge.low { background: var(--green-light); color: var(--green); }
+  .flags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .flag-pill {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text-soft);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .flag-pill.red { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .flag-pill.yellow { background: var(--yellow-light); border-color: var(--yellow); color: var(--yellow); }
+  .flag-pill.green { background: var(--green-light); border-color: var(--green); color: var(--green); }
+  .reason-text {
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .action-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .view-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--text);
+    color: white;
+    padding: 11px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.15s;
+  }
+  .view-link:hover { background: var(--accent); }
+  .view-link::after { content: '\2197'; font-size: 14px; }
+  .details-toggle, .cite-btn {
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .details-toggle:hover, .cite-btn:hover { border-color: var(--text); background: var(--bg); }
+  .details-panel {
+    display: none;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .details-panel.open { display: block; }
+  .details-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 700px) {
+    .details-grid { grid-template-columns: 1fr; }
+  }
+  .details-section { margin-bottom: 18px; }
+  .details-section:last-child { margin-bottom: 0; }
+  .details-section h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .evidence-list { list-style: none; }
+  .evidence-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--line);
+    color: var(--text-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .evidence-list li:last-child { border: none; }
+  .evidence-source {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .falsify {
+    background: var(--yellow-light);
+    border-left: 4px solid var(--yellow);
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .falsify strong {
+    display: block;
+    color: var(--yellow);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+  }
+  .specimen-image {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    display: block;
+  }
+  .citation-box {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copy-btn {
+    margin-top: 8px;
+    background: var(--text);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .copy-btn:hover { background: var(--accent); }
+
+  /* Map */
+  .map-section {
+    display: none;
+    margin-bottom: 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .map-section.visible { display: block; }
+  .map-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .map-title {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .map-legend {
+    display: flex;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .legend-dot.normal { background: var(--text-muted); }
+  .legend-dot.flagged { background: var(--accent); }
+  #specimen-map {
+    width: 100%;
+    height: 360px;
+    background: var(--bg);
+    position: relative;
+  }
+  .map-canvas { width: 100%; height: 100%; cursor: crosshair; }
+
+  /* Empty + footer */
+  .empty-state {
+    text-align: center;
+    padding: 50px 24px;
+    color: var(--text-muted);
+    font-size: 16px;
+    font-style: italic;
+  }
+  footer {
+    margin-top: 60px;
+    padding: 32px 0 28px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  footer .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 28px;
+  }
+  footer h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  footer a:hover { text-decoration: underline; }
+  footer ul { list-style: none; }
+  footer ul li { margin-bottom: 6px; }
+  .footer-bottom {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* Disambiguation modal */
+  .disambig-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .disambig-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    align-items: center;
+    background: var(--bg);
+  }
+  .disambig-item:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .disambig-sci {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .disambig-common {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-top: 3px;
+  }
+  .disambig-fam {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+  .disambig-arrow {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-muted);
+    font-size: 20px;
+  }
+
+  /* What's known panel */
+  .knowledge-panel {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .knowledge-panel.visible { display: block; }
+  .knowledge-header {
+    padding: 18px 24px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .knowledge-panel.open .knowledge-header { border-bottom-color: var(--line); }
+  .knowledge-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .knowledge-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .knowledge-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .knowledge-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+  .knowledge-pill.has-data {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .knowledge-toggle {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .knowledge-panel.open .knowledge-toggle::after { content: ' \25B4'; }
+  .knowledge-panel:not(.open) .knowledge-toggle::after { content: ' \25BE'; }
+  .knowledge-body {
+    display: none;
+    padding: 24px;
+  }
+  .knowledge-panel.open .knowledge-body { display: block; }
+  .knowledge-disclaimer {
+    background: var(--yellow-light);
+    border-left: 4px solid var(--yellow);
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 22px;
+  }
+  .knowledge-disclaimer strong {
+    display: block;
+    color: var(--yellow);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+  }
+  .knowledge-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .knowledge-section:last-child { border: none; margin-bottom: 0; padding-bottom: 0; }
+  .knowledge-section h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .knowledge-section h3 .evidence-level {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .evidence-level.high { background: var(--green-light); color: var(--green); }
+  .evidence-level.med { background: var(--yellow-light); color: var(--yellow); }
+  .evidence-level.low { background: var(--bg); color: var(--text-muted); border: 1px solid var(--line); }
+  .knowledge-content {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.6;
+  }
+  .knowledge-content p { margin-bottom: 10px; }
+  .knowledge-content p:last-child { margin-bottom: 0; }
+  .knowledge-source-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .knowledge-source-link:hover { text-decoration: underline; }
+  .knowledge-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 14px;
+  }
+  .knowledge-loading {
+    padding: 12px 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  @media (max-width: 900px) {
+    .hero h1 { font-size: 38px; }
+    .hero-lead { font-size: 17px; }
+    .how-steps { grid-template-columns: 1fr; }
+    .summary { grid-template-columns: repeat(2, 1fr); }
+    footer .footer-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .container { padding: 0 18px; }
+    .hero { padding: 36px 0 24px; }
+    .hero h1 { font-size: 30px; }
+    .specimen-top { grid-template-columns: 1fr; }
+    .id-candidate { grid-template-columns: 1fr; gap: 10px; }
+    .candidate-confidence { text-align: left; }
+    .candidate-confidence-bar { width: 100%; }
+    .tab { font-size: 14px; padding: 14px 12px; }
+    .tab-panel { padding: 22px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="brand-block">
+      <div class="brand-logo">S</div>
+      <div class="brand-text">
+        <div class="brand">Specimen Finder</div>
+        <div class="brand-sub">Plant records, made findable</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="api-status">
+        <div class="api-dot" id="api-dot"></div>
+        <span id="api-status-text">Photo ID off</span>
+      </div>
+      <a class="header-link" id="header-setup">Set up photo ID</a>
+      <a class="header-link" id="header-about">About</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-eyebrow">Open botanical data, made useful</div>
+    <h1>Identify any plant. Find <em>every record</em> of it in the world's herbaria.</h1>
+    <p class="hero-lead">Take a photo of a plant &mdash; leaf, flower, fruit, bark &mdash; and Specimen Finder identifies the species, then searches more than 1,800 herbaria and natural history museums for specimens of it. We flag records that look unusual (wrong location, wrong era, missing data, possible mislabeling) so botanists, conservationists, and curious people can find the records that matter.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>3.1B+</strong>occurrence records in GBIF</div>
+      <div class="hero-stat"><strong>1,800+</strong>contributing herbaria worldwide</div>
+      <div class="hero-stat"><strong>~50,000</strong>vascular plant species with specimens</div>
+      <div class="hero-stat"><strong>$0</strong>cost &mdash; all data is open</div>
+    </div>
+  </section>
+
+  <div class="how open" id="how-card">
+    <div class="how-header" id="how-toggle">
+      <h2>How it works</h2>
+      <div class="how-toggle">Show</div>
+    </div>
+    <div class="how-body">
+      <div class="how-steps">
+        <div class="how-step" data-num="1">
+          <strong>Identify or name a plant</strong>
+          Take a photo and Pl@ntNet's neural network identifies the species (free API key required, takes 2 minutes to set up). Or just type the scientific name if you already know it.
+        </div>
+        <div class="how-step" data-num="2">
+          <strong>We pull every specimen</strong>
+          Specimen Finder queries GBIF &mdash; the global aggregator of biodiversity data &mdash; for preserved-specimen records of that species (up to 300 per search), plus context from POWO (Kew's plant checklist) and Wikipedia.
+        </div>
+        <div class="how-step" data-num="3">
+          <strong>Unusual records are flagged</strong>
+          Statistical analysis surfaces records that don't fit the pattern: outliers in geography, time, or data quality. Each flag shows its reasoning, links to the original specimen, and explains how you'd verify or disprove it.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-card">
+    <div class="tabs">
+      <div class="tab active" data-tab="photo">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        Identify from photo
+      </div>
+      <div class="tab" data-tab="name">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Search by name
+      </div>
+    </div>
+
+    <div class="tab-panel active" id="panel-photo">
+      <div id="key-prompt-banner" style="display:none; background: var(--accent-light); border: 2px solid var(--accent); border-radius: 10px; padding: 18px 22px; margin-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700; color:var(--accent); margin-bottom:4px; font-size:15px;">Photo identification needs a free Pl@ntNet API key</div>
+            <div style="font-size:13px; color:var(--text-soft);">Takes about 2 minutes. Or use the "Search by name" tab instead.</div>
+          </div>
+          <button id="banner-setup-btn" style="background: var(--accent); color: white; border: none; padding: 12px 22px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;">Set up photo ID</button>
+        </div>
+      </div>
+
+      <div class="upload-zone" id="upload-zone">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <div class="upload-text">Drop a photo here</div>
+        <div class="upload-hint">JPG or PNG. A clear shot of leaf, flower, fruit, or bark works best.</div>
+        <div class="upload-buttons">
+          <button class="upload-btn" id="camera-btn">Take photo</button>
+          <button class="upload-btn secondary" id="file-btn">Upload from device</button>
+        </div>
+      </div>
+
+      <input type="file" id="file-input" accept="image/jpeg,image/png" style="display:none" />
+      <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" />
+
+      <div class="preview-area" id="preview-area">
+        <div class="preview-img-wrap">
+          <img id="preview-img" class="preview-img" alt="Plant preview" />
+        </div>
+        <div class="organ-select">
+          <label class="organ-label">What part of the plant is in the photo? <span style="font-weight:400;color:var(--text-muted);font-size:13px">(improves accuracy)</span></label>
+          <div class="organ-pills" id="organ-pills">
+            <div class="organ-pill selected" data-organ="auto">Auto detect</div>
+            <div class="organ-pill" data-organ="leaf">Leaf</div>
+            <div class="organ-pill" data-organ="flower">Flower</div>
+            <div class="organ-pill" data-organ="fruit">Fruit</div>
+            <div class="organ-pill" data-organ="bark">Bark</div>
+            <div class="organ-pill" data-organ="habit">Whole plant</div>
+          </div>
+        </div>
+        <button class="identify-btn" id="identify-btn">Identify this plant</button>
+
+        <div class="id-results" id="id-results">
+          <h3>Identification results</h3>
+          <div id="id-candidates"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-name">
+      <label class="organ-label">Plant name <span style="font-weight:400;color:var(--text-muted);font-size:13px">(common or scientific &mdash; e.g., "pitcher plant" or <i>Sarracenia purpurea</i>)</span></label>
+      <div class="search-row">
+        <input type="text" class="search-input" id="species-input" placeholder='try "swamp milkweed" or "Franklinia alatamaha"' autocomplete="off" />
+        <button class="search-btn" id="search-btn">Search</button>
+      </div>
+      <div class="examples">
+        <strong>Try one of these:</strong><br/>
+        <span class="example-pill" data-species="pitcher plant">pitcher plant (multiple species)</span>
+        <span class="example-pill" data-species="swamp milkweed">swamp milkweed</span>
+        <span class="example-pill" data-species="Franklinia alatamaha">Franklinia alatamaha (extinct in wild)</span>
+        <span class="example-pill" data-species="passionflower">passionflower</span>
+        <span class="example-pill" data-species="busy lizzie">busy Lizzie</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-panel" id="status-panel">
+    <div id="status-lines"></div>
+  </div>
+
+  <div class="species-banner" id="species-banner">
+    <div class="species-banner-top">
+      <div class="species-info">
+        <div class="species-sci" id="species-sci"></div>
+        <div class="species-common" id="species-common"></div>
+        <div class="species-tax" id="species-tax"></div>
+        <div class="species-links" id="species-links"></div>
+      </div>
+    </div>
+    <div class="species-summary" id="species-summary"></div>
+  </div>
+
+  <div class="knowledge-panel" id="knowledge-panel">
+    <div class="knowledge-header" id="knowledge-header">
+      <div class="knowledge-title-row">
+        <div class="knowledge-title">What's known about this plant</div>
+        <div class="knowledge-pills" id="knowledge-pills"></div>
+      </div>
+      <div class="knowledge-toggle">Expand</div>
+    </div>
+    <div class="knowledge-body" id="knowledge-body">
+      <div class="knowledge-disclaimer">
+        <strong>How to read this</strong>
+        This panel pulls only from authoritative scientific sources (Wikipedia, POWO, PubChem, GBIF). Each claim links back to its source. "Compounds studied" means molecules have been isolated &mdash; it does <strong>not</strong> mean the plant treats anything. Never use this information for self-treatment. Consult a doctor for medical advice and a botanist for identification before eating any wild plant.
+      </div>
+      <div id="knowledge-sections"></div>
+    </div>
+  </div>
+
+  <div class="summary" id="summary">
+    <div class="summary-card">
+      <div class="summary-label">Specimens Loaded</div>
+      <div class="summary-value" id="stat-total">&mdash;</div>
+      <div class="summary-sub" id="stat-total-sub">in this search</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Flagged As Unusual</div>
+      <div class="summary-value" id="stat-flagged">&mdash;</div>
+      <div class="summary-sub" id="stat-flagged-sub">worth a closer look</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Date Range</div>
+      <div class="summary-value" id="stat-dates">&mdash;</div>
+      <div class="summary-sub" id="stat-dates-sub">earliest to latest</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Countries</div>
+      <div class="summary-value" id="stat-geo">&mdash;</div>
+      <div class="summary-sub" id="stat-geo-sub">with documented records</div>
+    </div>
+  </div>
+
+  <div class="map-section" id="map-section">
+    <div class="map-header">
+      <div class="map-title">Global distribution</div>
+      <div class="map-legend">
+        <span><span class="legend-dot normal"></span>Specimen</span>
+        <span><span class="legend-dot flagged"></span>Flagged specimen</span>
+      </div>
+    </div>
+    <div id="specimen-map">
+      <canvas id="map-canvas" class="map-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="results-header" id="results-header">
+    <div class="results-title">Flagged specimens &middot; <span class="results-count" id="result-count">0</span></div>
+    <div class="results-actions">
+      <button class="results-action" id="export-csv">Export CSV</button>
+      <button class="results-action" id="sort-toggle">Sort: Priority</button>
+    </div>
+  </div>
+
+  <div class="filters-bar" id="filters-bar">
+    <span class="filters-label">Filter by:</span>
+    <span class="filter-chip active" data-filter="all">All</span>
+  </div>
+
+  <div id="specimen-list">
+    <div class="empty-state">Identify a plant or type a species name to begin.</div>
+  </div>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h4>About Specimen Finder</h4>
+        Specimen Finder is an open tool for finding unusual plant specimen records in the world's herbaria. It uses no proprietary data &mdash; everything comes from public, citable scientific sources. Built for botanists, herbarium curators, conservation biologists, students, and anyone curious about plants.
+      </div>
+      <div>
+        <h4>Data sources</h4>
+        <ul>
+          <li><a href="https://www.gbif.org" target="_blank" rel="noopener">GBIF</a> &mdash; specimen records</li>
+          <li><a href="https://powo.science.kew.org" target="_blank" rel="noopener">POWO (Kew)</a> &mdash; taxonomy</li>
+          <li><a href="https://my.plantnet.org" target="_blank" rel="noopener">Pl@ntNet</a> &mdash; photo ID</li>
+          <li><a href="https://en.wikipedia.org" target="_blank" rel="noopener">Wikipedia</a> &mdash; context</li>
+          <li><a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a> &mdash; conservation status</li>
+          <li><a href="https://www.inaturalist.org" target="_blank" rel="noopener">iNaturalist</a> &mdash; common names</li>
+        </ul>
+      </div>
+      <div>
+        <h4>For researchers</h4>
+        <ul>
+          <li>Every flag is reproducible</li>
+          <li>Citation text per record</li>
+          <li>CSV export available</li>
+          <li>Direct links to source records</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      All data licensed CC BY or CC BY-NC by source institutions. Specimen Finder itself is an open tool &mdash; no accounts, no tracking, no ads. Your API key stays in your browser.
+    </div>
+  </footer>
+</div>
+
+<!-- API key modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2>Set up photo identification</h2>
+    <p>Photo identification uses <a href="https://my.plantnet.org" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Pl@ntNet</a> &mdash; a research-grade neural network for plant ID used by botanists worldwide. You need a free API key (about 2 minutes to set up). The free tier allows up to 500 identifications per day.</p>
+    <ol>
+      <li>Open <a href="https://my.plantnet.org/" target="_blank" rel="noopener">my.plantnet.org</a> and click "Sign up"</li>
+      <li>Verify your email and log in</li>
+      <li>Go to your account &rarr; "API key"</li>
+      <li>Copy that key and paste it below</li>
+    </ol>
+    <input type="text" class="modal-input" id="api-key-input" placeholder="Paste your Pl@ntNet API key here" autocomplete="off" />
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">Your key is stored only in this browser, never sent anywhere except directly to Pl@ntNet. You can change or remove it anytime.</p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="modal-cancel">Skip &mdash; I'll search by name</button>
+      <button class="modal-btn save" id="modal-save">Save key</button>
+    </div>
+  </div>
+</div>
+
+<!-- About modal -->
+<div class="modal-overlay" id="about-overlay">
+  <div class="modal">
+    <h2>About Specimen Finder</h2>
+    <p>Plants matter to ecology, medicine, conservation, and food systems. Their records &mdash; physical specimens pressed and stored in herbaria, sometimes for centuries &mdash; are the foundation of botanical knowledge. But the records aren't perfect. Specimens get mislabeled, misidentified, or filed under outdated names. Important records sit in collections with no one able to flag what needs attention.</p>
+    <p>Specimen Finder is a small tool aimed at that gap. Given a species, it queries the global aggregated record (GBIF, which pulls from 1,800+ herbaria), and applies statistical checks to flag records that look unusual &mdash; far from the typical range, very early or very late dates, missing coordinates, data quality issues. Each flag includes its reasoning and a direct link to the source record so you can verify, dispute, or follow up.</p>
+    <p>The tool doesn't replace expert judgment. It surfaces candidates for it. Researchers can export results, cite specimens, and prioritize their attention. Curious people can see how the global botanical record actually works.</p>
+    <p style="margin-bottom:0">No data is stored on a server. No accounts. No tracking. Your Pl@ntNet API key, if you use one, lives only in your browser.</p>
+    <div class="modal-actions">
+      <button class="modal-btn save" id="about-close">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Disambiguation modal -->
+<div class="modal-overlay" id="disambig-overlay">
+  <div class="modal">
+    <h2 id="disambig-title">Multiple matches</h2>
+    <p id="disambig-text">Several plants are known by that name. Pick the one you meant:</p>
+    <div class="disambig-list" id="disambig-list"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="disambig-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// State
+let plantnetKey = null;
+let currentImageFile = null;
+let currentOrgan = 'auto';
+let currentResults = { flagged: [], all: [], stats: null, species: null };
+let currentSort = 'priority';
+let activeFilter = 'all';
+let searchId = 0; // Race-condition guard: ignore stale async results
+
+// Storage
+function getStoredKey() {
+  try { return localStorage.getItem('plantnet_api_key') || null; }
+  catch (e) { return window.__plantnet_key__ || null; }
+}
+function setStoredKey(key) {
+  try { localStorage.setItem('plantnet_api_key', key); }
+  catch (e) { window.__plantnet_key__ = key; }
+}
+
+function updateApiStatus() {
+  const dot = document.getElementById('api-dot');
+  const text = document.getElementById('api-status-text');
+  const setup = document.getElementById('header-setup');
+  const banner = document.getElementById('key-prompt-banner');
+  if (plantnetKey) {
+    dot.classList.add('connected');
+    text.textContent = 'Photo ID connected';
+    setup.textContent = 'Change key';
+    if (banner) banner.style.display = 'none';
+  } else {
+    dot.classList.remove('connected');
+    text.textContent = 'Photo ID off';
+    setup.textContent = 'Set up photo ID';
+    if (banner) banner.style.display = 'block';
+  }
+}
+
+// Modals
+function openKeyModal() {
+  document.getElementById('api-key-input').value = plantnetKey || '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeKeyModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function openAboutModal() {
+  document.getElementById('about-overlay').classList.add('open');
+}
+function closeAboutModal() {
+  document.getElementById('about-overlay').classList.remove('open');
+}
+document.getElementById('header-setup').addEventListener('click', openKeyModal);
+document.getElementById('header-about').addEventListener('click', openAboutModal);
+document.getElementById('banner-setup-btn').addEventListener('click', openKeyModal);
+document.getElementById('modal-cancel').addEventListener('click', closeKeyModal);
+document.getElementById('about-close').addEventListener('click', closeAboutModal);
+document.getElementById('modal-save').addEventListener('click', () => {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (key) { plantnetKey = key; setStoredKey(key); }
+  updateApiStatus();
+  closeKeyModal();
+});
+
+plantnetKey = getStoredKey();
+updateApiStatus();
+
+// How toggle
+document.getElementById('how-toggle').addEventListener('click', () => {
+  document.getElementById('how-card').classList.toggle('open');
+});
+
+// Knowledge panel toggle
+document.getElementById('knowledge-header').addEventListener('click', () => {
+  const panel = document.getElementById('knowledge-panel');
+  const isOpen = panel.classList.toggle('open');
+  panel.querySelector('.knowledge-toggle').firstChild.textContent = isOpen ? 'Collapse' : 'Expand';
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// Upload
+const uploadZone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+const cameraInput = document.getElementById('camera-input');
+const previewArea = document.getElementById('preview-area');
+const previewImg = document.getElementById('preview-img');
+
+document.getElementById('file-btn').addEventListener('click', () => fileInput.click());
+document.getElementById('camera-btn').addEventListener('click', () => cameraInput.click());
+fileInput.addEventListener('change', e => { handleFile(e.target.files[0]); e.target.value = ''; });
+cameraInput.addEventListener('change', e => { handleFile(e.target.files[0]); e.target.value = ''; });
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+uploadZone.addEventListener('click', e => {
+  if (e.target === uploadZone || e.target.closest('.upload-icon, .upload-text, .upload-hint')) {
+    fileInput.click();
+  }
+});
+
+function handleFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('Please upload an image file (JPG or PNG).'); return; }
+  currentImageFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewImg.src = e.target.result;
+    previewArea.classList.add('visible');
+    document.getElementById('id-results').classList.remove('visible');
+  };
+  reader.readAsDataURL(file);
+}
+
+document.querySelectorAll('.organ-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.organ-pill').forEach(x => x.classList.remove('selected'));
+    p.classList.add('selected');
+    currentOrgan = p.dataset.organ;
+  });
+});
+
+// Multipart upload (works in sandboxed environments)
+async function buildMultipartBody(imageFile, organ) {
+  const arrayBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Could not read photo'));
+    reader.readAsArrayBuffer(imageFile);
+  });
+  const imageBytes = new Uint8Array(arrayBuffer);
+  const boundary = '----SpecimenFinderBoundary' + Date.now() + Math.random().toString(36).slice(2);
+  const enc = new TextEncoder();
+  const mimeType = imageFile.type || 'image/jpeg';
+  const filename = (imageFile.name || 'photo.jpg').replace(/"/g, '');
+  const parts = [];
+  parts.push(enc.encode(
+    `--${boundary}\r\nContent-Disposition: form-data; name="images"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+  ));
+  parts.push(imageBytes);
+  parts.push(enc.encode('\r\n'));
+  if (organ && organ !== 'auto') {
+    parts.push(enc.encode(
+      `--${boundary}\r\nContent-Disposition: form-data; name="organs"\r\n\r\n${organ}\r\n`
+    ));
+  }
+  parts.push(enc.encode(`--${boundary}--\r\n`));
+  const total = parts.reduce((s, p) => s + p.length, 0);
+  const body = new Uint8Array(total);
+  let off = 0;
+  for (const p of parts) { body.set(p, off); off += p.length; }
+  return { body, boundary };
+}
+
+// Identify
+document.getElementById('identify-btn').addEventListener('click', async () => {
+  if (!currentImageFile) return;
+  if (!plantnetKey) { openKeyModal(); return; }
+  const btn = document.getElementById('identify-btn');
+  btn.disabled = true;
+  btn.textContent = 'Identifying...';
+  clearStatus();
+  status('Reading photo...');
+  try {
+    const { body, boundary } = await buildMultipartBody(currentImageFile, currentOrgan);
+    status('Sending to Pl@ntNet for identification...');
+    const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${encodeURIComponent(plantnetKey)}&include-related-images=false&no-reject=false&lang=en`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: body
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 401 || res.status === 403) {
+        status('API key rejected. Click "Change key" in the header to update it.', 'error');
+      } else if (res.status === 429) {
+        status('Pl@ntNet rate limit hit (500/day free tier). Try again tomorrow or use the "Search by name" tab.', 'error');
+      } else {
+        status(`Pl@ntNet error: ${err.message || res.statusText}`, 'error');
+      }
+      return;
+    }
+    const data = await res.json();
+    status(`Got ${data.results?.length || 0} candidate identifications.`, 'done');
+    showCandidates(data);
+  } catch (e) {
+    status('Identification failed: ' + e.message + '. If you opened this file directly, host it on a static-page service (GitHub Pages works), or use "Search by name".', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Identify this plant';
+  }
+});
+
+function showCandidates(data) {
+  const results = (data.results || []).slice(0, 5);
+  if (results.length === 0) {
+    status('No matches. Try a different angle or clearer photo.', 'error');
+    return;
+  }
+  const wrap = document.getElementById('id-candidates');
+  wrap.innerHTML = '';
+  results.forEach((r, idx) => {
+    const sci = r.species.scientificNameWithoutAuthor;
+    const fam = r.species.family?.scientificNameWithoutAuthor || '';
+    const common = (r.species.commonNames || []).slice(0, 2).join(', ');
+    const pct = Math.round(r.score * 100);
+    const el = document.createElement('div');
+    el.className = 'id-candidate' + (idx === 0 ? ' best' : '');
+    el.innerHTML = `
+      <div>
+        <div class="candidate-name">${escapeHtml(sci)}</div>
+        <div class="candidate-common">${escapeHtml(fam)}${common ? ' · ' + escapeHtml(common) : ''}</div>
+      </div>
+      <div class="candidate-confidence">
+        ${pct}% match
+        <div class="candidate-confidence-bar"><div class="candidate-confidence-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="candidate-use">Use this</button>
+    `;
+    el.querySelector('.candidate-use').addEventListener('click', () => {
+      document.getElementById('species-input').value = sci;
+      runSearchDirect(sci);
+    });
+    wrap.appendChild(el);
+  });
+  document.getElementById('id-results').classList.add('visible');
+}
+
+// Helpers
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const statusPanel = document.getElementById('status-panel');
+const statusLines = document.getElementById('status-lines');
+function status(text, type = 'working') {
+  const div = document.createElement('div');
+  div.className = 'status-line';
+  const icon = { done: '✓', error: '!', info: 'i', working: '…' }[type] || '…';
+  div.innerHTML = `<span class="status-icon ${type}">${icon}</span><span>${escapeHtml(text)}</span>`;
+  statusLines.appendChild(div);
+  statusPanel.classList.add('visible');
+}
+function clearStatus() { statusLines.innerHTML = ''; }
+
+// GBIF
+// Constrain to plant kingdom so common-name collisions (e.g., animal genera) can't match.
+async function fetchSpecies(name) {
+  const r = await fetch('https://api.gbif.org/v1/species/match?kingdom=Plantae&name=' + encodeURIComponent(name));
+  return r.json();
+}
+async function fetchOccurrences(taxonKey, limit) {
+  const params = new URLSearchParams({
+    taxonKey, limit: Math.min(limit, 300), basisOfRecord: 'PRESERVED_SPECIMEN'
+  });
+  const r = await fetch('https://api.gbif.org/v1/occurrence/search?' + params.toString());
+  return r.json();
+}
+async function fetchWikipedia(name) {
+  try {
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(name));
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; }
+}
+
+// Stats and analysis
+// Robust outlier detection using Median Absolute Deviation (MAD).
+// Modified Z-score: 0.6745 * (x - median) / MAD; |z| > 3.5 flags as outlier
+// (Iglewicz & Hoaglin 1993).
+function median(arr) {
+  const sorted = [...arr].sort((a,b) => a-b);
+  const m = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[m] : (sorted[m-1] + sorted[m]) / 2;
+}
+function mad(arr, med) {
+  const dev = arr.map(x => Math.abs(x - med));
+  return median(dev);
+}
+function modifiedZScore(value, med, madValue) {
+  if (madValue === 0) return 0;
+  return 0.6745 * (value - med) / madValue;
+}
+
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function computeStats(occs) {
+  const years = occs.map(o => o.year).filter(y => y && y > 1700 && y <= new Date().getFullYear());
+  const countries = new Set();
+  occs.forEach(o => { if (o.countryCode) countries.add(o.countryCode); });
+  const withCoords = occs.filter(o => typeof o.decimalLatitude === 'number' && typeof o.decimalLongitude === 'number');
+  return { years, countries, withCoords };
+}
+
+// Circular longitude median: handles species that straddle the antimeridian
+// (e.g., Pacific or circumpolar). Uses unit-vector mean which is well-defined
+// on the circle and falls back to ordinary median when span is small.
+function circularLongitudeMedian(longitudes) {
+  if (longitudes.length === 0) return 0;
+  // If range spans less than 180 degrees, ordinary median is fine
+  const sorted = [...longitudes].sort((a,b) => a-b);
+  if (sorted[sorted.length-1] - sorted[0] < 180) return median(longitudes);
+  // Otherwise compute the angular mean and return that
+  let sumX = 0, sumY = 0;
+  longitudes.forEach(lon => {
+    const r = lon * Math.PI / 180;
+    sumX += Math.cos(r);
+    sumY += Math.sin(r);
+  });
+  const angle = Math.atan2(sumY / longitudes.length, sumX / longitudes.length);
+  return angle * 180 / Math.PI;
+}
+
+// Wikidata: conservation status, common names
+async function getWikidataInfo(scientificName) {
+  try {
+    const searchRes = await fetch('https://www.wikidata.org/w/api.php?action=wbsearchentities&search=' +
+      encodeURIComponent(scientificName) + '&language=en&type=item&format=json&origin=*&limit=3');
+    if (!searchRes.ok) return null;
+    const searchData = await searchRes.json();
+    const candidates = searchData.search || [];
+    const plantMatch = candidates.find(r => {
+      const desc = (r.description || '').toLowerCase();
+      return desc.includes('species') || desc.includes('plant') || desc.includes('genus') ||
+             desc.includes('flowering') || desc.includes('tree') || desc.includes('shrub');
+    }) || candidates[0];
+    if (!plantMatch) return null;
+
+    const entRes = await fetch('https://www.wikidata.org/wiki/Special:EntityData/' + plantMatch.id + '.json');
+    if (!entRes.ok) return null;
+    const entData = await entRes.json();
+    const ent = entData.entities[plantMatch.id];
+    const claims = ent.claims || {};
+
+    // IUCN conservation status (P141)
+    let iucnStatus = null, iucnId = null;
+    if (claims.P141 && claims.P141[0]) {
+      const v = claims.P141[0].mainsnak?.datavalue?.value;
+      if (v && v.id) {
+        iucnId = v.id;
+        const statusRes = await fetch('https://www.wikidata.org/wiki/Special:EntityData/' + v.id + '.json');
+        if (statusRes.ok) {
+          const sd = await statusRes.json();
+          iucnStatus = sd.entities[v.id]?.labels?.en?.value || null;
+        }
+      }
+    }
+
+    // Common names (P1843)
+    const commonNames = [];
+    if (claims.P1843) {
+      claims.P1843.forEach(c => {
+        const v = c.mainsnak?.datavalue?.value;
+        if (v && v.language === 'en' && v.text) commonNames.push(v.text);
+      });
+    }
+
+    return {
+      qid: plantMatch.id,
+      label: plantMatch.label,
+      description: plantMatch.description,
+      iucnStatus, iucnId,
+      commonNames,
+      wikidataUrl: 'https://www.wikidata.org/wiki/' + plantMatch.id
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// iNaturalist: observation counts, conservation, taxonomic photos
+async function getINaturalistInfo(scientificName) {
+  try {
+    const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(scientificName) + '&rank=species&is_active=true&per_page=1');
+    if (!r.ok) return null;
+    const data = await r.json();
+    const t = (data.results || []).find(x =>
+      x.name.toLowerCase() === scientificName.toLowerCase()
+    ) || (data.results || [])[0];
+    if (!t) return null;
+    return {
+      id: t.id,
+      observationsCount: t.observations_count || 0,
+      preferredCommonName: t.preferred_common_name || null,
+      wikipediaUrl: t.wikipedia_url || null,
+      extinct: !!t.extinct,
+      conservationStatuses: t.conservation_statuses || [],
+      defaultPhoto: t.default_photo?.medium_url || null,
+      inatUrl: 'https://www.inaturalist.org/taxa/' + t.id
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function analyze(occs) {
+  const { years, withCoords } = computeStats(occs);
+
+  let latMed = null, lonMed = null, geoMed = null, geoMad = null;
+  if (withCoords.length >= 10) {
+    const latArr = withCoords.map(o => o.decimalLatitude);
+    const lonArr = withCoords.map(o => o.decimalLongitude);
+    latMed = median(latArr);
+    lonMed = circularLongitudeMedian(lonArr);
+    const distances = withCoords.map(o => distanceKm(o.decimalLatitude, o.decimalLongitude, latMed, lonMed));
+    geoMed = median(distances);
+    geoMad = mad(distances, geoMed);
+  }
+
+  let yearMed = null, yearMad = null;
+  if (years.length >= 10) {
+    yearMed = median(years);
+    yearMad = mad(years, yearMed);
+  }
+
+  const flagged = [];
+  occs.forEach(o => {
+    const flags = [];
+    const evidence = [];
+    let priority = 0;
+    const hasCoords = typeof o.decimalLatitude === 'number' && typeof o.decimalLongitude === 'number';
+
+    if (hasCoords && geoMed !== null && geoMad > 0) {
+      const dist = distanceKm(o.decimalLatitude, o.decimalLongitude, latMed, lonMed);
+      const zDist = modifiedZScore(dist, geoMed, geoMad);
+      if (zDist > 3.5 && dist > 300) {
+        flags.push({ text: 'Far from typical location', class: 'yellow', key: 'geo' });
+        evidence.push({
+          text: `Collected ${Math.round(dist)} km from the population center (median location of all specimens). Modified Z-score: ${zDist.toFixed(1)} — a value above 3.5 indicates a statistical outlier (Iglewicz & Hoaglin 1993).`,
+          source: `Compared against ${withCoords.length} georeferenced specimens. Method: Median Absolute Deviation.`
+        });
+        priority += Math.min(0.3 + (zDist - 3.5) * 0.05, 0.5);
+      }
+    }
+
+    if (o.year && yearMed !== null && yearMad > 0) {
+      const zYear = modifiedZScore(o.year, yearMed, yearMad);
+      if (Math.abs(zYear) > 3.5) {
+        const isOld = zYear < 0;
+        flags.push({
+          text: isOld ? 'Very old record' : 'Recent record',
+          class: 'green', key: isOld ? 'old' : 'recent'
+        });
+        evidence.push({
+          text: `Collected in ${o.year} (median collection year: ${yearMed}). Modified Z-score: ${zYear.toFixed(1)}. ` +
+            (isOld
+              ? `Among the earliest specimens of this species — irreplaceable historical reference.`
+              : `Among the most recent specimens — valuable for confirming current distribution.`),
+          source: `Compared against ${years.length} dated records. Method: Median Absolute Deviation.`
+        });
+        priority += 0.2;
+      }
+    }
+
+    if (!hasCoords) {
+      flags.push({ text: 'No coordinates', class: '', key: 'nocoord' });
+      evidence.push({
+        text: 'No latitude/longitude recorded. Specimen may have a written locality that could be georeferenced.',
+        source: 'Specimen record (GBIF)'
+      });
+      priority += 0.1;
+    }
+
+    if (hasCoords && Math.abs(o.decimalLatitude) < 0.01 && Math.abs(o.decimalLongitude) < 0.01) {
+      flags.push({ text: 'Bad coordinates (0,0)', class: 'red', key: 'zerozero' });
+      evidence.push({
+        text: 'Coordinates are 0,0 (in the Gulf of Guinea, "Null Island"). This is almost always a data entry error from a blank or zeroed field.',
+        source: 'Coordinate validity check'
+      });
+      priority += 0.4;
+    }
+
+    if (o.issues && o.issues.length > 0) {
+      const critical = o.issues.filter(i =>
+        ['COUNTRY_COORDINATE_MISMATCH', 'COORDINATE_INVALID', 'COORDINATE_OUT_OF_RANGE',
+         'PRESUMED_NEGATED_LATITUDE', 'PRESUMED_NEGATED_LONGITUDE',
+         'PRESUMED_SWAPPED_COORDINATE', 'RECORDED_DATE_UNLIKELY'].includes(i)
+      );
+      if (critical.length > 0) {
+        flags.push({ text: 'Data quality issues', class: 'red', key: 'quality' });
+        evidence.push({
+          text: `GBIF flagged: ${critical.map(c => c.toLowerCase().replace(/_/g, ' ')).join(', ')}. These typically indicate a transcription error.`,
+          source: 'GBIF automatic quality checks'
+        });
+        priority += 0.3;
+      }
+    }
+
+    if (o.year && o.year < 1900 && (!o.media || o.media.length === 0)) {
+      flags.push({ text: 'Historical, not imaged', class: 'green', key: 'unimaged' });
+      evidence.push({
+        text: `Pre-1900 specimen with no digital images. Such specimens often need priority digitization before deterioration.`,
+        source: 'Media inventory from GBIF record'
+      });
+      priority += 0.15;
+    }
+
+    if (flags.length > 0) {
+      let level = 'low';
+      if (priority >= 0.5) level = 'high';
+      else if (priority >= 0.25) level = 'med';
+      flagged.push({ ...o, flags, evidence, priority: Math.min(priority, 0.99), level, falsify: makeFalsify(flags) });
+    }
+  });
+  return flagged;
+}
+function makeFalsify(flags) {
+  const t = flags.map(f => f.text);
+  if (t.some(x => x.includes('Far from typical'))) {
+    return 'Verify the coordinates against the original specimen label. If accurate, this may be a real range extension worth reporting. If not, the coordinates need correction.';
+  }
+  if (t.some(x => x.includes('(0,0)'))) {
+    return 'The coordinates are almost certainly wrong. Georeference the specimen from the written locality on its label.';
+  }
+  if (t.some(x => x.includes('quality issues'))) {
+    return 'Open the original specimen record. Compare the database fields (country, coordinates, date) to the physical label. One was transcribed incorrectly.';
+  }
+  if (t.some(x => x.includes('Historical') || x.includes('not imaged'))) {
+    return 'This specimen should be prioritized for digital imaging before further deterioration. After imaging, the label can be verified.';
+  }
+  if (t.some(x => x.includes('Very old') || x.includes('Recent'))) {
+    return 'For a temporal outlier: verify the collection date on the original label. Verification confirms or corrects the historical or recent record.';
+  }
+  return 'Open the specimen record and verify the flagged fields against the physical specimen or its label image.';
+}
+
+// Map render (no external deps)
+function renderMap(allOccs, flaggedOccs) {
+  const canvas = document.getElementById('map-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width, h = rect.height;
+  ctx.fillStyle = '#f4ede1';
+  ctx.fillRect(0, 0, w, h);
+
+  const proj = (lat, lon) => ({
+    x: (lon + 180) / 360 * w,
+    y: (90 - lat) / 180 * h
+  });
+
+  ctx.strokeStyle = '#d8d4cc';
+  ctx.lineWidth = 0.5;
+  for (let lon = -180; lon <= 180; lon += 30) {
+    const p = proj(0, lon);
+    ctx.beginPath();
+    ctx.moveTo(p.x, 0);
+    ctx.lineTo(p.x, h);
+    ctx.stroke();
+  }
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const p = proj(lat, 0);
+    ctx.beginPath();
+    ctx.moveTo(0, p.y);
+    ctx.lineTo(w, p.y);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#b8b3a8';
+  ctx.lineWidth = 1;
+  const eq = proj(0, 0);
+  ctx.beginPath();
+  ctx.moveTo(0, eq.y);
+  ctx.lineTo(w, eq.y);
+  ctx.stroke();
+
+  const flaggedKeys = new Set(flaggedOccs.map(f => f.key));
+  allOccs.forEach(o => {
+    if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
+    if (o.decimalLatitude === 0 && o.decimalLongitude === 0) return;
+    const p = proj(o.decimalLatitude, o.decimalLongitude);
+    const isFlagged = flaggedKeys.has(o.key);
+    ctx.fillStyle = isFlagged ? '#c2410c' : 'rgba(90, 90, 90, 0.45)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, isFlagged ? 4 : 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Knowledge panel: "What's known about this plant"
+async function getWikipediaSection(pageTitle, sectionPattern) {
+  try {
+    const secRes = await fetch('https://en.wikipedia.org/w/api.php?action=parse&page=' +
+      encodeURIComponent(pageTitle) + '&prop=sections&format=json&origin=*');
+    if (!secRes.ok) return null;
+    const secData = await secRes.json();
+    const sections = secData.parse?.sections || [];
+    const match = sections.find(s => sectionPattern.test(s.line));
+    if (!match) return null;
+    const contentRes = await fetch('https://en.wikipedia.org/w/api.php?action=parse&page=' +
+      encodeURIComponent(pageTitle) + '&section=' + match.index +
+      '&prop=text&format=json&disabletoc=1&origin=*');
+    if (!contentRes.ok) return null;
+    const contentData = await contentRes.json();
+    const html = contentData.parse?.text?.['*'] || '';
+    let text = html
+      .replace(/<sup class="reference"[^>]*>[\s\S]*?<\/sup>/g, '')
+      .replace(/<span class="mw-editsection[^"]*"[^>]*>[\s\S]*?<\/span>/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\[\d+\]/g, '')
+      .replace(/\[edit\]/gi, '')
+      .replace(/&#91;.*?&#93;/g, '')
+      .replace(/&#160;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text.length > 1200) text = text.slice(0, 1200) + '...';
+    return { text, sectionName: match.line };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getGBIFVernacularNames(usageKey) {
+  try {
+    const r = await fetch('https://api.gbif.org/v1/species/' + usageKey + '/vernacularNames?limit=20');
+    if (!r.ok) return [];
+    const data = await r.json();
+    return data.results || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
+  const panel = document.getElementById('knowledge-panel');
+  const pills = document.getElementById('knowledge-pills');
+  const sections = document.getElementById('knowledge-sections');
+
+  panel.classList.add('visible');
+  pills.innerHTML = '<span class="knowledge-pill">Loading...</span>';
+  sections.innerHTML = '<div class="knowledge-loading">Fetching from Wikipedia, Wikidata, GBIF, iNaturalist...</div>';
+
+  const wikiTitle = (speciesName || '').replace(/ /g, '_');
+
+  const [usesSection, ecologySection, toxicitySection, medicinalSection, descriptionSection,
+         vernacularNames, wikidata, inat] =
+    await Promise.all([
+      getWikipediaSection(wikiTitle, /^(uses|cultivation|economic\s+uses|human\s+uses|culinary)$/i),
+      getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology)$/i),
+      getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)$/i),
+      getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry)/i),
+      getWikipediaSection(wikiTitle, /^(description|morphology)$/i),
+      gbifSpecies.usageKey ? getGBIFVernacularNames(gbifSpecies.usageKey) : Promise.resolve([]),
+      getWikidataInfo(speciesName),
+      getINaturalistInfo(speciesName)
+    ]);
+
+  // If user has started a new search while we were fetching, abort UI update
+  if (mySearchId !== searchId) return;
+
+  let conservationHtml = '';
+  if (wikidata?.iucnStatus || inat?.extinct || (inat?.conservationStatuses && inat.conservationStatuses.length > 0)) {
+    const statusColor = (s) => {
+      const lower = (s || '').toLowerCase();
+      if (lower.includes('extinct')) return 'red';
+      if (lower.includes('critical')) return 'red';
+      if (lower.includes('endang')) return 'red';
+      if (lower.includes('vulner') || lower.includes('threat')) return 'yellow';
+      if (lower.includes('near')) return 'yellow';
+      return 'green';
+    };
+    let statusItems = [];
+    if (wikidata?.iucnStatus) {
+      statusItems.push(`<div style="margin-bottom:8px"><strong>IUCN Red List:</strong> <span class="flag-pill ${statusColor(wikidata.iucnStatus)}" style="margin-left:4px">${escapeHtml(wikidata.iucnStatus)}</span></div>`);
+    }
+    if (inat?.extinct) {
+      statusItems.push(`<div style="margin-bottom:8px"><strong>Status:</strong> <span class="flag-pill red" style="margin-left:4px">Marked extinct on iNaturalist</span></div>`);
+    }
+    if (inat?.observationsCount > 0) {
+      const obsLevel = inat.observationsCount > 10000 ? 'very common' :
+                       inat.observationsCount > 1000 ? 'common' :
+                       inat.observationsCount > 100 ? 'occasionally observed' :
+                       inat.observationsCount > 10 ? 'rarely observed' : 'very rarely observed';
+      statusItems.push(`<div><strong>Field observations:</strong> ${inat.observationsCount.toLocaleString()} on iNaturalist (${obsLevel})</div>`);
+    }
+    conservationHtml = `
+      <div class="knowledge-section">
+        <h3>Conservation & status <span class="evidence-level high">structured data</span></h3>
+        <div class="knowledge-content">
+          ${statusItems.join('')}
+          <div style="margin-top:10px">
+            ${wikidata ? `<a href="${escapeHtml(wikidata.wikidataUrl)}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikidata — ${escapeHtml(wikidata.qid)} →</a>` : ''}
+            ${inat ? ` &middot; <a href="${escapeHtml(inat.inatUrl)}" target="_blank" rel="noopener" class="knowledge-source-link">iNaturalist taxon page →</a>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const pillData = [
+    { label: 'Conservation', has: !!(wikidata?.iucnStatus || inat?.extinct) },
+    { label: 'Common names', has: vernacularNames.length > 0 || (wikidata?.commonNames || []).length > 0 },
+    { label: 'Field observations', has: !!(inat?.observationsCount > 0) },
+    { label: 'Description', has: !!descriptionSection },
+    { label: 'Ecology', has: !!ecologySection },
+    { label: 'Documented uses', has: !!usesSection },
+    { label: 'Toxicity / hazards', has: !!toxicitySection },
+    { label: 'Compounds studied', has: !!medicinalSection }
+  ];
+  pills.innerHTML = pillData.map(p =>
+    `<span class="knowledge-pill ${p.has ? 'has-data' : ''}">${escapeHtml(p.label)}${p.has ? ' ✓' : ''}</span>`
+  ).join('');
+
+  const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiTitle)}`;
+  let sectionsHtml = conservationHtml;
+
+  if (vernacularNames.length > 0 || (wikidata?.commonNames || []).length > 0) {
+    const byLang = {};
+    vernacularNames.forEach(v => {
+      if (!byLang[v.language]) byLang[v.language] = [];
+      byLang[v.language].push(v.vernacularName);
+    });
+    const englishNames = [...new Set([
+      ...(byLang.eng || byLang.en || []),
+      ...(wikidata?.commonNames || [])
+    ])];
+    const otherLangCount = Object.keys(byLang).filter(l => l !== 'eng' && l !== 'en').length;
+    sectionsHtml += `
+      <div class="knowledge-section">
+        <h3>Common names <span class="evidence-level high">verified</span></h3>
+        <div class="knowledge-content">
+          ${englishNames.length > 0
+            ? `<p><strong>English:</strong> ${englishNames.slice(0,10).map(escapeHtml).join(', ')}</p>`
+            : '<p class="knowledge-empty">No English common names in connected sources.</p>'}
+          ${otherLangCount > 0
+            ? `<p style="color:var(--text-muted);font-size:13px">Also recorded in ${otherLangCount} other languages on GBIF.</p>`
+            : ''}
+          <a href="https://www.gbif.org/species/${gbifSpecies.usageKey}" target="_blank" rel="noopener" class="knowledge-source-link">Source: GBIF + Wikidata vernacular names →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  if (descriptionSection) {
+    sectionsHtml += `
+      <div class="knowledge-section">
+        <h3>Description <span class="evidence-level med">Wikipedia</span></h3>
+        <div class="knowledge-content">
+          <p>${escapeHtml(descriptionSection.text)}</p>
+          <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(descriptionSection.sectionName)} →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  if (ecologySection) {
+    sectionsHtml += `
+      <div class="knowledge-section">
+        <h3>Ecology & habitat <span class="evidence-level med">Wikipedia</span></h3>
+        <div class="knowledge-content">
+          <p>${escapeHtml(ecologySection.text)}</p>
+          <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(ecologySection.sectionName)} →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  if (usesSection) {
+    sectionsHtml += `
+      <div class="knowledge-section">
+        <h3>Documented uses <span class="evidence-level med">Wikipedia</span></h3>
+        <div class="knowledge-content">
+          <p style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:10px">
+            Below is what Wikipedia documents about historical or current uses. <strong>This is not a recommendation.</strong> Many traditional uses lack clinical evidence, and many medicinal plants are toxic at incorrect doses. Verify any practical use with a doctor or qualified herbalist.
+          </p>
+          <p>${escapeHtml(usesSection.text)}</p>
+          <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(usesSection.sectionName)} →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  sectionsHtml += `
+    <div class="knowledge-section">
+      <h3>Toxicity & hazards <span class="evidence-level ${toxicitySection ? 'med' : 'low'}">${toxicitySection ? 'Wikipedia' : 'limited data'}</span></h3>
+      <div class="knowledge-content">
+        <div style="background:var(--red-light); border-left: 4px solid var(--red); padding: 12px 16px; border-radius: 4px; margin-bottom:14px;">
+          <strong style="color:var(--red); text-transform:uppercase; font-size:11px; letter-spacing:0.05em; display:block; margin-bottom:5px;">Important</strong>
+          <span style="font-size:13px; line-height:1.55;">
+            <strong>Never eat, taste, or apply a wild plant based on this tool alone.</strong> No free, comprehensive plant toxicity API exists for humans. Toxicity often varies by plant part, season, dose, and individual. If you suspect plant poisoning, call <strong>1-800-222-1222</strong> (US Poison Control) or your local emergency number. For pets, call ASPCA Animal Poison Control at <strong>(888) 426-4435</strong>.
+          </span>
+        </div>
+        ${toxicitySection
+          ? `<p>${escapeHtml(toxicitySection.text)}</p>
+             <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(toxicitySection.sectionName)} →</a>`
+          : `<p class="knowledge-empty">No dedicated toxicity section found on Wikipedia for this species. <strong>Absence of data is not evidence of safety</strong> — many toxic plants don't have well-documented toxicity sections. Check the sources below for authoritative information before any practical use.</p>`}
+        <div style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--line); font-size:13px;">
+          <strong>Authoritative toxicity sources to consult:</strong>
+          <ul style="list-style:disc; padding-left:22px; margin-top:6px;">
+            <li><a href="https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants" target="_blank" rel="noopener">ASPCA toxic/non-toxic plant database</a> — search by name (pets)</li>
+            <li><a href="https://www.cbif.gc.ca/eng/species-bank/canadian-poisonous-plants-information-system/all-plants-scientific-name/?id=1370403266608" target="_blank" rel="noopener">Canadian Poisonous Plants Information System</a> — humans + livestock</li>
+            <li><a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubChem (NIH)</a> — search compound by name</li>
+            <li><a href="https://www.nccih.nih.gov/health/herbsataglance" target="_blank" rel="noopener">NIH NCCIH Herbs at a Glance</a> — if among reviewed herbs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (medicinalSection) {
+    sectionsHtml += `
+      <div class="knowledge-section">
+        <h3>Compounds & research <span class="evidence-level med">Wikipedia</span></h3>
+        <div class="knowledge-content">
+          <p style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:10px">
+            What scientists have isolated or studied from this plant. <strong>"Studied" does not mean "treats."</strong> Most compounds never become approved drugs.
+          </p>
+          <p>${escapeHtml(medicinalSection.text)}</p>
+          <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(medicinalSection.sectionName)} →</a>
+          <div style="margin-top:10px">
+            <a href="https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(speciesName)}" target="_blank" rel="noopener" class="knowledge-source-link">Search compounds on PubChem (NIH) →</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  sectionsHtml += `
+    <div class="knowledge-section">
+      <h3>Go deeper at authoritative sources <span class="evidence-level high">curated</span></h3>
+      <div class="knowledge-content">
+        <ul style="list-style:disc;padding-left:20px;">
+          <li><a href="https://powo.science.kew.org/?q=${encodeURIComponent(speciesName)}" target="_blank" rel="noopener">Plants of the World Online (Kew)</a> — authoritative taxonomy and distribution</li>
+          <li><a href="https://www.gbif.org/species/${gbifSpecies.usageKey}" target="_blank" rel="noopener">GBIF species page</a> — occurrence data</li>
+          <li><a href="https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(speciesName)}" target="_blank" rel="noopener">PubChem (NIH)</a> — chemistry of isolated compounds</li>
+          <li><a href="${wikiUrl}" target="_blank" rel="noopener">Wikipedia article</a> — general overview</li>
+          ${inat ? `<li><a href="${escapeHtml(inat.inatUrl)}" target="_blank" rel="noopener">iNaturalist taxon page</a> — field photos and observations</li>` : ''}
+          ${wikidata ? `<li><a href="${escapeHtml(wikidata.wikidataUrl)}" target="_blank" rel="noopener">Wikidata structured data</a></li>` : ''}
+        </ul>
+      </div>
+    </div>
+  `;
+
+  sections.innerHTML = sectionsHtml;
+}
+
+// Common name resolution via iNaturalist
+async function resolveCommonName(query) {
+  try {
+    const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(query) + '&rank=species,subspecies,variety&is_active=true&per_page=10');
+    if (!r.ok) return [];
+    const data = await r.json();
+    const plants = (data.results || []).filter(t => {
+      const ancestors = t.ancestor_ids || [];
+      return ancestors.includes(47126) || t.iconic_taxon_name === 'Plantae';
+    });
+    return plants.map(t => ({
+      scientificName: t.name,
+      commonName: t.preferred_common_name || '',
+      rank: t.rank,
+      observationCount: t.observations_count || 0,
+      iconicGroup: t.iconic_taxon_name,
+      inatId: t.id
+    }));
+  } catch (e) {
+    return [];
+  }
+}
+
+// Heuristic: does this query look like a Latin binomial?
+// Rules: 2-4 words, first word Title-Cased, second word lowercase, and the
+// second word is not a common English noun that would also fit the shape
+// ("Pitcher plant", "Bee balm", "Devil tree", etc.).
+const COMMON_ENGLISH_PLANT_NOUNS = new Set([
+  'plant','tree','flower','fern','moss','vine','grass','weed','shrub','lily',
+  'rose','leaf','herb','bush','bean','pea','wort','oak','pine','fir','ivy',
+  'palm','fig','balm','daisy','berry','clover','poppy','iris','mint','sage',
+  'thistle','thorn','root','seed','nut','wood','heath','reed','rush','sedge',
+  'orchid','cactus','cane','vetch','cress','melon','squash','corn','wheat',
+  'rice','rye','oat','barley','flax','hemp','myrtle','laurel','holly','briar',
+  'maple','elm','ash','beech','birch','willow','poplar','spruce','cedar','yew',
+  'cherry','plum','peach','apple','pear','grape','lemon','lime','orange','date',
+  'banana','mango','olive','onion','garlic','tea','coffee','cocoa','tobacco',
+  'cotton','sunflower','marigold','aster','tulip','crocus','violet','pansy',
+  'lavender','rosemary','thyme','basil','parsley','dill','fennel','chive',
+  'milkweed','goldenrod','plant\'s','tree\'s'
+]);
+
+function looksLikeScientificName(query) {
+  const trimmed = query.trim();
+  if (trimmed.includes("'")) return false;
+  const words = trimmed.split(/\s+/);
+  if (words.length < 2 || words.length > 4) return false;
+  if (!/^[A-Z][a-z]+$/.test(words[0])) return false;
+  if (!/^[a-z]+$/.test(words[1])) return false;
+  if (COMMON_ENGLISH_PLANT_NOUNS.has(words[1])) return false;
+  return true;
+}
+
+// Disambiguation modal
+function openDisambig(candidates, originalQuery) {
+  document.getElementById('disambig-title').textContent =
+    `"${originalQuery}" matches ${candidates.length} plants`;
+  document.getElementById('disambig-text').textContent =
+    candidates.length > 1
+      ? 'Common names can be ambiguous — multiple species share this name. Pick the one you meant:'
+      : 'Confirm the match:';
+  const list = document.getElementById('disambig-list');
+  list.innerHTML = '';
+  candidates.slice(0, 8).forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'disambig-item';
+    const obsLabel = c.observationCount
+      ? `${c.observationCount.toLocaleString()} observations on iNaturalist`
+      : 'no observation data';
+    item.innerHTML = `
+      <div>
+        <div class="disambig-sci">${escapeHtml(c.scientificName)}</div>
+        ${c.commonName ? `<div class="disambig-common">${escapeHtml(c.commonName)}</div>` : ''}
+        <div class="disambig-fam">${escapeHtml(c.rank || '')} &middot; ${escapeHtml(obsLabel)}</div>
+      </div>
+      <div class="disambig-arrow">&rarr;</div>
+    `;
+    item.addEventListener('click', () => {
+      closeDisambig();
+      document.getElementById('species-input').value = c.scientificName;
+      runSearchDirect(c.scientificName);
+    });
+    list.appendChild(item);
+  });
+  document.getElementById('disambig-overlay').classList.add('open');
+}
+function closeDisambig() {
+  document.getElementById('disambig-overlay').classList.remove('open');
+}
+document.getElementById('disambig-cancel').addEventListener('click', closeDisambig);
+
+// Search dispatcher: detect scientific vs common name
+async function runSearch(speciesName) {
+  const name = (speciesName || document.getElementById('species-input').value || '').trim();
+  if (!name) return;
+
+  if (looksLikeScientificName(name)) {
+    runSearchDirect(name);
+    return;
+  }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true; btn.textContent = 'Looking up...';
+  clearStatus();
+  status(`Looking up "${name}" as a common name...`);
+
+  try {
+    const candidates = await resolveCommonName(name);
+    if (candidates.length === 0) {
+      status(`No common-name match found. Trying "${name}" as a scientific name...`, 'info');
+      btn.disabled = false; btn.textContent = 'Search';
+      runSearchDirect(name);
+      return;
+    }
+    if (candidates.length === 1) {
+      status(`Common name "${name}" matched to ${candidates[0].scientificName}.`, 'done');
+      btn.disabled = false; btn.textContent = 'Search';
+      document.getElementById('species-input').value = candidates[0].scientificName;
+      runSearchDirect(candidates[0].scientificName);
+      return;
+    }
+    status(`Found ${candidates.length} possible matches for "${name}".`, 'info');
+    btn.disabled = false; btn.textContent = 'Search';
+    openDisambig(candidates, name);
+  } catch (e) {
+    status(`Lookup error: ${e.message}. Falling back to scientific-name search.`, 'error');
+    btn.disabled = false; btn.textContent = 'Search';
+    runSearchDirect(name);
+  }
+}
+
+async function runSearchDirect(speciesName) {
+  const name = speciesName;
+  if (!name) return;
+  document.getElementById('species-input').value = name;
+
+  const mySearchId = ++searchId;
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true; btn.textContent = 'Searching...';
+  document.getElementById('specimen-list').innerHTML = '';
+  document.getElementById('summary').classList.remove('visible');
+  document.getElementById('results-header').classList.remove('visible');
+  document.getElementById('species-banner').classList.remove('visible');
+  document.getElementById('knowledge-panel').classList.remove('visible');
+  document.getElementById('knowledge-panel').classList.remove('open');
+  document.getElementById('map-section').classList.remove('visible');
+  document.getElementById('filters-bar').classList.remove('visible');
+
+  try {
+    status(`Resolving "${name}" against the GBIF taxonomy (plant kingdom)...`);
+    const species = await fetchSpecies(name);
+    if (mySearchId !== searchId) return;
+
+    if (!species.usageKey) {
+      status(`No plant match for "${name}". Check spelling, or try the scientific Latin name.`, 'error');
+      return;
+    }
+    if (species.matchType === 'NONE') {
+      status(`GBIF could not match "${name}" to any plant. Check spelling.`, 'error');
+      return;
+    }
+    if (species.rank && !['SPECIES','SUBSPECIES','VARIETY','FORM'].includes(species.rank)) {
+      status(`"${name}" matched GBIF only at the ${species.rank.toLowerCase()} level (${species.scientificName}). Specimens shown will cover all members of this ${species.rank.toLowerCase()}.`, 'info');
+    } else {
+      status(`Matched: ${species.scientificName} · family ${species.family || '(unknown)'}`, 'done');
+    }
+
+    document.getElementById('species-sci').textContent = species.scientificName.replace(/^(\S+\s+\S+)\s+.*$/, '$1');
+    document.getElementById('species-tax').innerHTML =
+      `<span>Family:</span> ${escapeHtml(species.family || '?')} &nbsp;·&nbsp; ` +
+      `<span>Order:</span> ${escapeHtml(species.order || '?')} &nbsp;·&nbsp; ` +
+      `<span>Rank:</span> ${escapeHtml(species.rank || '?')} &nbsp;·&nbsp; ` +
+      `<span>Status:</span> ${escapeHtml(species.status || '?')}`;
+    const links = [
+      { url: `https://www.gbif.org/species/${species.usageKey}`, label: 'GBIF' },
+      { url: `https://powo.science.kew.org/?q=${encodeURIComponent(species.canonicalName || name)}`, label: 'POWO (Kew)' },
+      { url: `https://en.wikipedia.org/wiki/${encodeURIComponent((species.canonicalName || name).replace(/ /g, '_'))}`, label: 'Wikipedia' },
+      { url: `https://www.inaturalist.org/taxa/search?q=${encodeURIComponent(species.canonicalName || name)}`, label: 'iNaturalist' }
+    ];
+    document.getElementById('species-links').innerHTML = links.map(l =>
+      `<a href="${l.url}" target="_blank" rel="noopener" class="species-link">${l.label} ↗</a>`
+    ).join('');
+    document.getElementById('species-banner').classList.add('visible');
+
+    fetchWikipedia(species.canonicalName || name).then(wiki => {
+      if (mySearchId !== searchId) return;
+      if (wiki && wiki.extract) {
+        document.getElementById('species-common').textContent = wiki.description || '';
+        const sum = document.getElementById('species-summary');
+        sum.textContent = wiki.extract;
+        sum.classList.add('visible');
+      }
+    });
+
+    loadKnowledgePanel(species.canonicalName || name, species, mySearchId);
+
+    status(`Fetching specimens from herbaria worldwide...`);
+    const occData = await fetchOccurrences(species.usageKey, 300);
+    if (mySearchId !== searchId) return;
+    const occs = occData.results || [];
+    if (occs.length === 0) {
+      status(`No preserved specimens found for this taxon in GBIF.`, 'error');
+      return;
+    }
+    const totalAvail = occData.count || occs.length;
+    status(`Retrieved ${occs.length} specimens out of ${totalAvail.toLocaleString()} available globally.`, 'done');
+    if (totalAvail > occs.length) {
+      status(`Showing the first ${occs.length} records returned by GBIF (its default ordering). For complete analysis of common species, use the GBIF download API directly.`, 'info');
+    }
+
+    const stats = computeStats(occs);
+    document.getElementById('stat-total').textContent = occs.length.toLocaleString();
+    document.getElementById('stat-total-sub').textContent =
+      totalAvail > occs.length ? `of ${totalAvail.toLocaleString()} worldwide (capped at 300)` : `of ${totalAvail.toLocaleString()} worldwide`;
+    document.getElementById('stat-dates').textContent =
+      stats.years.length ? `${Math.min(...stats.years)}–${Math.max(...stats.years)}` : '—';
+    document.getElementById('stat-dates-sub').textContent = `${stats.years.length} dated records`;
+    document.getElementById('stat-geo').textContent = stats.countries.size;
+    document.getElementById('stat-geo-sub').textContent = `${stats.withCoords.length} georeferenced`;
+
+    status(`Analyzing for anomalies...`);
+    const flagged = analyze(occs).sort((a,b) => b.priority - a.priority);
+    document.getElementById('stat-flagged').textContent = flagged.length;
+    document.getElementById('stat-flagged-sub').textContent = `${Math.round(100 * flagged.length / occs.length)}% of loaded records`;
+    document.getElementById('summary').classList.add('visible');
+
+    status(`Done. ${flagged.length} specimens flagged.`, 'done');
+
+    currentResults = { flagged, all: occs, stats, species };
+
+    document.getElementById('map-section').classList.add('visible');
+    setTimeout(() => {
+      if (mySearchId === searchId) renderMap(occs, flagged);
+    }, 50);
+
+    buildFilters(flagged);
+    render();
+  } catch (e) {
+    if (mySearchId !== searchId) return;
+    status(`Search failed: ${e.message}`, 'error');
+  } finally {
+    if (mySearchId === searchId) {
+      btn.disabled = false; btn.textContent = 'Search';
+    }
+  }
+}
+
+function buildFilters(flagged) {
+  const bar = document.getElementById('filters-bar');
+  const counts = {};
+  flagged.forEach(f => f.flags.forEach(fl => { counts[fl.key] = (counts[fl.key] || 0) + 1; }));
+  const flagLabels = {
+    geo: 'Geographic outliers',
+    old: 'Very old records',
+    recent: 'Recent records',
+    nocoord: 'No coordinates',
+    zerozero: 'Bad coordinates',
+    quality: 'Data quality issues',
+    unimaged: 'Historical, not imaged'
+  };
+  bar.innerHTML = '<span class="filters-label">Filter:</span>' +
+    `<span class="filter-chip ${activeFilter === 'all' ? 'active' : ''}" data-filter="all">All (${flagged.length})</span>` +
+    Object.entries(counts).map(([k, v]) =>
+      `<span class="filter-chip ${activeFilter === k ? 'active' : ''}" data-filter="${k}">${escapeHtml(flagLabels[k] || k)} (${v})</span>`
+    ).join('');
+  bar.classList.add('visible');
+  bar.querySelectorAll('.filter-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      activeFilter = c.dataset.filter;
+      bar.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      render();
+    });
+  });
+}
+
+function render() {
+  const list = document.getElementById('specimen-list');
+  list.innerHTML = '';
+  let items = currentResults.flagged;
+  if (activeFilter !== 'all') {
+    items = items.filter(s => s.flags.some(f => f.key === activeFilter));
+  }
+  let sorted = [...items];
+  if (currentSort === 'date') {
+    sorted.sort((a,b) => (b.year || 0) - (a.year || 0));
+  } else {
+    sorted.sort((a,b) => b.priority - a.priority);
+  }
+  document.getElementById('result-count').textContent = sorted.length;
+  document.getElementById('results-header').classList.add('visible');
+
+  if (sorted.length === 0) {
+    list.innerHTML = '<div class="empty-state">No specimens match this filter.</div>';
+    return;
+  }
+
+  sorted.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'specimen-card';
+    const inst = s.institutionCode || 'Unknown institution';
+    const cat = s.catalogNumber || s.key;
+    const year = s.year || 'unknown year';
+    const collector = s.recordedBy || 'unknown collector';
+    const place = [s.locality, s.stateProvince, s.country].filter(Boolean).join(', ') || 'unknown location';
+    const truncPlace = place.length > 100 ? place.slice(0,100) + '…' : place;
+    const imgUrl = s.media && s.media[0] && s.media[0].identifier;
+    const gbifUrl = `https://www.gbif.org/occurrence/${s.key}`;
+    const levelLabel = { high: 'High priority', med: 'Medium', low: 'Low priority' }[s.level];
+
+    const citation = `GBIF.org (${new Date().getFullYear()}). Occurrence Download. ` +
+      `${s.scientificName || s.species} specimen, ${inst} #${cat}, ` +
+      `collected ${year}${collector !== 'unknown collector' ? ' by ' + collector : ''}, ${truncPlace}. ` +
+      `https://www.gbif.org/occurrence/${s.key}`;
+
+    card.innerHTML = `
+      <div class="specimen-top">
+        <div>
+          <div class="specimen-name">${escapeHtml(s.scientificName || s.species || 'Unknown')}</div>
+          <div class="specimen-meta">
+            <strong>${escapeHtml(inst)}</strong> · catalog #${escapeHtml(cat)} · collected ${escapeHtml(String(year))} by ${escapeHtml(collector)}<br/>
+            ${escapeHtml(truncPlace)}
+          </div>
+        </div>
+        <div class="priority-badge ${s.level}">${escapeHtml(levelLabel)}</div>
+      </div>
+      <div class="flags-row">
+        ${s.flags.map(f => `<span class="flag-pill ${f.class}">${escapeHtml(f.text)}</span>`).join('')}
+      </div>
+      <div class="reason-text">${escapeHtml(s.evidence[0]?.text || '')}</div>
+      <div class="action-row">
+        <a href="${gbifUrl}" target="_blank" rel="noopener" class="view-link">View specimen record</a>
+        <button class="details-toggle">Show all evidence</button>
+        <button class="cite-btn">Cite</button>
+      </div>
+      <div class="details-panel">
+        <div class="details-grid">
+          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="specimen-image" alt="Specimen photo" loading="lazy" />` : '<div></div>'}
+          <div>
+            <div class="details-section">
+              <h4>All evidence (${s.evidence.length})</h4>
+              <ul class="evidence-list">
+                ${s.evidence.map(e => `
+                  <li>${escapeHtml(e.text)}<span class="evidence-source">Source: ${escapeHtml(e.source)}</span></li>
+                `).join('')}
+              </ul>
+            </div>
+            <div class="details-section">
+              <div class="falsify">
+                <strong>How to verify or disprove this flag</strong>
+                ${escapeHtml(s.falsify)}
+              </div>
+            </div>
+            <div class="details-section cite-section" style="display:none">
+              <h4>Citation</h4>
+              <div class="citation-box">${escapeHtml(citation)}</div>
+              <button class="copy-btn">Copy citation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    const toggle = card.querySelector('.details-toggle');
+    const panel = card.querySelector('.details-panel');
+    toggle.addEventListener('click', () => {
+      const open = panel.classList.toggle('open');
+      toggle.textContent = open ? 'Hide details' : 'Show all evidence';
+    });
+    const citeBtn = card.querySelector('.cite-btn');
+    const citeSection = card.querySelector('.cite-section');
+    citeBtn.addEventListener('click', () => {
+      panel.classList.add('open');
+      toggle.textContent = 'Hide details';
+      citeSection.style.display = 'block';
+      citeSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    const copyBtn = card.querySelector('.copy-btn');
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(citation).then(() => {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy citation', 1500);
+      });
+    });
+    list.appendChild(card);
+  });
+}
+
+// Export CSV
+document.getElementById('export-csv').addEventListener('click', () => {
+  if (!currentResults.flagged.length) return;
+  const rows = [
+    ['scientificName','institutionCode','catalogNumber','year','recordedBy','country','locality','decimalLatitude','decimalLongitude','flags','gbifURL'].join(',')
+  ];
+  currentResults.flagged.forEach(s => {
+    const r = [
+      s.scientificName, s.institutionCode, s.catalogNumber, s.year,
+      s.recordedBy, s.country, s.locality, s.decimalLatitude, s.decimalLongitude,
+      s.flags.map(f => f.text).join('; '),
+      `https://www.gbif.org/occurrence/${s.key}`
+    ].map(v => {
+      if (v === undefined || v === null) return '';
+      const str = String(v);
+      return str.includes(',') || str.includes('"') || str.includes('\n')
+        ? '"' + str.replace(/"/g, '""') + '"' : str;
+    });
+    rows.push(r.join(','));
+  });
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `specimens-${(currentResults.species?.canonicalName || 'export').replace(/\s+/g,'-')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('sort-toggle').addEventListener('click', () => {
+  currentSort = currentSort === 'priority' ? 'date' : 'priority';
+  document.getElementById('sort-toggle').textContent = 'Sort: ' + (currentSort === 'priority' ? 'Priority' : 'Date');
+  render();
+});
+
+document.getElementById('search-btn').addEventListener('click', () => runSearch());
+document.getElementById('species-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') runSearch();
+});
+document.querySelectorAll('.example-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.getElementById('species-input').value = p.dataset.species;
+    runSearch();
+  });
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (currentResults.all.length) renderMap(currentResults.all, currentResults.flagged);
+  }, 200);
+});
+</script>
+
+</body>
+</html>

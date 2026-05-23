@@ -90,6 +90,10 @@ No proprietary APIs. No paid keys. Specimen Finder's own code is MIT-licensed (s
 - **"What's known" knowledge panel** drawing only from primary, citable sources, with a prominent warning that *"compounds studied"* does not mean *"medicine."*
 - **Poison-control phone numbers** displayed alongside any toxicity content.
 - **Race-condition guard** so rapid clicks on different examples don't interleave results.
+- **Shareable URL** — every search updates `?q=Species+name` in the address bar, and visiting that URL re-runs the search automatically.
+- **Keyboard accessible** — tabs, organ pills, filter chips, example pills, the upload zone, and the collapsible panels are all semantic buttons with proper ARIA roles. Modals close with `Escape`.
+- **Browser-runnable tests** (`tests.html`) cover median, MAD, modified Z-score, great-circle distance, and circular longitude median — including an integration test that replicates the outlier-flag decision end-to-end.
+- **Coastlines on the global map** so dots have continental context. Coastline data is embedded (~67KB) from world-atlas 110m (MIT-licensed).
 
 ---
 
@@ -151,12 +155,15 @@ The user who commissioned this asked for honest self-critique from a researcher,
 
 ```
 specimen-finder/
-├── index.html      # the entire app, single file, no build step
-├── README.md       # this file
-└── LICENSE         # MIT
+├── index.html       # the app UI and orchestration
+├── analysis.js      # pure-function statistical math (shared with tests)
+├── coastlines.js    # embedded world coastline polylines (~67KB, MIT)
+├── tests.html       # browser-runnable assertions for analysis.js
+├── README.md        # this file
+└── LICENSE          # MIT
 ```
 
-That's it. Open `index.html`. The tool runs.
+Open `index.html` from any static host and the tool runs. Open `tests.html` in the same way to see the math test suite — green means the scientific backbone is intact.
 
 ---
 

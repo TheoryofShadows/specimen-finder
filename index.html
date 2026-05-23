@@ -218,6 +218,22 @@
     overflow: hidden;
     box-shadow: 0 2px 20px rgba(0,0,0,0.04);
   }
+  /* Button reset for elements styled with chip/tab/pill classes */
+  button.tab, button.organ-pill, button.filter-chip, button.example-pill,
+  button.header-link, button.disambig-item {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    margin: 0;
+    cursor: pointer;
+    text-align: inherit;
+  }
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   .tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1219,8 +1235,8 @@
         <div class="api-dot" id="api-dot"></div>
         <span id="api-status-text">Photo ID off</span>
       </div>
-      <a class="header-link" id="header-setup">Set up photo ID</a>
-      <a class="header-link" id="header-about">About</a>
+      <button type="button" class="header-link" id="header-setup">Set up photo ID</button>
+      <button type="button" class="header-link" id="header-about">About</button>
     </div>
   </header>
 
@@ -1237,11 +1253,11 @@
   </section>
 
   <div class="how open" id="how-card">
-    <div class="how-header" id="how-toggle">
+    <div class="how-header" id="how-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="how-body">
       <h2>How it works</h2>
       <div class="how-toggle">Show</div>
     </div>
-    <div class="how-body">
+    <div class="how-body" id="how-body">
       <div class="how-steps">
         <div class="how-step" data-num="1">
           <strong>Identify or name a plant</strong>
@@ -1260,21 +1276,21 @@
   </div>
 
   <div class="input-card">
-    <div class="tabs">
-      <div class="tab active" data-tab="photo">
-        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="photo" role="tab" aria-selected="true" aria-controls="panel-photo">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
           <circle cx="12" cy="13" r="4"/>
         </svg>
         Identify from photo
-      </div>
-      <div class="tab" data-tab="name">
-        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      </button>
+      <button type="button" class="tab" data-tab="name" role="tab" aria-selected="false" aria-controls="panel-name">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         Search by name
-      </div>
+      </button>
     </div>
 
     <div class="tab-panel active" id="panel-photo">
@@ -1288,8 +1304,8 @@
         </div>
       </div>
 
-      <div class="upload-zone" id="upload-zone">
-        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="Upload a photo of a plant">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
@@ -1311,13 +1327,13 @@
         </div>
         <div class="organ-select">
           <label class="organ-label">What part of the plant is in the photo? <span style="font-weight:400;color:var(--text-muted);font-size:13px">(improves accuracy)</span></label>
-          <div class="organ-pills" id="organ-pills">
-            <div class="organ-pill selected" data-organ="auto">Auto detect</div>
-            <div class="organ-pill" data-organ="leaf">Leaf</div>
-            <div class="organ-pill" data-organ="flower">Flower</div>
-            <div class="organ-pill" data-organ="fruit">Fruit</div>
-            <div class="organ-pill" data-organ="bark">Bark</div>
-            <div class="organ-pill" data-organ="habit">Whole plant</div>
+          <div class="organ-pills" id="organ-pills" role="radiogroup" aria-label="Plant part shown in photo">
+            <button type="button" class="organ-pill selected" data-organ="auto" role="radio" aria-checked="true">Auto detect</button>
+            <button type="button" class="organ-pill" data-organ="leaf" role="radio" aria-checked="false">Leaf</button>
+            <button type="button" class="organ-pill" data-organ="flower" role="radio" aria-checked="false">Flower</button>
+            <button type="button" class="organ-pill" data-organ="fruit" role="radio" aria-checked="false">Fruit</button>
+            <button type="button" class="organ-pill" data-organ="bark" role="radio" aria-checked="false">Bark</button>
+            <button type="button" class="organ-pill" data-organ="habit" role="radio" aria-checked="false">Whole plant</button>
           </div>
         </div>
         <button class="identify-btn" id="identify-btn">Identify this plant</button>
@@ -1337,11 +1353,11 @@
       </div>
       <div class="examples">
         <strong>Try one of these:</strong><br/>
-        <span class="example-pill" data-species="pitcher plant">pitcher plant (multiple species)</span>
-        <span class="example-pill" data-species="swamp milkweed">swamp milkweed</span>
-        <span class="example-pill" data-species="Franklinia alatamaha">Franklinia alatamaha (extinct in wild)</span>
-        <span class="example-pill" data-species="passionflower">passionflower</span>
-        <span class="example-pill" data-species="busy lizzie">busy Lizzie</span>
+        <button type="button" class="example-pill" data-species="pitcher plant">pitcher plant (multiple species)</button>
+        <button type="button" class="example-pill" data-species="swamp milkweed">swamp milkweed</button>
+        <button type="button" class="example-pill" data-species="Franklinia alatamaha">Franklinia alatamaha (extinct in wild)</button>
+        <button type="button" class="example-pill" data-species="passionflower">passionflower</button>
+        <button type="button" class="example-pill" data-species="busy lizzie">busy Lizzie</button>
       </div>
     </div>
   </div>
@@ -1363,7 +1379,7 @@
   </div>
 
   <div class="knowledge-panel" id="knowledge-panel">
-    <div class="knowledge-header" id="knowledge-header">
+    <div class="knowledge-header" id="knowledge-header" role="button" tabindex="0" aria-expanded="false" aria-controls="knowledge-body">
       <div class="knowledge-title-row">
         <div class="knowledge-title">What's known about this plant</div>
         <div class="knowledge-pills" id="knowledge-pills"></div>
@@ -1425,7 +1441,7 @@
 
   <div class="filters-bar" id="filters-bar">
     <span class="filters-label">Filter by:</span>
-    <span class="filter-chip active" data-filter="all">All</span>
+    <button type="button" class="filter-chip active" data-filter="all" aria-pressed="true">All</button>
   </div>
 
   <div id="specimen-list">
@@ -1511,6 +1527,8 @@
   </div>
 </div>
 
+<script src="analysis.js"></script>
+<script src="coastlines.js"></script>
 <script>
 // State
 let plantnetKey = null;
@@ -1578,24 +1596,44 @@ document.getElementById('modal-save').addEventListener('click', () => {
 plantnetKey = getStoredKey();
 updateApiStatus();
 
+// Activate-on-Enter/Space for elements with role="button" that aren't native buttons
+function wireKeyActivation(el) {
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      el.click();
+    }
+  });
+}
+
 // How toggle
-document.getElementById('how-toggle').addEventListener('click', () => {
-  document.getElementById('how-card').classList.toggle('open');
+const howToggle = document.getElementById('how-toggle');
+howToggle.addEventListener('click', () => {
+  const open = document.getElementById('how-card').classList.toggle('open');
+  howToggle.setAttribute('aria-expanded', String(open));
 });
+wireKeyActivation(howToggle);
 
 // Knowledge panel toggle
-document.getElementById('knowledge-header').addEventListener('click', () => {
+const kHeader = document.getElementById('knowledge-header');
+kHeader.addEventListener('click', () => {
   const panel = document.getElementById('knowledge-panel');
   const isOpen = panel.classList.toggle('open');
   panel.querySelector('.knowledge-toggle').firstChild.textContent = isOpen ? 'Collapse' : 'Expand';
+  kHeader.setAttribute('aria-expanded', String(isOpen));
 });
+wireKeyActivation(kHeader);
 
-// Tabs
+// Tabs (with aria-selected toggle)
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x => {
+      x.classList.remove('active');
+      x.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
+    t.setAttribute('aria-selected', 'true');
     document.getElementById('panel-' + t.dataset.tab).classList.add('active');
   });
 });
@@ -1623,6 +1661,12 @@ uploadZone.addEventListener('click', e => {
     fileInput.click();
   }
 });
+uploadZone.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    fileInput.click();
+  }
+});
 
 function handleFile(file) {
   if (!file) return;
@@ -1639,8 +1683,12 @@ function handleFile(file) {
 
 document.querySelectorAll('.organ-pill').forEach(p => {
   p.addEventListener('click', () => {
-    document.querySelectorAll('.organ-pill').forEach(x => x.classList.remove('selected'));
+    document.querySelectorAll('.organ-pill').forEach(x => {
+      x.classList.remove('selected');
+      x.setAttribute('aria-checked', 'false');
+    });
     p.classList.add('selected');
+    p.setAttribute('aria-checked', 'true');
     currentOrgan = p.dataset.organ;
   });
 });
@@ -1790,55 +1838,16 @@ async function fetchWikipedia(name) {
   } catch (e) { return null; }
 }
 
-// Stats and analysis
-// Robust outlier detection using Median Absolute Deviation (MAD).
-// Modified Z-score: 0.6745 * (x - median) / MAD; |z| > 3.5 flags as outlier
-// (Iglewicz & Hoaglin 1993).
-function median(arr) {
-  const sorted = [...arr].sort((a,b) => a-b);
-  const m = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[m] : (sorted[m-1] + sorted[m]) / 2;
-}
-function mad(arr, med) {
-  const dev = arr.map(x => Math.abs(x - med));
-  return median(dev);
-}
-function modifiedZScore(value, med, madValue) {
-  if (madValue === 0) return 0;
-  return 0.6745 * (value - med) / madValue;
-}
+// Stats and analysis math is in analysis.js — tested in tests.html.
+// Modified Z-score on MAD; threshold |z| > 3.5 (Iglewicz & Hoaglin 1993).
+const { median, mad, modifiedZScore, distanceKm, circularLongitudeMedian } = window.SpecimenFinderAnalysis;
 
-function distanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
 function computeStats(occs) {
   const years = occs.map(o => o.year).filter(y => y && y > 1700 && y <= new Date().getFullYear());
   const countries = new Set();
   occs.forEach(o => { if (o.countryCode) countries.add(o.countryCode); });
   const withCoords = occs.filter(o => typeof o.decimalLatitude === 'number' && typeof o.decimalLongitude === 'number');
   return { years, countries, withCoords };
-}
-
-// Circular longitude median: handles species that straddle the antimeridian
-// (e.g., Pacific or circumpolar). Uses unit-vector mean which is well-defined
-// on the circle and falls back to ordinary median when span is small.
-function circularLongitudeMedian(longitudes) {
-  if (longitudes.length === 0) return 0;
-  // If range spans less than 180 degrees, ordinary median is fine
-  const sorted = [...longitudes].sort((a,b) => a-b);
-  if (sorted[sorted.length-1] - sorted[0] < 180) return median(longitudes);
-  // Otherwise compute the angular mean and return that
-  let sumX = 0, sumY = 0;
-  longitudes.forEach(lon => {
-    const r = lon * Math.PI / 180;
-    sumX += Math.cos(r);
-    sumY += Math.sin(r);
-  });
-  const angle = Math.atan2(sumY / longitudes.length, sumX / longitudes.length);
-  return angle * 180 / Math.PI;
 }
 
 // Wikidata: conservation status, common names
@@ -2090,6 +2099,21 @@ function renderMap(allOccs, flaggedOccs) {
     ctx.lineTo(w, p.y);
     ctx.stroke();
   }
+  // Coastlines (from coastlines.js — 110m Natural Earth via world-atlas, MIT)
+  if (window.SpecimenFinderCoastlines) {
+    ctx.strokeStyle = '#a8a098';
+    ctx.lineWidth = 0.8;
+    window.SpecimenFinderCoastlines.forEach(line => {
+      ctx.beginPath();
+      for (let i = 0; i < line.length; i++) {
+        const p = proj(line[i][1], line[i][0]); // [lon, lat]
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+    });
+  }
+
   ctx.strokeStyle = '#b8b3a8';
   ctx.lineWidth = 1;
   const eq = proj(0, 0);
@@ -2437,8 +2461,10 @@ function openDisambig(candidates, originalQuery) {
   const list = document.getElementById('disambig-list');
   list.innerHTML = '';
   candidates.slice(0, 8).forEach(c => {
-    const item = document.createElement('div');
+    const item = document.createElement('button');
+    item.type = 'button';
     item.className = 'disambig-item';
+    item.style.width = '100%';
     const obsLabel = c.observationCount
       ? `${c.observationCount.toLocaleString()} observations on iNaturalist`
       : 'no observation data';
@@ -2508,6 +2534,13 @@ async function runSearchDirect(speciesName) {
   const name = speciesName;
   if (!name) return;
   document.getElementById('species-input').value = name;
+
+  // Make the current search shareable via URL — no reload
+  try {
+    const params = new URLSearchParams(location.search);
+    params.set('q', name);
+    history.replaceState({}, '', location.pathname + '?' + params.toString());
+  } catch (e) { /* ignore in sandboxed contexts */ }
 
   const mySearchId = ++searchId;
 
@@ -2635,16 +2668,20 @@ function buildFilters(flagged) {
     unimaged: 'Historical, not imaged'
   };
   bar.innerHTML = '<span class="filters-label">Filter:</span>' +
-    `<span class="filter-chip ${activeFilter === 'all' ? 'active' : ''}" data-filter="all">All (${flagged.length})</span>` +
+    `<button type="button" class="filter-chip ${activeFilter === 'all' ? 'active' : ''}" data-filter="all" aria-pressed="${activeFilter === 'all'}">All (${flagged.length})</button>` +
     Object.entries(counts).map(([k, v]) =>
-      `<span class="filter-chip ${activeFilter === k ? 'active' : ''}" data-filter="${k}">${escapeHtml(flagLabels[k] || k)} (${v})</span>`
+      `<button type="button" class="filter-chip ${activeFilter === k ? 'active' : ''}" data-filter="${k}" aria-pressed="${activeFilter === k}">${escapeHtml(flagLabels[k] || k)} (${v})</button>`
     ).join('');
   bar.classList.add('visible');
   bar.querySelectorAll('.filter-chip').forEach(c => {
     c.addEventListener('click', () => {
       activeFilter = c.dataset.filter;
-      bar.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      bar.querySelectorAll('.filter-chip').forEach(x => {
+        x.classList.remove('active');
+        x.setAttribute('aria-pressed', 'false');
+      });
       c.classList.add('active');
+      c.setAttribute('aria-pressed', 'true');
       render();
     });
   });
@@ -2815,6 +2852,26 @@ window.addEventListener('resize', () => {
     if (currentResults.all.length) renderMap(currentResults.all, currentResults.flagged);
   }, 200);
 });
+
+// Close any open modal with Escape
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+
+// Shareable URL: if the page loaded with ?q=<species>, run that search.
+(function loadFromUrl() {
+  try {
+    const q = new URLSearchParams(location.search).get('q');
+    if (q && q.trim()) {
+      document.getElementById('species-input').value = q;
+      // Switch to the name tab so the user sees what's running
+      const nameTab = document.querySelector('.tab[data-tab="name"]');
+      if (nameTab) nameTab.click();
+      runSearch(q);
+    }
+  } catch (e) { /* ignore */ }
+})();
 </script>
 
 </body>

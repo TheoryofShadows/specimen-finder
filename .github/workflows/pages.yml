@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+# Auto-deploys index.html and its assets to GitHub Pages every time main
+# is updated. After this workflow runs successfully once, the live site is at
+# https://<owner>.github.io/<repo>/ and any push refreshes it within ~1 minute.
+#
+# One-time setup (only needed once, by a repo admin):
+#   Repo Settings -> Pages -> Source -> "GitHub Actions"
+# That's it. From then on, every push to main republishes automatically.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Cancel an in-flight deploy if a newer one starts. Don't kill a deploy
+# that's already mid-flight just because someone pushed twice.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -2,9 +2,17 @@
 
 **Identify any plant from a photo. Then find every record of it sitting in the world's herbaria.**
 
+### ▶ [Launch the app](https://theoryofshadows.github.io/specimen-finder/)
+
+Once deployed, the live tool runs in your browser at the link above. No install. No account. No mock data. The "Search by name" tab works immediately; photo ID needs a free Pl@ntNet key (~2 min).
+
+> **First-time setup (one click, repo owner only).** GitHub Pages needs to be enabled once. Go to **Settings → Pages**, set **Source** to **GitHub Actions**, save. The included workflow (`.github/workflows/pages.yml`) will then redeploy automatically on every push to `main`. Live URL: `https://theoryofshadows.github.io/specimen-finder/`.
+
+---
+
 Specimen Finder is a single-page web tool that ties together open botanical data — Pl@ntNet for photo identification, GBIF for specimen records aggregated from 1,800+ herbaria, plus Wikipedia, Wikidata, POWO, and iNaturalist for context — and then flags which of those specimens look unusual: wrong location, wrong era, missing coordinates, or possible label errors.
 
-It is built for botanists, herbarium curators, conservation biologists, students, naturalists, and curious people. No accounts. No tracking. No mock data. No server. Open it in a browser and use it.
+It is built for botanists, herbarium curators, conservation biologists, students, naturalists, and curious people. No accounts. No tracking. No mock data. No server.
 
 ---
 
@@ -22,26 +30,23 @@ No single curator can audit the global pool. So errors accumulate, and important
 
 ## How to use it
 
-### Option A — open `index.html` directly
+The fastest path: open **[the live app](https://theoryofshadows.github.io/specimen-finder/)** and search for a plant. Common names like "swamp milkweed" or scientific names like *Sarracenia purpurea* both work, and you can share a result by copying the URL — every search updates the address bar (`?q=Species+name`).
 
-Download or clone, then double-click `index.html`. The "Search by name" tab works immediately. (Photo identification needs to be served over HTTP because of how the Pl@ntNet API handles browser requests — see Option B.)
+### Run your own copy
 
-### Option B — host as a static page (recommended)
+- **GitHub Pages (recommended).** Fork this repo, flip Settings → Pages → Source to "GitHub Actions" once, and every commit auto-deploys. The included workflow handles it.
+- **Local dev.** `python3 -m http.server 8000` from the repo root, then open `http://localhost:8000`.
+- **Other static hosts.** Netlify / Vercel / Cloudflare Pages — drag-and-drop the repo or connect it. The site is plain HTML/JS, no build step.
+- **Direct file open.** Double-clicking `index.html` works for "Search by name." Photo identification needs HTTPS or localhost because of CORS.
 
-Deploy `index.html` anywhere that serves static files:
+### Photo identification (optional)
 
-- **GitHub Pages**: in the repo Settings → Pages, set Source to your branch and root. The site will be at `https://<user>.github.io/specimen-finder/`.
-- **Netlify / Vercel / Cloudflare Pages**: drag-and-drop `index.html` or connect the repo.
-- **Any static host**: `python3 -m http.server 8000` from this directory, then open `http://localhost:8000`.
-
-### Option C — search by photo
-
-To use photo identification, get a free Pl@ntNet API key (~2 minutes):
+To search by photo, get a free Pl@ntNet API key (~2 minutes):
 
 1. Sign up at [my.plantnet.org](https://my.plantnet.org/)
 2. Verify your email and log in
 3. Account → "API key" → copy
-4. In Specimen Finder, click "Set up photo ID" and paste
+4. In the app, click "Set up photo ID" and paste
 
 Free tier allows 500 identifications per day. The key is stored in your browser's `localStorage` only — never transmitted anywhere except directly to Pl@ntNet.
 

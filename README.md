@@ -120,9 +120,9 @@ These are real and acknowledged:
 
 ---
 
-## Critique — from three angles
+## Honest assessment
 
-The user who commissioned this asked for honest self-critique from a researcher, a developer, and an end user. Here it is.
+This tool surfaces other people's data and asks you to trust the surfacing. Here's a multi-angle look at where it earns that trust and where it doesn't.
 
 ### As a researcher
 
@@ -142,19 +142,40 @@ The user who commissioned this asked for honest self-critique from a researcher,
 
 **What's weak:** a non-botanist seeing "Modified Z-score: 4.2" has no idea what that means even with the inline explanation. A plain-language version like "this specimen is in the 99th percentile of unusual locations for this species" would be friendlier. The map is a dotted grid with no continent outlines, so a Mexican specimen is hard to tell from a Guatemalan one at a glance — adding a simple coastline overlay would dramatically improve the map without adding dependencies. Toxicity warnings are appropriately strong, but a first-time user might bounce off the heavy disclaimers; they're correct, just heavy. And: there's no way to save a search or share a URL of results — which a teacher running this in a classroom would want.
 
----
+### As a mobile user
 
-## Bugs found and fixed in this revision
+**What works:** the layout is responsive, the cards reflow at narrow widths, the input boxes scale, modals are vertically scrollable.
 
-1. **`looksLikeScientificName("Pitcher plant")` returned true,** falsely flagging the query as a Latin binomial and skipping common-name resolution. Fixed with a denylist of common English plant-related nouns.
-2. **GBIF species match was unconstrained,** so an animal or fungal genus with a colliding spelling could win the match. Added `kingdom=Plantae`.
-3. **No warning when GBIF matched at genus or higher rank.** Now flagged with an info status line, since search results then cover the whole genus rather than a single species.
-4. **Race condition:** rapid clicks on different examples could interleave results. Added a `searchId` counter; stale async branches abort cleanly.
-5. **Longitude wraparound** broke the geographic-center calculation for trans-Pacific or circumboreal species. Added circular-statistics median for longitude.
-6. **File input reuse:** re-selecting the same file did nothing because the input's `value` was unchanged. Fixed by clearing `value` after each change event.
-7. **Citation HTML was injected unescaped,** which would have broken on species names containing markup-like characters. Now escaped.
-8. **Status message text** was injected as raw HTML (low risk because all callers are internal, but tightened to escape user-derived strings).
-9. **Pl@ntNet 500/day free-tier limit** wasn't communicated. Added to the setup modal and the rate-limit error message.
+**What's weak:** the live URL can 404 silently if the repo owner forgot to flip a Settings dropdown — and there's no in-page diagnostic explaining why. The Pl@ntNet key-setup modal and the toxicity disclaimer block are heavy on a 6-inch screen and require a lot of scrolling before you find the action button. Map dots render at 2.5–4 px and are effectively un-tappable on a phone; tap-to-inspect a flagged specimen isn't wired up. The example-pill row scrolls horizontally on narrow screens without a visual scroll hint, so users may not realize there are more options to the right. No swipe-to-dismiss on modals. The camera input works, but the photo preview can be bigger than the viewport on portrait phones.
+
+### As a security / privacy reviewer
+
+What data leaves your browser, honestly:
+
+- **Pl@ntNet** sees your photo, your API key, and your IP. You're trusting them with all three.
+- **GBIF, Wikipedia, Wikidata, iNaturalist** each see your species queries plus your IP. PubChem and the toxicity-database links only see traffic if you click them.
+- **No analytics, no third-party trackers, no error-monitoring telemetry.** The map and the outlier analysis are 100% client-side.
+- **All API calls are over HTTPS.**
+
+What's tightened:
+- `escapeHtml` is used at every DOM-injection point that touches external data; the XSS audit was clean at the last commit.
+- Pages serves the site with `x-content-type-options: nosniff`.
+- The Pl@ntNet API key is stored only in your browser's `localStorage` and only sent to `my-api.plantnet.org`.
+
+What's not:
+- **No Content-Security-Policy header.** Setting a strict CSP would meaningfully tighten the threat model — currently a compromised CDN could in principle inject script. (None of the assets are CDN-hosted right now, but the threat surface exists.)
+- **`localStorage` is readable by any same-origin script and by browser extensions** with the right permissions. If you don't trust your installed extensions, don't paste an API key.
+- **Pl@ntNet's privacy policy** governs what they do with the photos you upload. We don't intermediate that — the request goes directly from your browser to their server.
+
+### As an ethnobotanist / Indigenous-knowledge perspective
+
+What this tool is silent on:
+
+- **Western Linnaean taxonomy is the only handle.** Every search, every flag, every link assumes the binomial system as the source of truth. Indigenous and traditional names of plants are absent unless they happen to appear in Wikipedia or iNat as "common names" — and when they do, they're flattened into the same dropdown as English nicknames.
+- **Common-name resolution defaults to English.** iNaturalist returns multilingual data; the app surfaces only `preferred_common_name`. GBIF returns vernacular names in dozens of languages; the app shows the English ones first and counts the rest. A non-English speaker can still search by scientific name, but the disambiguation flow is built for English speakers.
+- **The "Documented uses" panel sources Wikipedia,** which has well-documented issues with how it represents traditional plant knowledge — sometimes erasing attribution, sometimes appropriating without consent. The app's disclaimer addresses *medical* safety but not *provenance* of the knowledge itself.
+- **No links to Indigenous-led databases** like [Native Land Digital](https://native-land.ca/) or the IPBES Indigenous-Local Knowledge platform. A specimen collected on Indigenous land could be enriched with that context; currently it isn't.
+- **"The global botanical record" is treated as GBIF + Kew.** Both are Western institutional projects that aggregate a worldwide record but reflect the priorities of their funders and contributors. The README is upfront about every data source but doesn't explicitly name this institutional framing.
 
 ---
 

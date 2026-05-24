@@ -4,9 +4,13 @@ name: Deploy to GitHub Pages
 # is updated. After this workflow runs successfully once, the live site is at
 # https://<owner>.github.io/<repo>/ and any push refreshes it within ~1 minute.
 #
-# One-time setup (only needed once, by a repo admin):
-#   Repo Settings -> Pages -> Source -> "GitHub Actions"
-# That's it. From then on, every push to main republishes automatically.
+# Forks of this repo: nothing to configure. The configure-pages step below
+# uses enablement: true, which auto-creates the Pages site on first run.
+#
+# For this original repo: Pages was first initialized in "Deploy from a branch"
+# mode, which Jekyll-builds the repo and ignores this workflow. To switch to
+# this workflow's output, go to Settings -> Pages -> Source and pick
+# "GitHub Actions" once. After that, every push to main publishes.
 
 on:
   push:
@@ -35,6 +39,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages on first run for forks. Uses the workflow's
+          # pages: write token. No-op when Pages is already enabled.
+          enablement: true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

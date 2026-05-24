@@ -1,12 +1,14 @@
 # Specimen Finder
 
+[![Deploy](https://github.com/TheoryofShadows/specimen-finder/actions/workflows/pages.yml/badge.svg)](https://github.com/TheoryofShadows/specimen-finder/actions/workflows/pages.yml)
+
 **Identify any plant from a photo. Then find every record of it sitting in the world's herbaria.**
+
+> **First-time setup for this repo (10 seconds, desktop or mobile).** Open **[Settings → Pages](https://github.com/TheoryofShadows/specimen-finder/settings/pages)** and change **Source** from "Deploy from a branch" to **"GitHub Actions"**. The page auto-saves and the included workflow (`.github/workflows/pages.yml`) publishes on the next push to `main`. After this one-time switch, the badge above turns green and the link below works. (Forks of this repo don't need this step — the workflow auto-enables Pages on first run.)
 
 ### ▶ [Launch the app](https://theoryofshadows.github.io/specimen-finder/)
 
-Once deployed, the live tool runs in your browser at the link above. No install. No account. No mock data. The "Search by name" tab works immediately; photo ID needs a free Pl@ntNet key (~2 min).
-
-> **First-time setup (one click, repo owner only).** GitHub Pages needs to be enabled once. Go to **Settings → Pages**, set **Source** to **GitHub Actions**, save. The included workflow (`.github/workflows/pages.yml`) will then redeploy automatically on every push to `main`. Live URL: `https://theoryofshadows.github.io/specimen-finder/`.
+The live tool runs in your browser at the link above — no install, no account, no mock data. The "Search by name" tab works immediately; photo ID needs a free Pl@ntNet key (~2 min).
 
 ---
 
@@ -34,9 +36,9 @@ The fastest path: open **[the live app](https://theoryofshadows.github.io/specim
 
 ### Run your own copy
 
-- **GitHub Pages (recommended).** Fork this repo, flip Settings → Pages → Source to "GitHub Actions" once, and every commit auto-deploys. The included workflow handles it.
+- **GitHub Pages (recommended).** Fork this repo — the included workflow auto-enables Pages on first push to `main` and publishes automatically. Forks don't need to flip the Settings dropdown.
+- **Cloudflare Pages or Netlify** (fallback if your org blocks GitHub Pages). Both accept this repo unchanged: connect the repo, set build command to *(none)*, publish directory to `/`. No code changes needed.
 - **Local dev.** `python3 -m http.server 8000` from the repo root, then open `http://localhost:8000`.
-- **Other static hosts.** Netlify / Vercel / Cloudflare Pages — drag-and-drop the repo or connect it. The site is plain HTML/JS, no build step.
 - **Direct file open.** Double-clicking `index.html` works for "Search by name." Photo identification needs HTTPS or localhost because of CORS.
 
 ### Photo identification (optional)

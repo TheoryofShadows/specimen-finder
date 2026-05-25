@@ -1198,12 +1198,381 @@
     font-style: italic;
   }
 
+  /* Photo strip (living-plant photos) */
+  .photo-strip {
+    display: none;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 6px;
+  }
+  .photo-strip.visible { display: flex; }
+  .photo-strip-thumb {
+    flex: 0 0 auto;
+    width: 130px;
+    height: 130px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    cursor: zoom-in;
+    position: relative;
+    padding: 0;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .photo-strip-thumb:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .photo-strip-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-strip-thumb .photo-strip-credit {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.65));
+    color: white;
+    font-size: 10px;
+    padding: 12px 6px 4px;
+    text-align: left;
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .photo-strip-empty {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 8px 0;
+  }
+
+  /* Compare button + comparing state */
+  .species-compare-wrap { display: flex; align-items: flex-start; }
+  .species-compare-btn {
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .species-compare-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .species-compare-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .compare-banner {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-left: 4px solid #1e40af;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .compare-banner.visible { display: flex; }
+  .compare-banner-sci {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: #1e40af;
+  }
+  .compare-banner-stats {
+    color: var(--text-soft);
+    font-size: 12px;
+  }
+  .compare-banner-clear {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .compare-banner-clear:hover { background: var(--bg); }
+  .legend-dot.compare { background: #1e40af; }
+
+  /* Native-range panel */
+  .native-range {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.55;
+  }
+  .native-range.visible { display: block; }
+  .native-range-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .native-range-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .native-chip {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid var(--green);
+    font-weight: 600;
+  }
+  .native-chip.introduced {
+    background: var(--yellow-light);
+    color: var(--yellow);
+    border-color: var(--yellow);
+  }
+  .native-range-loading {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* Plain-language outlier label */
+  .plain-language {
+    font-size: 12px;
+    color: var(--text-soft);
+    background: var(--bg);
+    border-left: 3px solid var(--accent);
+    padding: 6px 10px;
+    margin-top: 6px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* Annotation widget on each flag card */
+  .annotation-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .annotation-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .annotation-pill {
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 100px;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-card);
+    color: var(--text-soft);
+    cursor: pointer;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.12s;
+  }
+  .annotation-pill:hover { background: var(--bg); }
+  .annotation-pill.selected.confirmed {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+  }
+  .annotation-pill.selected.falsepositive {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .annotation-pill.selected.review {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: white;
+  }
+  .annotation-notes {
+    flex: 1;
+    min-width: 200px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text);
+  }
+  .annotation-notes:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+  .annotation-saved {
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .annotation-saved.visible { opacity: 1; }
+  .specimen-card.annotated-confirmed { border-left: 3px solid var(--red); }
+  .specimen-card.annotated-falsepositive { border-left: 3px solid var(--green); opacity: 0.75; }
+  .specimen-card.annotated-review { border-left: 3px solid var(--yellow); }
+
+  /* Specimen gallery */
+  .gallery-section {
+    display: none;
+    margin-bottom: 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .gallery-section.visible { display: block; }
+  .gallery-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .gallery-title {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .gallery-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  .gallery-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    padding: 14px;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+  .gallery-thumb {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    cursor: zoom-in;
+    position: relative;
+    padding: 0;
+    transition: transform 0.15s;
+  }
+  .gallery-thumb:hover { transform: scale(1.04); z-index: 2; border-color: var(--accent); }
+  .gallery-thumb.flagged { border: 2px solid var(--accent); }
+  .gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .gallery-thumb-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    color: white;
+    font-size: 10px;
+    padding: 14px 6px 4px;
+    font-weight: 600;
+    pointer-events: none;
+    line-height: 1.25;
+  }
+  .gallery-empty {
+    grid-column: 1 / -1;
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  /* Lightbox */
+  .lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 14, 0.92);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 30px;
+  }
+  .lightbox-overlay.open { display: flex; }
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #222;
+  }
+  .lightbox-caption {
+    color: #f4ede1;
+    font-size: 13px;
+    margin-top: 14px;
+    max-width: 600px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .lightbox-caption a {
+    color: #fbbf77;
+    text-decoration: underline;
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    background: transparent;
+    border: none;
+    color: #f4ede1;
+    font-size: 38px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,0.08); }
+
   @media (max-width: 900px) {
     .hero h1 { font-size: 38px; }
     .hero-lead { font-size: 17px; }
     .how-steps { grid-template-columns: 1fr; }
     .summary { grid-template-columns: repeat(2, 1fr); }
     footer .footer-grid { grid-template-columns: 1fr; }
+    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
   }
   @media (max-width: 600px) {
     .container { padding: 0 18px; }
@@ -1215,6 +1584,8 @@
     .candidate-confidence-bar { width: 100%; }
     .tab { font-size: 14px; padding: 14px 12px; }
     .tab-panel { padding: 22px 20px; }
+    .photo-strip-thumb { width: 100px; height: 100px; }
+    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
   }
 </style>
 </head>
@@ -1374,8 +1745,13 @@
         <div class="species-tax" id="species-tax"></div>
         <div class="species-links" id="species-links"></div>
       </div>
+      <div class="species-compare-wrap">
+        <button type="button" class="species-compare-btn" id="compare-btn">+ Compare with another species</button>
+      </div>
     </div>
     <div class="species-summary" id="species-summary"></div>
+    <div class="photo-strip" id="photo-strip" aria-label="Living-plant photos"></div>
+    <div class="native-range" id="native-range"></div>
   </div>
 
   <div class="knowledge-panel" id="knowledge-panel">
@@ -1418,10 +1794,19 @@
     </div>
   </div>
 
+  <div class="compare-banner" id="compare-banner">
+    <div>
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:700;">Comparing with</span>
+      <span class="compare-banner-sci" id="compare-banner-sci"></span>
+    </div>
+    <div class="compare-banner-stats" id="compare-banner-stats"></div>
+    <button type="button" class="compare-banner-clear" id="compare-banner-clear">Clear comparison</button>
+  </div>
+
   <div class="map-section" id="map-section">
     <div class="map-header">
       <div class="map-title">Global distribution</div>
-      <div class="map-legend">
+      <div class="map-legend" id="map-legend">
         <span><span class="legend-dot normal"></span>Specimen</span>
         <span><span class="legend-dot flagged"></span>Flagged specimen</span>
       </div>
@@ -1429,6 +1814,14 @@
     <div id="specimen-map">
       <canvas id="map-canvas" class="map-canvas"></canvas>
     </div>
+  </div>
+
+  <div class="gallery-section" id="gallery-section">
+    <div class="gallery-header">
+      <div class="gallery-title">Specimen photo gallery <span class="gallery-count" id="gallery-count">0</span></div>
+      <div class="gallery-sub">Imaged specimens from this search. Flagged specimens have an orange border.</div>
+    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
   </div>
 
   <div class="results-header" id="results-header">
@@ -1479,6 +1872,13 @@
       All data licensed CC BY or CC BY-NC by source institutions. Specimen Finder itself is an open tool &mdash; no accounts, no tracking, no ads. Your API key stays in your browser.
     </div>
   </footer>
+</div>
+
+<!-- Lightbox modal for gallery + photo strip -->
+<div class="lightbox-overlay" id="lightbox-overlay" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close photo viewer">&times;</button>
+  <img class="lightbox-img" id="lightbox-img" alt="" />
+  <div class="lightbox-caption" id="lightbox-caption"></div>
 </div>
 
 <!-- API key modal -->
@@ -1538,6 +1938,36 @@ let currentResults = { flagged: [], all: [], stats: null, species: null };
 let currentSort = 'priority';
 let activeFilter = 'all';
 let searchId = 0; // Race-condition guard: ignore stale async results
+let compareResults = null; // { species, occs } when a comparison species is loaded
+let nativeRangeCountries = null; // Set of ISO2 country codes considered native for the current species
+
+// Annotation storage (saved/reviewed flag state, persisted per species+occurrence)
+const ANNOTATION_STORE_KEY = 'specimenfinder_annotations_v1';
+function loadAnnotations() {
+  try { return JSON.parse(localStorage.getItem(ANNOTATION_STORE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveAnnotations(obj) {
+  try { localStorage.setItem(ANNOTATION_STORE_KEY, JSON.stringify(obj)); }
+  catch (e) { /* quota or sandbox */ }
+}
+function annotationKey(speciesKey, occKey) {
+  return `${speciesKey || 'unknown'}::${occKey}`;
+}
+function getAnnotation(speciesKey, occKey) {
+  const all = loadAnnotations();
+  return all[annotationKey(speciesKey, occKey)] || null;
+}
+function setAnnotation(speciesKey, occKey, status, notes) {
+  const all = loadAnnotations();
+  const k = annotationKey(speciesKey, occKey);
+  if (!status && !notes) {
+    delete all[k];
+  } else {
+    all[k] = { status: status || null, notes: notes || '', t: Date.now() };
+  }
+  saveAnnotations(all);
+}
 
 // Storage
 function getStoredKey() {
@@ -1964,10 +2394,23 @@ function analyze(occs) {
       const dist = distanceKm(o.decimalLatitude, o.decimalLongitude, latMed, lonMed);
       const zDist = modifiedZScore(dist, geoMed, geoMad);
       if (zDist > 3.5 && dist > 300) {
-        flags.push({ text: 'Far from typical location', class: 'yellow', key: 'geo' });
+        // Native-range context: if we know the native country set and this specimen
+        // is outside it, label as a likely cultivated / introduced record.
+        let rangeNote = '';
+        let rangeBadgeClass = 'yellow';
+        if (nativeRangeCountries && o.countryCode) {
+          if (nativeRangeCountries.has(o.countryCode)) {
+            rangeNote = ` Collected inside the native range (${isoToName(o.countryCode)}), so this is more likely a real range edge than a cultivation.`;
+          } else {
+            rangeNote = ` Collected outside the recorded native range (${isoToName(o.countryCode)} not listed as native by POWO/GBIF) — possibly cultivated or introduced.`;
+            rangeBadgeClass = 'red';
+          }
+        }
+        flags.push({ text: 'Far from typical location', class: rangeBadgeClass, key: 'geo' });
         evidence.push({
-          text: `Collected ${Math.round(dist)} km from the population center (median location of all specimens). Modified Z-score: ${zDist.toFixed(1)} — a value above 3.5 indicates a statistical outlier (Iglewicz & Hoaglin 1993).`,
-          source: `Compared against ${withCoords.length} georeferenced specimens. Method: Median Absolute Deviation.`
+          text: `Collected ${Math.round(dist)} km from the population center (median location of all specimens). Modified Z-score: ${zDist.toFixed(1)} — a value above 3.5 indicates a statistical outlier (Iglewicz & Hoaglin 1993).${rangeNote}`,
+          source: `Compared against ${withCoords.length} georeferenced specimens. Method: Median Absolute Deviation.`,
+          plain: plainLanguageForZ(zDist, 'distance')
         });
         priority += Math.min(0.3 + (zDist - 3.5) * 0.05, 0.5);
       }
@@ -1986,7 +2429,8 @@ function analyze(occs) {
             (isOld
               ? `Among the earliest specimens of this species — irreplaceable historical reference.`
               : `Among the most recent specimens — valuable for confirming current distribution.`),
-          source: `Compared against ${years.length} dated records. Method: Median Absolute Deviation.`
+          source: `Compared against ${years.length} dated records. Method: Median Absolute Deviation.`,
+          plain: plainLanguageForZ(Math.abs(zYear), 'date')
         });
         priority += 0.2;
       }
@@ -2133,6 +2577,16 @@ function renderMap(allOccs, flaggedOccs) {
     ctx.arc(p.x, p.y, isFlagged ? 4 : 2.5, 0, Math.PI * 2);
     ctx.fill();
   });
+  // Comparison species overlay (drawn last so it sits on top)
+  if (compareResults && compareResults.occs.length > 0) {
+    compareResults.occs.forEach(o => {
+      const p = proj(o.decimalLatitude, o.decimalLongitude);
+      ctx.fillStyle = 'rgba(30, 64, 175, 0.55)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
 }
 
 // Knowledge panel: "What's known about this plant"
@@ -2554,6 +3008,14 @@ async function runSearchDirect(speciesName) {
   document.getElementById('knowledge-panel').classList.remove('open');
   document.getElementById('map-section').classList.remove('visible');
   document.getElementById('filters-bar').classList.remove('visible');
+  document.getElementById('gallery-section').classList.remove('visible');
+  document.getElementById('photo-strip').classList.remove('visible');
+  document.getElementById('photo-strip').innerHTML = '';
+  document.getElementById('native-range').classList.remove('visible');
+  document.getElementById('native-range').innerHTML = '';
+  nativeRangeCountries = null;
+  // Clear any previous comparison when starting a fresh search
+  clearComparison();
 
   try {
     status(`Resolving "${name}" against the GBIF taxonomy (plant kingdom)...`);
@@ -2601,11 +3063,34 @@ async function runSearchDirect(speciesName) {
       }
     });
 
+    // Living-plant photo strip (parallel, non-blocking)
+    fetchTaxonPhotos(species.canonicalName || name).then(photos => {
+      if (mySearchId !== searchId) return;
+      renderPhotoStrip(photos);
+    });
+
+    // Native range from GBIF distributions (kick off in parallel; await before
+    // analyze() so flags can incorporate "outside native range" context).
+    document.getElementById('native-range').innerHTML =
+      '<span class="native-range-loading">Fetching native-range data from GBIF/POWO distributions...</span>';
+    document.getElementById('native-range').classList.add('visible');
+    const rangePromise = species.usageKey ? fetchNativeRange(species.usageKey) : Promise.resolve(null);
+
     loadKnowledgePanel(species.canonicalName || name, species, mySearchId);
 
     status(`Fetching specimens from herbaria worldwide...`);
-    const occData = await fetchOccurrences(species.usageKey, 300);
+    const [occData, range] = await Promise.all([
+      fetchOccurrences(species.usageKey, 300),
+      rangePromise
+    ]);
     if (mySearchId !== searchId) return;
+    // Only use native-range tagging when GBIF returned a meaningful native set.
+    // POWO coverage is patchy: many species have 0 or 1 native countries listed
+    // even when the actual range spans continents. Require at least 3 to avoid
+    // per-flag tagging that would mislead more than it helps. The panel itself
+    // still shows whatever's available.
+    nativeRangeCountries = (range && range.native.size >= 3) ? range.native : null;
+    renderNativeRange(range);
     const occs = occData.results || [];
     if (occs.length === 0) {
       status(`No preserved specimens found for this taxon in GBIF.`, 'error');
@@ -2641,6 +3126,9 @@ async function runSearchDirect(speciesName) {
     setTimeout(() => {
       if (mySearchId === searchId) renderMap(occs, flagged);
     }, 50);
+
+    const flaggedKeys = new Set(flagged.map(f => f.key));
+    renderGallery(occs, flaggedKeys);
 
     buildFilters(flagged);
     render();
@@ -2687,6 +3175,296 @@ function buildFilters(flagged) {
   });
 }
 
+// -----------------------------------------------------------------------------
+// Plain-language outlier explanation
+// Maps a modified Z-score (Iglewicz & Hoaglin) to a percentile-like sentence
+// using the conversion z_mod ~ 0.6745 * (x - med) / MAD ≈ 0.6745 * (standard Z).
+// We bucket rather than over-quote a precise percentile (the MAD model isn't
+// strictly Gaussian, so the mapping is approximate by design).
+function plainLanguageForZ(zAbs, dimension) {
+  const what = dimension === 'distance' ? 'unusual a location' : 'unusual a date';
+  if (zAbs >= 6)   return `In plain English: more ${what} than ~99.9% of specimens for this species.`;
+  if (zAbs >= 5)   return `In plain English: more ${what} than ~99.5% of specimens for this species.`;
+  if (zAbs >= 4.2) return `In plain English: more ${what} than ~99% of specimens for this species.`;
+  if (zAbs >= 3.5) return `In plain English: more ${what} than ~95% of specimens for this species.`;
+  return '';
+}
+
+// -----------------------------------------------------------------------------
+// Living-plant photo strip (iNaturalist taxon photos + Wikipedia summary image)
+async function fetchTaxonPhotos(scientificName) {
+  const photos = [];
+  try {
+    // Step 1: resolve the iNaturalist taxon id from the scientific name
+    const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(scientificName) + '&rank=species&is_active=true&per_page=1');
+    if (r.ok) {
+      const data = await r.json();
+      const t = (data.results || []).find(x =>
+        x.name.toLowerCase() === scientificName.toLowerCase()
+      ) || (data.results || [])[0];
+      // Step 2: hit the per-taxon endpoint which reliably returns taxon_photos
+      if (t && t.id) {
+        const detRes = await fetch('https://api.inaturalist.org/v1/taxa/' + t.id);
+        if (detRes.ok) {
+          const detData = await detRes.json();
+          const taxon = (detData.results || [])[0];
+          const taxonPhotos = (taxon && taxon.taxon_photos) || (t && t.taxon_photos) || [];
+          taxonPhotos.slice(0, 8).forEach(p => {
+            const url = p.photo?.medium_url || p.photo?.small_url;
+            if (!url) return;
+            photos.push({
+              thumb: url,
+              full: p.photo?.original_url || p.photo?.large_url || url,
+              credit: p.photo?.attribution || 'iNaturalist',
+              source: 'iNaturalist',
+              sourceUrl: p.photo?.id ? 'https://www.inaturalist.org/photos/' + p.photo.id
+                                     : 'https://www.inaturalist.org/taxa/' + t.id
+            });
+          });
+        }
+      }
+    }
+  } catch (e) { /* ignore */ }
+  try {
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' +
+      encodeURIComponent(scientificName.replace(/ /g, '_')));
+    if (r.ok) {
+      const data = await r.json();
+      if (data.thumbnail?.source) {
+        photos.unshift({
+          thumb: data.thumbnail.source,
+          full: data.originalimage?.source || data.thumbnail.source,
+          credit: 'Wikipedia',
+          source: 'Wikipedia',
+          sourceUrl: data.content_urls?.desktop?.page || ('https://en.wikipedia.org/wiki/' + encodeURIComponent(scientificName.replace(/ /g, '_')))
+        });
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return photos;
+}
+
+function renderPhotoStrip(photos) {
+  const strip = document.getElementById('photo-strip');
+  strip.innerHTML = '';
+  if (!photos || photos.length === 0) {
+    strip.classList.remove('visible');
+    return;
+  }
+  photos.slice(0, 8).forEach(p => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'photo-strip-thumb';
+    btn.innerHTML = `
+      <img src="${escapeHtml(p.thumb)}" alt="Living-plant photo from ${escapeHtml(p.source)}" loading="lazy" />
+      <span class="photo-strip-credit">${escapeHtml(p.source)}</span>
+    `;
+    btn.addEventListener('click', () => openLightbox(p.full, p.credit, p.sourceUrl, p.source));
+    strip.appendChild(btn);
+  });
+  strip.classList.add('visible');
+}
+
+// -----------------------------------------------------------------------------
+// Native-range awareness via GBIF species distributions
+// GBIF's /species/{key}/distributions returns country-level establishment means
+// (Native / Introduced / etc) sourced from POWO and other checklists.
+async function fetchNativeRange(usageKey) {
+  try {
+    const r = await fetch(`https://api.gbif.org/v1/species/${usageKey}/distributions?limit=300`);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const records = data.results || [];
+    const native = new Set();
+    const introduced = new Set();
+    const sources = new Set();
+    records.forEach(d => {
+      const code = d.country; // ISO2
+      if (!code) return;
+      const est = (d.establishmentMeans || '').toLowerCase();
+      // GBIF / POWO use values like NATIVE, INTRODUCED, NATURALISED, UNCERTAIN
+      if (est === 'native' || est === 'endemic') native.add(code);
+      else if (est === 'introduced' || est === 'naturalised' || est === 'invasive' || est === 'cultivated') introduced.add(code);
+      if (d.source) sources.add(d.source);
+    });
+    if (native.size === 0 && introduced.size === 0) return null;
+    return { native, introduced, sourceCount: sources.size };
+  } catch (e) {
+    return null;
+  }
+}
+
+function isoToName(code) {
+  // Tiny ISO2 -> name for the most commonly seen codes. Beyond this we just show the code.
+  const map = {
+    US:'United States',CA:'Canada',MX:'Mexico',BR:'Brazil',AR:'Argentina',CL:'Chile',
+    GB:'United Kingdom',IE:'Ireland',FR:'France',DE:'Germany',IT:'Italy',ES:'Spain',
+    PT:'Portugal',NL:'Netherlands',BE:'Belgium',CH:'Switzerland',AT:'Austria',
+    PL:'Poland',CZ:'Czechia',SE:'Sweden',NO:'Norway',FI:'Finland',DK:'Denmark',
+    RU:'Russia',UA:'Ukraine',TR:'Türkiye',GR:'Greece',
+    CN:'China',JP:'Japan',KR:'South Korea',IN:'India',PK:'Pakistan',ID:'Indonesia',
+    AU:'Australia',NZ:'New Zealand',ZA:'South Africa',KE:'Kenya',EG:'Egypt',
+    NG:'Nigeria',MA:'Morocco',TH:'Thailand',VN:'Vietnam',PH:'Philippines',MY:'Malaysia',
+    CR:'Costa Rica',CO:'Colombia',PE:'Peru',VE:'Venezuela',EC:'Ecuador',BO:'Bolivia',
+    GT:'Guatemala',CU:'Cuba',DO:'Dominican Republic',HT:'Haiti',JM:'Jamaica'
+  };
+  return map[code] || code;
+}
+
+function renderNativeRange(range) {
+  const el = document.getElementById('native-range');
+  if (!range) { el.classList.remove('visible'); el.innerHTML = ''; return; }
+  const nativeArr = [...range.native].sort();
+  const introArr = [...range.introduced].filter(c => !range.native.has(c)).sort();
+  let html = '<div class="native-range-title">Native range <span style="font-weight:400;color:var(--text-muted);font-size:11px">(via GBIF / POWO distribution data)</span></div>';
+  if (nativeArr.length > 0) {
+    html += '<div>Recorded as native in ' + nativeArr.length + ' countries.</div>';
+    html += '<div class="native-range-chips">' +
+      nativeArr.slice(0, 14).map(c => `<span class="native-chip" title="ISO2: ${escapeHtml(c)}">${escapeHtml(isoToName(c))}</span>`).join('') +
+      (nativeArr.length > 14 ? `<span style="font-size:11px;color:var(--text-muted);align-self:center">+${nativeArr.length - 14} more</span>` : '') +
+    '</div>';
+  } else {
+    html += '<div>No native-range data in GBIF for this species.</div>';
+  }
+  if (introArr.length > 0) {
+    html += '<div style="margin-top:8px">Also recorded as introduced / naturalised in:</div>';
+    html += '<div class="native-range-chips">' +
+      introArr.slice(0, 10).map(c => `<span class="native-chip introduced" title="ISO2: ${escapeHtml(c)}">${escapeHtml(isoToName(c))}</span>`).join('') +
+      (introArr.length > 10 ? `<span style="font-size:11px;color:var(--text-muted);align-self:center">+${introArr.length - 10} more</span>` : '') +
+    '</div>';
+  }
+  el.innerHTML = html;
+  el.classList.add('visible');
+}
+
+// -----------------------------------------------------------------------------
+// Specimen photo gallery — every loaded specimen that has an image
+function renderGallery(allOccs, flaggedKeys) {
+  const sec = document.getElementById('gallery-section');
+  const grid = document.getElementById('gallery-grid');
+  const count = document.getElementById('gallery-count');
+  grid.innerHTML = '';
+  const withImages = allOccs.filter(o => o.media && o.media[0] && o.media[0].identifier);
+  count.textContent = withImages.length.toLocaleString();
+  if (withImages.length === 0) {
+    grid.innerHTML = '<div class="gallery-empty">None of the loaded specimens have digital images attached to the GBIF record.</div>';
+    sec.classList.add('visible');
+    return;
+  }
+  withImages.forEach(o => {
+    const img = o.media[0].identifier;
+    const inst = o.institutionCode || 'Unknown';
+    const year = o.year || '—';
+    const place = o.country || '';
+    const isFlagged = flaggedKeys.has(o.key);
+    const caption = `${o.scientificName || o.species || ''} · ${inst} · ${year}${place ? ' · ' + place : ''}`;
+    const gbifUrl = `https://www.gbif.org/occurrence/${o.key}`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'gallery-thumb' + (isFlagged ? ' flagged' : '');
+    btn.innerHTML = `
+      <img src="${escapeHtml(img)}" alt="Specimen ${escapeHtml(String(inst))} ${escapeHtml(String(year))}" loading="lazy" />
+      <span class="gallery-thumb-label">${escapeHtml(inst)} · ${escapeHtml(String(year))}</span>
+    `;
+    btn.addEventListener('click', () => openLightbox(img, caption, gbifUrl, 'GBIF record'));
+    grid.appendChild(btn);
+  });
+  sec.classList.add('visible');
+}
+
+// -----------------------------------------------------------------------------
+// Lightbox
+function openLightbox(imgUrl, caption, sourceUrl, sourceLabel) {
+  const overlay = document.getElementById('lightbox-overlay');
+  document.getElementById('lightbox-img').src = imgUrl;
+  document.getElementById('lightbox-img').alt = caption || 'Photo';
+  const capEl = document.getElementById('lightbox-caption');
+  capEl.innerHTML = escapeHtml(caption || '') +
+    (sourceUrl ? ` &middot; <a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(sourceLabel || 'source')} &rarr;</a>` : '');
+  overlay.classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox-overlay').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.getElementById('lightbox-overlay').addEventListener('click', e => {
+  if (e.target.id === 'lightbox-overlay') closeLightbox();
+});
+
+// -----------------------------------------------------------------------------
+// Compare-two-species: prompt for a second species, fetch its occurrences, overlay.
+function clearComparison() {
+  compareResults = null;
+  document.getElementById('compare-banner').classList.remove('visible');
+  document.getElementById('compare-btn').classList.remove('active');
+  document.getElementById('compare-btn').textContent = '+ Compare with another species';
+  // Remove compare legend entry
+  const cmpLegend = document.getElementById('compare-legend');
+  if (cmpLegend) cmpLegend.remove();
+  if (currentResults.all.length) renderMap(currentResults.all, currentResults.flagged);
+}
+async function startComparison() {
+  if (!currentResults.species) {
+    alert('Run a search first, then add a comparison species.');
+    return;
+  }
+  const second = prompt('Compare this species with another. Enter a scientific or common name:');
+  if (!second || !second.trim()) return;
+  const btn = document.getElementById('compare-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading comparison...';
+  try {
+    // Resolve common name → scientific if needed
+    let sciName = second.trim();
+    if (!looksLikeScientificName(sciName)) {
+      const cands = await resolveCommonName(sciName);
+      if (cands.length === 0) {
+        alert(`No plant match for "${sciName}". Try a scientific name.`);
+        return;
+      }
+      sciName = cands[0].scientificName;
+    }
+    const species = await fetchSpecies(sciName);
+    if (!species.usageKey) {
+      alert(`GBIF could not match "${sciName}".`);
+      return;
+    }
+    const occData = await fetchOccurrences(species.usageKey, 300);
+    const occs = (occData.results || []).filter(o =>
+      typeof o.decimalLatitude === 'number' && typeof o.decimalLongitude === 'number' &&
+      !(o.decimalLatitude === 0 && o.decimalLongitude === 0)
+    );
+    compareResults = { species, occs, totalAvail: occData.count || occs.length };
+    // Update UI
+    document.getElementById('compare-banner-sci').textContent = ' ' + species.scientificName;
+    document.getElementById('compare-banner-stats').textContent =
+      `${occs.length.toLocaleString()} georeferenced specimens overlaid in blue (of ${compareResults.totalAvail.toLocaleString()} available).`;
+    document.getElementById('compare-banner').classList.add('visible');
+    btn.classList.add('active');
+    btn.textContent = '✓ Comparing — change';
+    // Add legend entry if not present
+    const legend = document.getElementById('map-legend');
+    if (legend && !document.getElementById('compare-legend')) {
+      const span = document.createElement('span');
+      span.id = 'compare-legend';
+      span.innerHTML = '<span class="legend-dot compare"></span>Comparison species';
+      legend.appendChild(span);
+    }
+    if (currentResults.all.length) renderMap(currentResults.all, currentResults.flagged);
+  } catch (e) {
+    alert('Comparison failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    if (!compareResults) {
+      btn.textContent = '+ Compare with another species';
+    }
+  }
+}
+document.getElementById('compare-btn').addEventListener('click', startComparison);
+document.getElementById('compare-banner-clear').addEventListener('click', clearComparison);
+
 function render() {
   const list = document.getElementById('specimen-list');
   list.innerHTML = '';
@@ -2708,6 +3486,7 @@ function render() {
     return;
   }
 
+  const speciesKey = currentResults.species?.usageKey || currentResults.species?.canonicalName || '';
   sorted.forEach(s => {
     const card = document.createElement('div');
     card.className = 'specimen-card';
@@ -2721,10 +3500,16 @@ function render() {
     const gbifUrl = `https://www.gbif.org/occurrence/${s.key}`;
     const levelLabel = { high: 'High priority', med: 'Medium', low: 'Low priority' }[s.level];
 
+    const annotation = getAnnotation(speciesKey, s.key);
+    if (annotation && annotation.status) card.classList.add('annotated-' + annotation.status);
+
     const citation = `GBIF.org (${new Date().getFullYear()}). Occurrence Download. ` +
       `${s.scientificName || s.species} specimen, ${inst} #${cat}, ` +
       `collected ${year}${collector !== 'unknown collector' ? ' by ' + collector : ''}, ${truncPlace}. ` +
       `https://www.gbif.org/occurrence/${s.key}`;
+
+    const firstEvidence = s.evidence[0];
+    const firstPlain = firstEvidence?.plain ? `<div class="plain-language">${escapeHtml(firstEvidence.plain)}</div>` : '';
 
     card.innerHTML = `
       <div class="specimen-top">
@@ -2740,21 +3525,23 @@ function render() {
       <div class="flags-row">
         ${s.flags.map(f => `<span class="flag-pill ${f.class}">${escapeHtml(f.text)}</span>`).join('')}
       </div>
-      <div class="reason-text">${escapeHtml(s.evidence[0]?.text || '')}</div>
+      <div class="reason-text">${escapeHtml(firstEvidence?.text || '')}</div>
+      ${firstPlain}
       <div class="action-row">
         <a href="${gbifUrl}" target="_blank" rel="noopener" class="view-link">View specimen record</a>
         <button class="details-toggle">Show all evidence</button>
+        ${imgUrl ? '<button class="view-photo-btn" style="background:transparent;border:1px solid var(--line-strong);color:var(--text-soft);font-family:Inter;font-size:13px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer">View photo</button>' : ''}
         <button class="cite-btn">Cite</button>
       </div>
       <div class="details-panel">
         <div class="details-grid">
-          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="specimen-image" alt="Specimen photo" loading="lazy" />` : '<div></div>'}
+          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="specimen-image" alt="Specimen photo" loading="lazy" style="cursor:zoom-in" />` : '<div></div>'}
           <div>
             <div class="details-section">
               <h4>All evidence (${s.evidence.length})</h4>
               <ul class="evidence-list">
                 ${s.evidence.map(e => `
-                  <li>${escapeHtml(e.text)}<span class="evidence-source">Source: ${escapeHtml(e.source)}</span></li>
+                  <li>${escapeHtml(e.text)}${e.plain ? `<div class="plain-language">${escapeHtml(e.plain)}</div>` : ''}<span class="evidence-source">Source: ${escapeHtml(e.source)}</span></li>
                 `).join('')}
               </ul>
             </div>
@@ -2771,6 +3558,14 @@ function render() {
             </div>
           </div>
         </div>
+      </div>
+      <div class="annotation-row">
+        <span class="annotation-label">Mark:</span>
+        <button type="button" class="annotation-pill ${annotation?.status === 'confirmed' ? 'selected confirmed' : ''}" data-status="confirmed">Confirmed real</button>
+        <button type="button" class="annotation-pill ${annotation?.status === 'falsepositive' ? 'selected falsepositive' : ''}" data-status="falsepositive">False positive</button>
+        <button type="button" class="annotation-pill ${annotation?.status === 'review' ? 'selected review' : ''}" data-status="review">Needs review</button>
+        <input type="text" class="annotation-notes" placeholder="Notes (optional, saved in this browser)" value="${escapeHtml(annotation?.notes || '')}" />
+        <span class="annotation-saved" aria-live="polite">Saved</span>
       </div>
     `;
     const toggle = card.querySelector('.details-toggle');
@@ -2794,6 +3589,57 @@ function render() {
         setTimeout(() => copyBtn.textContent = 'Copy citation', 1500);
       });
     });
+
+    // Specimen image lightbox
+    const specImg = card.querySelector('.specimen-image');
+    if (specImg) {
+      specImg.addEventListener('click', () => {
+        openLightbox(imgUrl, `${s.scientificName || s.species} · ${inst} · ${year} · ${truncPlace}`, gbifUrl, 'GBIF record');
+      });
+    }
+    const viewPhotoBtn = card.querySelector('.view-photo-btn');
+    if (viewPhotoBtn) {
+      viewPhotoBtn.addEventListener('click', () => {
+        openLightbox(imgUrl, `${s.scientificName || s.species} · ${inst} · ${year} · ${truncPlace}`, gbifUrl, 'GBIF record');
+      });
+    }
+
+    // Annotation pills
+    const savedFlash = card.querySelector('.annotation-saved');
+    const notesInput = card.querySelector('.annotation-notes');
+    const flashSaved = () => {
+      savedFlash.classList.add('visible');
+      clearTimeout(savedFlash._t);
+      savedFlash._t = setTimeout(() => savedFlash.classList.remove('visible'), 1200);
+    };
+    card.querySelectorAll('.annotation-pill').forEach(p => {
+      p.addEventListener('click', () => {
+        const target = p.dataset.status;
+        const current = getAnnotation(speciesKey, s.key);
+        const nextStatus = current?.status === target ? null : target;
+        setAnnotation(speciesKey, s.key, nextStatus, notesInput.value.trim());
+        // Update pill UI
+        card.querySelectorAll('.annotation-pill').forEach(x => {
+          x.classList.remove('selected', 'confirmed', 'falsepositive', 'review');
+          if (x.dataset.status === nextStatus) {
+            x.classList.add('selected', nextStatus);
+          }
+        });
+        card.classList.remove('annotated-confirmed', 'annotated-falsepositive', 'annotated-review');
+        if (nextStatus) card.classList.add('annotated-' + nextStatus);
+        flashSaved();
+      });
+    });
+    let notesTimer;
+    notesInput.addEventListener('input', () => {
+      clearTimeout(notesTimer);
+      notesTimer = setTimeout(() => {
+        const current = getAnnotation(speciesKey, s.key);
+        setAnnotation(speciesKey, s.key, current?.status || null, notesInput.value.trim());
+        flashSaved();
+      }, 400);
+    });
+
     list.appendChild(card);
   });
 }
@@ -2801,14 +3647,18 @@ function render() {
 // Export CSV
 document.getElementById('export-csv').addEventListener('click', () => {
   if (!currentResults.flagged.length) return;
+  const speciesKey = currentResults.species?.usageKey || currentResults.species?.canonicalName || '';
   const rows = [
-    ['scientificName','institutionCode','catalogNumber','year','recordedBy','country','locality','decimalLatitude','decimalLongitude','flags','gbifURL'].join(',')
+    ['scientificName','institutionCode','catalogNumber','year','recordedBy','country','locality','decimalLatitude','decimalLongitude','flags','reviewStatus','reviewNotes','gbifURL'].join(',')
   ];
   currentResults.flagged.forEach(s => {
+    const ann = getAnnotation(speciesKey, s.key);
     const r = [
       s.scientificName, s.institutionCode, s.catalogNumber, s.year,
       s.recordedBy, s.country, s.locality, s.decimalLatitude, s.decimalLongitude,
       s.flags.map(f => f.text).join('; '),
+      ann?.status || '',
+      ann?.notes || '',
       `https://www.gbif.org/occurrence/${s.key}`
     ].map(v => {
       if (v === undefined || v === null) return '';
@@ -2853,10 +3703,11 @@ window.addEventListener('resize', () => {
   }, 200);
 });
 
-// Close any open modal with Escape
+// Close any open modal or lightbox with Escape
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  closeLightbox();
 });
 
 // Shareable URL: if the page loaded with ?q=<species>, run that search.

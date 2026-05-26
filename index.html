@@ -1566,6 +1566,259 @@
   }
   .lightbox-close:hover { background: rgba(255,255,255,0.08); }
 
+  /* Time machine (decade slider + histogram + play) */
+  .time-machine {
+    padding: 14px 20px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+  }
+  .time-machine[hidden] { display: none; }
+  .tm-row { display: flex; align-items: center; gap: 14px; }
+  .tm-row-meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .tm-hint kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+  .tm-undated {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tm-playbtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s;
+  }
+  .tm-playbtn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .tm-playbtn.playing { background: var(--accent); color: white; border-color: var(--accent); }
+  .tm-range-wrap {
+    position: relative;
+    flex: 1;
+    height: 64px;
+    min-width: 240px;
+  }
+  .tm-histogram {
+    position: absolute;
+    inset: 0 0 26px 0;
+    width: 100%;
+    height: 38px;
+    pointer-events: none;
+  }
+  .tm-slider {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    margin: 0;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 26px;
+  }
+  .tm-slider::-webkit-slider-runnable-track {
+    height: 3px;
+    background: var(--line);
+    border-radius: 3px;
+  }
+  .tm-slider::-moz-range-track {
+    height: 3px;
+    background: var(--line);
+    border-radius: 3px;
+  }
+  .tm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    pointer-events: auto;
+    margin-top: -7px;
+  }
+  .tm-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .tm-readout {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-soft);
+    white-space: nowrap;
+    text-align: right;
+    min-width: 180px;
+    flex: 0 0 auto;
+  }
+  .tm-readout strong { color: var(--text); font-weight: 700; }
+
+  /* Climate envelope panel */
+  .climate-envelope {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.55;
+  }
+  .climate-envelope.visible { display: block; }
+  .climate-envelope.loading { display: block; color: var(--text-muted); font-style: italic; }
+  .climate-envelope-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .climate-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .climate-stat {
+    background: var(--bg);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+  }
+  .climate-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .climate-stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .climate-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Community-curation badges */
+  .community-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .community-row-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .community-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+  .community-badge.confirmed {
+    background: var(--red-light);
+    color: var(--red);
+    border-color: var(--red);
+  }
+  .community-badge.falsepositive {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .community-badge.review {
+    background: var(--yellow-light);
+    color: var(--yellow);
+    border-color: var(--yellow);
+  }
+  .community-detail-list {
+    margin-top: 10px;
+    padding: 0;
+    list-style: none;
+    font-size: 12px;
+    border-top: 1px dashed var(--line);
+    padding-top: 10px;
+  }
+  .community-detail-list li {
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--line);
+  }
+  .community-detail-list li:last-child { border-bottom: none; }
+  .community-detail-author {
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .specimen-card.community-falsepositive {
+    opacity: 0.65;
+    border-left: 3px solid var(--green);
+  }
+  .share-community-btn {
+    background: var(--bg);
+    border: 1px dashed var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .share-community-btn:hover {
+    border-color: var(--accent);
+    border-style: solid;
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .share-community-btn.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
   @media (max-width: 900px) {
     .hero h1 { font-size: 38px; }
     .hero-lead { font-size: 17px; }
@@ -1573,6 +1826,8 @@
     .summary { grid-template-columns: repeat(2, 1fr); }
     footer .footer-grid { grid-template-columns: 1fr; }
     .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .tm-readout { min-width: 0; text-align: left; }
+    .tm-row { flex-wrap: wrap; }
   }
   @media (max-width: 600px) {
     .container { padding: 0 18px; }
@@ -1752,6 +2007,7 @@
     <div class="species-summary" id="species-summary"></div>
     <div class="photo-strip" id="photo-strip" aria-label="Living-plant photos"></div>
     <div class="native-range" id="native-range"></div>
+    <div class="climate-envelope" id="climate-envelope"></div>
   </div>
 
   <div class="knowledge-panel" id="knowledge-panel">
@@ -1813,6 +2069,21 @@
     </div>
     <div id="specimen-map">
       <canvas id="map-canvas" class="map-canvas"></canvas>
+    </div>
+    <div class="time-machine" id="time-machine" hidden>
+      <div class="tm-row tm-row-controls">
+        <button type="button" class="tm-playbtn" id="tm-playbtn" aria-label="Play timeline">&#9654;</button>
+        <div class="tm-range-wrap">
+          <canvas class="tm-histogram" id="tm-histogram" aria-hidden="true"></canvas>
+          <input type="range" class="tm-slider tm-start" id="tm-start" aria-label="Start year" />
+          <input type="range" class="tm-slider tm-end" id="tm-end" aria-label="End year" />
+        </div>
+        <div class="tm-readout" id="tm-readout"></div>
+      </div>
+      <div class="tm-row tm-row-meta">
+        <label class="tm-undated"><input type="checkbox" id="tm-show-undated" checked /> Show specimens without a date</label>
+        <span class="tm-hint">Scrub the slider to filter the map. Press <kbd>Play</kbd> to animate.</span>
+      </div>
     </div>
   </div>
 
@@ -1894,9 +2165,16 @@
     </ol>
     <input type="text" class="modal-input" id="api-key-input" placeholder="Paste your Pl@ntNet API key here" autocomplete="off" />
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">Your key is stored only in this browser, never sent anywhere except directly to Pl@ntNet. You can change or remove it anytime.</p>
+
+    <hr style="margin: 22px 0 18px; border: none; border-top: 1px solid var(--line);" />
+    <h2 style="font-size: 18px;">Optional: share annotations with the community</h2>
+    <p>If you want to contribute your "False positive / Confirmed / Needs review" annotations to the public community record, paste a GitHub <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Personal Access Token</a> with <code>public_repo</code> scope. Reads are always public &mdash; you only need a token to <em>post</em> annotations. The token stays in your browser; it's never sent anywhere except directly to GitHub.</p>
+    <input type="password" class="modal-input" id="github-pat-input" placeholder="ghp_... (only needed if you want to share annotations)" autocomplete="off" />
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">Recommended scope: <code>public_repo</code> only. The community archive lives at <a href="https://github.com/TheoryofShadows/specimen-finder-annotations" target="_blank" rel="noopener" style="color:var(--accent)">TheoryofShadows/specimen-finder-annotations</a>.</p>
+
     <div class="modal-actions">
       <button class="modal-btn cancel" id="modal-cancel">Skip &mdash; I'll search by name</button>
-      <button class="modal-btn save" id="modal-save">Save key</button>
+      <button class="modal-btn save" id="modal-save">Save</button>
     </div>
   </div>
 </div>
@@ -1940,6 +2218,11 @@ let activeFilter = 'all';
 let searchId = 0; // Race-condition guard: ignore stale async results
 let compareResults = null; // { species, occs } when a comparison species is loaded
 let nativeRangeCountries = null; // Set of ISO2 country codes considered native for the current species
+let climateCache = null; // { occKey: {t2m, prec} } for the current search
+let climateEnvelope = null; // { tMed, tMad, pMed, pMad, n }
+let timeWindow = { start: null, end: null, playing: false, speed: 80, showUndated: true };
+let timeAnimHandle = null;
+let communityAnnotations = new Map(); // occKey -> [{status, notes, author, url, ts}]
 
 // Annotation storage (saved/reviewed flag state, persisted per species+occurrence)
 const ANNOTATION_STORE_KEY = 'specimenfinder_annotations_v1';
@@ -1970,13 +2253,20 @@ function setAnnotation(speciesKey, occKey, status, notes) {
 }
 
 // Storage
-function getStoredKey() {
-  try { return localStorage.getItem('plantnet_api_key') || null; }
-  catch (e) { return window.__plantnet_key__ || null; }
+function getStoredKey(name) {
+  const key = name || 'plantnet_api_key';
+  try { return localStorage.getItem(key) || null; }
+  catch (e) { return (window.__keys__ && window.__keys__[key]) || null; }
 }
-function setStoredKey(key) {
-  try { localStorage.setItem('plantnet_api_key', key); }
-  catch (e) { window.__plantnet_key__ = key; }
+function setStoredKey(value, name) {
+  const key = name || 'plantnet_api_key';
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch (e) {
+    window.__keys__ = window.__keys__ || {};
+    window.__keys__[key] = value || null;
+  }
 }
 
 function updateApiStatus() {
@@ -2000,6 +2290,7 @@ function updateApiStatus() {
 // Modals
 function openKeyModal() {
   document.getElementById('api-key-input').value = plantnetKey || '';
+  document.getElementById('github-pat-input').value = getStoredKey('github_pat') || '';
   document.getElementById('modal-overlay').classList.add('open');
 }
 function closeKeyModal() {
@@ -2018,12 +2309,15 @@ document.getElementById('modal-cancel').addEventListener('click', closeKeyModal)
 document.getElementById('about-close').addEventListener('click', closeAboutModal);
 document.getElementById('modal-save').addEventListener('click', () => {
   const key = document.getElementById('api-key-input').value.trim();
-  if (key) { plantnetKey = key; setStoredKey(key); }
+  const pat = document.getElementById('github-pat-input').value.trim();
+  plantnetKey = key || null;
+  setStoredKey(key || null, 'plantnet_api_key');
+  setStoredKey(pat || null, 'github_pat');
   updateApiStatus();
   closeKeyModal();
 });
 
-plantnetKey = getStoredKey();
+plantnetKey = getStoredKey('plantnet_api_key');
 updateApiStatus();
 
 // Activate-on-Enter/Space for elements with role="button" that aren't native buttons
@@ -2488,6 +2782,63 @@ function analyze(occs) {
   });
   return flagged;
 }
+// Apply climate-envelope flags after NASA POWER data has been fetched.
+// Mutates the flagged list AND can add specimens that were previously unflagged.
+function applyClimateFlags(allOccs, flagged) {
+  if (!climateCache || !climateEnvelope) return flagged;
+  const { tMed, tMad, pMed, pMad } = climateEnvelope;
+  if (!tMad || !pMad) return flagged;
+  const byKey = new Map(flagged.map(f => [f.key, f]));
+  allOccs.forEach(o => {
+    const c = climateCache[o.key];
+    if (!c) return;
+    const zt = modifiedZScore(c.t2m, tMed, tMad);
+    const zp = modifiedZScore(c.prec, pMed, pMad);
+    if (Math.abs(zt) <= 3.5 && Math.abs(zp) <= 3.5) return;
+    const dominant = Math.abs(zt) > Math.abs(zp) ? 'temperature' : 'precipitation';
+    const dir = (dominant === 'temperature')
+      ? (zt < 0 ? 'colder' : 'warmer')
+      : (zp < 0 ? 'drier' : 'wetter');
+    const text = `Climate outlier (${dominant} — ${dir})`;
+    const evidenceText = `Site climate: ${c.t2m.toFixed(1)} °C mean annual temperature, ${Math.round(c.prec)} mm annual precipitation. ` +
+      `Species envelope: ${tMed.toFixed(1)} °C ± ${tMad.toFixed(1)}, ${Math.round(pMed)} ± ${Math.round(pMad)} mm. ` +
+      `Modified Z-scores: T=${zt.toFixed(1)}, P=${zp.toFixed(1)}. ` +
+      `This specimen falls outside the species' typical climate envelope on ${dominant}.`;
+    const plain = plainLanguageForZ(Math.max(Math.abs(zt), Math.abs(zp)), 'distance')
+      .replace('unusual a location', `${dir}-climate site`);
+    const existing = byKey.get(o.key);
+    if (existing) {
+      existing.flags.push({ text, class: 'red', key: 'climate' });
+      existing.evidence.push({
+        text: evidenceText,
+        source: `NASA POWER 30-year climate normals (community=AG, parameters=T2M,PRECTOTCORR)`,
+        plain
+      });
+      existing.priority = Math.min(0.99, existing.priority + 0.2);
+      if (existing.priority >= 0.5) existing.level = 'high';
+      else if (existing.priority >= 0.25) existing.level = 'med';
+      existing.falsify = makeFalsify(existing.flags);
+    } else {
+      const priority = 0.25;
+      const f = {
+        ...o,
+        flags: [{ text, class: 'red', key: 'climate' }],
+        evidence: [{
+          text: evidenceText,
+          source: 'NASA POWER 30-year climate normals',
+          plain
+        }],
+        priority,
+        level: 'med',
+        falsify: makeFalsify([{ text, class: 'red', key: 'climate' }])
+      };
+      flagged.push(f);
+      byKey.set(o.key, f);
+    }
+  });
+  return flagged;
+}
+
 function makeFalsify(flags) {
   const t = flags.map(f => f.text);
   if (t.some(x => x.includes('Far from typical'))) {
@@ -2504,6 +2855,9 @@ function makeFalsify(flags) {
   }
   if (t.some(x => x.includes('Very old') || x.includes('Recent'))) {
     return 'For a temporal outlier: verify the collection date on the original label. Verification confirms or corrects the historical or recent record.';
+  }
+  if (t.some(x => x.includes('Climate outlier'))) {
+    return 'Cross-check the coordinates against WorldClim or local meteorological records. If the climate really is outside the species\' typical envelope, this may be a range-shift specimen worth reporting; if not, the coordinates may need correction.';
   }
   return 'Open the specimen record and verify the flagged fields against the physical specimen or its label image.';
 }
@@ -2567,19 +2921,34 @@ function renderMap(allOccs, flaggedOccs) {
   ctx.stroke();
 
   const flaggedKeys = new Set(flaggedOccs.map(f => f.key));
+  const passesTime = (o) => {
+    if (timeWindow.start === null || timeWindow.end === null) return true;
+    if (!o.year) return timeWindow.showUndated;
+    return o.year >= timeWindow.start && o.year <= timeWindow.end;
+  };
   allOccs.forEach(o => {
     if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
     if (o.decimalLatitude === 0 && o.decimalLongitude === 0) return;
+    const visible = passesTime(o);
     const p = proj(o.decimalLatitude, o.decimalLongitude);
     const isFlagged = flaggedKeys.has(o.key);
-    ctx.fillStyle = isFlagged ? '#c2410c' : 'rgba(90, 90, 90, 0.45)';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, isFlagged ? 4 : 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    if (visible) {
+      ctx.fillStyle = isFlagged ? '#c2410c' : 'rgba(90, 90, 90, 0.45)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, isFlagged ? 4 : 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Out-of-window dots are kept as a faint ghost so the user perceives motion
+      ctx.fillStyle = 'rgba(140, 140, 140, 0.08)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
   });
   // Comparison species overlay (drawn last so it sits on top)
   if (compareResults && compareResults.occs.length > 0) {
     compareResults.occs.forEach(o => {
+      if (!passesTime(o)) return;
       const p = proj(o.decimalLatitude, o.decimalLongitude);
       ctx.fillStyle = 'rgba(30, 64, 175, 0.55)';
       ctx.beginPath();
@@ -3014,6 +3383,13 @@ async function runSearchDirect(speciesName) {
   document.getElementById('native-range').classList.remove('visible');
   document.getElementById('native-range').innerHTML = '';
   nativeRangeCountries = null;
+  climateCache = null;
+  climateEnvelope = null;
+  communityAnnotations = new Map();
+  document.getElementById('climate-envelope').classList.remove('visible', 'loading');
+  document.getElementById('climate-envelope').innerHTML = '';
+  document.getElementById('time-machine').hidden = true;
+  stopTimeAnim();
   // Clear any previous comparison when starting a fresh search
   clearComparison();
 
@@ -3113,7 +3489,7 @@ async function runSearchDirect(speciesName) {
     document.getElementById('stat-geo-sub').textContent = `${stats.withCoords.length} georeferenced`;
 
     status(`Analyzing for anomalies...`);
-    const flagged = analyze(occs).sort((a,b) => b.priority - a.priority);
+    let flagged = analyze(occs).sort((a,b) => b.priority - a.priority);
     document.getElementById('stat-flagged').textContent = flagged.length;
     document.getElementById('stat-flagged-sub').textContent = `${Math.round(100 * flagged.length / occs.length)}% of loaded records`;
     document.getElementById('summary').classList.add('visible');
@@ -3123,6 +3499,10 @@ async function runSearchDirect(speciesName) {
     currentResults = { flagged, all: occs, stats, species };
 
     document.getElementById('map-section').classList.add('visible');
+    // Time machine is per-search; reset window so it picks up fresh range
+    timeWindow.start = timeWindow.end = null;
+    stopTimeAnim();
+    renderTimeMachine();
     setTimeout(() => {
       if (mySearchId === searchId) renderMap(occs, flagged);
     }, 50);
@@ -3132,6 +3512,36 @@ async function runSearchDirect(speciesName) {
 
     buildFilters(flagged);
     render();
+
+    // Climate envelope + community curation kick off in the background after
+    // the initial render so the user sees results immediately.
+    document.getElementById('climate-envelope').classList.add('visible', 'loading');
+    document.getElementById('climate-envelope').innerHTML =
+      '<div class="climate-envelope-title">Climate envelope</div><div>Fetching 30-year climate normals from NASA POWER for each specimen...</div>';
+
+    Promise.allSettled([
+      fetchClimateForOccurrences(occs, mySearchId),
+      species.usageKey ? fetchCommunityAnnotations(species.usageKey) : Promise.resolve()
+    ]).then(() => {
+      if (mySearchId !== searchId) return;
+      document.getElementById('climate-envelope').classList.remove('loading');
+      computeClimateEnvelope();
+      flagged = applyClimateFlags(occs, currentResults.flagged).sort((a,b) => b.priority - a.priority);
+      currentResults.flagged = flagged;
+      document.getElementById('stat-flagged').textContent = flagged.length;
+      document.getElementById('stat-flagged-sub').textContent = `${Math.round(100 * flagged.length / occs.length)}% of loaded records`;
+      renderClimateEnvelope();
+      renderMap(occs, flagged);
+      const flaggedKeys2 = new Set(flagged.map(f => f.key));
+      renderGallery(occs, flaggedKeys2);
+      buildFilters(flagged);
+      render();
+      status(`Climate + community data loaded. ${flagged.length} specimens now flagged.`, 'done');
+    }).catch(e => {
+      if (mySearchId !== searchId) return;
+      document.getElementById('climate-envelope').classList.remove('loading', 'visible');
+      status(`Climate / community fetch failed: ${e.message}. Core results unaffected.`, 'info');
+    });
   } catch (e) {
     if (mySearchId !== searchId) return;
     status(`Search failed: ${e.message}`, 'error');
@@ -3153,7 +3563,8 @@ function buildFilters(flagged) {
     nocoord: 'No coordinates',
     zerozero: 'Bad coordinates',
     quality: 'Data quality issues',
-    unimaged: 'Historical, not imaged'
+    unimaged: 'Historical, not imaged',
+    climate: 'Climate outliers'
   };
   bar.innerHTML = '<span class="filters-label">Filter:</span>' +
     `<button type="button" class="filter-chip ${activeFilter === 'all' ? 'active' : ''}" data-filter="all" aria-pressed="${activeFilter === 'all'}">All (${flagged.length})</button>` +
@@ -3464,6 +3875,486 @@ async function startComparison() {
 }
 document.getElementById('compare-btn').addEventListener('click', startComparison);
 document.getElementById('compare-banner-clear').addEventListener('click', clearComparison);
+wireTimeMachine();
+
+// -----------------------------------------------------------------------------
+// Time machine: decade slider + histogram + play/pause animation
+function renderTimeMachine() {
+  const tm = document.getElementById('time-machine');
+  const occs = currentResults.all || [];
+  const dated = occs.map(o => o.year).filter(y => y && y > 1700 && y <= new Date().getFullYear() + 1);
+  if (dated.length < 5) {
+    tm.hidden = true;
+    timeWindow.start = timeWindow.end = null;
+    return;
+  }
+  const minY = Math.min(...dated);
+  const maxY = Math.max(...dated);
+  // Initialize the window to the full range on first render of a search
+  if (timeWindow.start === null || timeWindow.start < minY || timeWindow.start > maxY) timeWindow.start = minY;
+  if (timeWindow.end === null || timeWindow.end > maxY || timeWindow.end < minY) timeWindow.end = maxY;
+
+  const startEl = document.getElementById('tm-start');
+  const endEl = document.getElementById('tm-end');
+  startEl.min = endEl.min = String(minY);
+  startEl.max = endEl.max = String(maxY);
+  startEl.step = endEl.step = '1';
+  startEl.value = String(timeWindow.start);
+  endEl.value = String(timeWindow.end);
+
+  document.getElementById('tm-show-undated').checked = !!timeWindow.showUndated;
+
+  drawTmHistogram(dated, minY, maxY);
+  updateTmReadout(occs);
+  tm.hidden = false;
+}
+
+function drawTmHistogram(dated, minY, maxY) {
+  const canvas = document.getElementById('tm-histogram');
+  const wrap = canvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(rect.width, 100);
+  const h = 38;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  const span = maxY - minY || 1;
+  const buckets = Math.min(80, span + 1);
+  const counts = new Array(buckets).fill(0);
+  dated.forEach(y => {
+    const idx = Math.min(buckets - 1, Math.floor((y - minY) / span * buckets));
+    counts[idx]++;
+  });
+  const maxCount = Math.max(1, ...counts);
+  const barW = w / buckets;
+  for (let i = 0; i < buckets; i++) {
+    const bh = (counts[i] / maxCount) * (h - 4);
+    const bucketStartYear = minY + (i / buckets) * span;
+    const bucketEndYear = minY + ((i + 1) / buckets) * span;
+    const inWindow = bucketEndYear >= timeWindow.start && bucketStartYear <= timeWindow.end;
+    ctx.fillStyle = inWindow ? 'rgba(194, 65, 12, 0.55)' : 'rgba(140, 140, 140, 0.25)';
+    ctx.fillRect(i * barW + 0.5, h - bh, barW - 1, bh);
+  }
+}
+
+function updateTmReadout(occs) {
+  const total = occs.filter(o => typeof o.decimalLatitude === 'number' && typeof o.decimalLongitude === 'number').length;
+  let shown = 0;
+  let undated = 0;
+  occs.forEach(o => {
+    if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
+    if (!o.year) { undated++; if (timeWindow.showUndated) shown++; return; }
+    if (o.year >= timeWindow.start && o.year <= timeWindow.end) shown++;
+  });
+  const el = document.getElementById('tm-readout');
+  el.innerHTML = `<strong>${shown}</strong>/${total} specimens · years <strong>${timeWindow.start}</strong>&ndash;<strong>${timeWindow.end}</strong>${undated > 0 && !timeWindow.showUndated ? ` · ${undated} undated hidden` : ''}`;
+}
+
+function wireTimeMachine() {
+  const startEl = document.getElementById('tm-start');
+  const endEl = document.getElementById('tm-end');
+  const undatedEl = document.getElementById('tm-show-undated');
+  const playBtn = document.getElementById('tm-playbtn');
+  const onChange = (changedStart) => {
+    let s = parseInt(startEl.value, 10);
+    let e = parseInt(endEl.value, 10);
+    if (s > e) {
+      if (changedStart) e = s;
+      else s = e;
+      startEl.value = String(s);
+      endEl.value = String(e);
+    }
+    timeWindow.start = s;
+    timeWindow.end = e;
+    refreshTimeView();
+  };
+  startEl.addEventListener('input', () => onChange(true));
+  endEl.addEventListener('input', () => onChange(false));
+  undatedEl.addEventListener('change', () => {
+    timeWindow.showUndated = undatedEl.checked;
+    refreshTimeView();
+  });
+  playBtn.addEventListener('click', () => {
+    if (timeWindow.playing) stopTimeAnim();
+    else startTimeAnim();
+  });
+}
+
+function refreshTimeView() {
+  if (!currentResults.all || !currentResults.all.length) return;
+  const dated = currentResults.all.map(o => o.year).filter(y => y && y > 1700 && y <= new Date().getFullYear() + 1);
+  if (dated.length) {
+    drawTmHistogram(dated, Math.min(...dated), Math.max(...dated));
+  }
+  updateTmReadout(currentResults.all);
+  renderMap(currentResults.all, currentResults.flagged);
+  // Climate envelope recomputes for the current time window
+  refreshClimateEnvelope();
+}
+
+function startTimeAnim() {
+  timeWindow.playing = true;
+  document.getElementById('tm-playbtn').textContent = '⏸';
+  document.getElementById('tm-playbtn').classList.add('playing');
+  document.getElementById('tm-playbtn').setAttribute('aria-label', 'Pause timeline');
+  // Animate by sweeping a 30-year window from earliest to latest
+  const dated = (currentResults.all || []).map(o => o.year).filter(y => y && y > 1700);
+  if (dated.length === 0) { stopTimeAnim(); return; }
+  const minY = Math.min(...dated);
+  const maxY = Math.max(...dated);
+  const window = Math.max(20, Math.round((maxY - minY) * 0.18));
+  timeWindow.start = minY;
+  timeWindow.end = Math.min(maxY, minY + window);
+  let last = performance.now();
+  const step = (now) => {
+    if (!timeWindow.playing) return;
+    if (now - last >= timeWindow.speed) {
+      last = now;
+      timeWindow.start += 1;
+      timeWindow.end += 1;
+      if (timeWindow.end > maxY) {
+        timeWindow.start = minY;
+        timeWindow.end = Math.min(maxY, minY + window);
+      }
+      document.getElementById('tm-start').value = String(timeWindow.start);
+      document.getElementById('tm-end').value = String(timeWindow.end);
+      refreshTimeView();
+    }
+    timeAnimHandle = requestAnimationFrame(step);
+  };
+  timeAnimHandle = requestAnimationFrame(step);
+}
+
+function stopTimeAnim() {
+  timeWindow.playing = false;
+  if (timeAnimHandle) cancelAnimationFrame(timeAnimHandle);
+  timeAnimHandle = null;
+  const btn = document.getElementById('tm-playbtn');
+  if (btn) {
+    btn.textContent = '▶';
+    btn.classList.remove('playing');
+    btn.setAttribute('aria-label', 'Play timeline');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Climate envelope via NASA POWER climatology endpoint (free, CORS, no key)
+// We round each specimen's coords to 0.25 deg to cluster cache hits, then
+// fetch mean annual T2M (°C) and total annual PRECTOTCORR (mm). 30-year normals.
+const CLIMATE_CACHE_KEY = 'specimenfinder_climate_v1';
+function loadClimateGridCache() {
+  try { return JSON.parse(localStorage.getItem(CLIMATE_CACHE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveClimateGridCache(obj) {
+  try { localStorage.setItem(CLIMATE_CACHE_KEY, JSON.stringify(obj)); }
+  catch (e) { /* quota — drop silently */ }
+}
+
+function climateCellKey(lat, lon) {
+  const rl = Math.round(lat * 4) / 4;
+  const rL = Math.round(lon * 4) / 4;
+  return rl.toFixed(2) + ',' + rL.toFixed(2);
+}
+
+async function fetchClimatePoint(lat, lon) {
+  const url = 'https://power.larc.nasa.gov/api/temporal/climatology/point' +
+    '?parameters=T2M,PRECTOTCORR&community=AG' +
+    '&longitude=' + lon.toFixed(4) + '&latitude=' + lat.toFixed(4) + '&format=JSON';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('NASA POWER ' + r.status);
+  const data = await r.json();
+  const params = data?.properties?.parameter || {};
+  const t2m = params.T2M?.ANN;
+  const prec = params.PRECTOTCORR?.ANN;
+  if (t2m === undefined || prec === undefined) return null;
+  // NASA POWER fill value for missing land cells
+  if (t2m <= -990 || prec <= -990) return null;
+  // PRECTOTCORR in mm/day on climatology endpoint — multiply by 365 to get annual
+  return { t2m: t2m, prec: prec * 365 };
+}
+
+async function fetchClimateForOccurrences(occs, mySearchId) {
+  const grid = loadClimateGridCache();
+  const need = [];
+  const byOcc = {};
+  occs.forEach(o => {
+    if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
+    if (o.decimalLatitude === 0 && o.decimalLongitude === 0) return;
+    const cell = climateCellKey(o.decimalLatitude, o.decimalLongitude);
+    byOcc[o.key] = cell;
+    if (grid[cell]) return;
+    if (!need.find(n => n.cell === cell)) need.push({ cell, lat: o.decimalLatitude, lon: o.decimalLongitude });
+  });
+
+  status(`Fetching climate normals for ${need.length} unique grid cells from NASA POWER...`);
+  const concurrency = 8;
+  let idx = 0;
+  const errors = { count: 0 };
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (idx < need.length) {
+      const item = need[idx++];
+      if (mySearchId !== searchId) return; // bail if user started a new search
+      try {
+        const c = await fetchClimatePoint(item.lat, item.lon);
+        if (c) grid[item.cell] = c;
+        else grid[item.cell] = null;
+      } catch (e) {
+        errors.count++;
+        grid[item.cell] = null;
+      }
+    }
+  }));
+  if (mySearchId !== searchId) return null;
+  saveClimateGridCache(grid);
+  if (errors.count) status(`Climate fetch: ${errors.count} cells failed — those specimens will be skipped in the envelope.`, 'info');
+
+  // Build per-occurrence map
+  climateCache = {};
+  Object.entries(byOcc).forEach(([k, cell]) => {
+    if (grid[cell]) climateCache[k] = grid[cell];
+  });
+  return climateCache;
+}
+
+function computeClimateEnvelope() {
+  if (!climateCache) { climateEnvelope = null; return; }
+  const visible = (currentResults.all || []).filter(o => {
+    if (!climateCache[o.key]) return false;
+    if (timeWindow.start === null || timeWindow.end === null) return true;
+    if (!o.year) return timeWindow.showUndated;
+    return o.year >= timeWindow.start && o.year <= timeWindow.end;
+  });
+  if (visible.length < 8) { climateEnvelope = null; return; }
+  const ts = visible.map(o => climateCache[o.key].t2m);
+  const ps = visible.map(o => climateCache[o.key].prec);
+  const tMed = median(ts);
+  const tMad = mad(ts, tMed);
+  const pMed = median(ps);
+  const pMad = mad(ps, pMed);
+  climateEnvelope = { tMed, tMad, pMed, pMad, n: visible.length };
+}
+
+function renderClimateEnvelope() {
+  const el = document.getElementById('climate-envelope');
+  if (!climateCache) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  computeClimateEnvelope();
+  if (!climateEnvelope) {
+    el.classList.add('visible');
+    el.innerHTML = '<div class="climate-envelope-title">Climate envelope</div>' +
+      '<div>Not enough specimens with climate data in the current time window for a reliable envelope.</div>';
+    return;
+  }
+  const { tMed, tMad, pMed, pMad, n } = climateEnvelope;
+  // Count climate outliers among visible specimens
+  let outliers = 0;
+  (currentResults.all || []).forEach(o => {
+    const c = climateCache[o.key];
+    if (!c) return;
+    if (timeWindow.start !== null && o.year && (o.year < timeWindow.start || o.year > timeWindow.end)) return;
+    const zt = modifiedZScore(c.t2m, tMed, tMad);
+    const zp = modifiedZScore(c.prec, pMed, pMad);
+    if (Math.abs(zt) > 3.5 || Math.abs(zp) > 3.5) outliers++;
+  });
+  el.classList.add('visible');
+  const tLow = (tMed - tMad).toFixed(1);
+  const tHigh = (tMed + tMad).toFixed(1);
+  const pLow = Math.round(pMed - pMad);
+  const pHigh = Math.round(pMed + pMad);
+  el.innerHTML = `
+    <div class="climate-envelope-title">Climate envelope <span style="font-weight:400;color:var(--text-muted);font-size:11px">(from NASA POWER 30-year normals; recomputes for the time window above)</span></div>
+    <div class="climate-stats">
+      <div class="climate-stat">
+        <div class="climate-stat-label">Mean annual temp</div>
+        <div class="climate-stat-value">${tLow} &ndash; ${tHigh} &deg;C</div>
+        <div class="climate-stat-sub">median &plusmn; MAD, n=${n}</div>
+      </div>
+      <div class="climate-stat">
+        <div class="climate-stat-label">Annual precipitation</div>
+        <div class="climate-stat-value">${pLow} &ndash; ${pHigh} mm</div>
+        <div class="climate-stat-sub">median &plusmn; MAD, n=${n}</div>
+      </div>
+      <div class="climate-stat">
+        <div class="climate-stat-label">Climate outliers</div>
+        <div class="climate-stat-value">${outliers}</div>
+        <div class="climate-stat-sub">|z| &gt; 3.5 on T or P</div>
+      </div>
+    </div>
+  `;
+}
+
+function refreshClimateEnvelope() {
+  if (!climateCache) return;
+  renderClimateEnvelope();
+}
+
+// -----------------------------------------------------------------------------
+// Collective curation: read community annotations from a GitHub Issues repo.
+// One issue per species (title contains "usageKey=N"); each annotation is a
+// comment containing a fenced JSON code block.
+// The repo URL is configurable; if the repo doesn't exist, reads return empty
+// silently so the feature degrades gracefully.
+const COMMUNITY_REPO = 'TheoryofShadows/specimen-finder-annotations';
+const COMMUNITY_LABEL = 'annotations';
+
+async function findSpeciesIssue(usageKey) {
+  // Cached in sessionStorage per usageKey to avoid repeat hits
+  try {
+    const cached = sessionStorage.getItem('cf_issue_' + usageKey);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {}
+  try {
+    const q = encodeURIComponent(`repo:${COMMUNITY_REPO} is:issue label:${COMMUNITY_LABEL} usageKey=${usageKey} in:title`);
+    const headers = communityAuthHeader();
+    const r = await fetch(`https://api.github.com/search/issues?q=${q}`, { headers });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const item = (data.items || [])[0] || null;
+    if (item) sessionStorage.setItem('cf_issue_' + usageKey, JSON.stringify({ number: item.number, url: item.html_url }));
+    return item ? { number: item.number, url: item.html_url } : null;
+  } catch (e) { return null; }
+}
+
+function parseAnnotationComment(comment) {
+  const body = comment.body || '';
+  const m = body.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (!m) return null;
+  let parsed;
+  try { parsed = JSON.parse(m[1]); } catch (e) { return null; }
+  if (!parsed.occKey || !parsed.status) return null;
+  return {
+    occKey: String(parsed.occKey),
+    status: parsed.status,
+    notes: parsed.notes || '',
+    author: comment.user?.login || 'anonymous',
+    url: comment.html_url,
+    ts: comment.created_at
+  };
+}
+
+async function fetchCommunityAnnotations(usageKey) {
+  communityAnnotations = new Map();
+  const issue = await findSpeciesIssue(usageKey);
+  if (!issue) return;
+  try {
+    const headers = communityAuthHeader();
+    const r = await fetch(`https://api.github.com/repos/${COMMUNITY_REPO}/issues/${issue.number}/comments?per_page=100`, { headers });
+    if (!r.ok) return;
+    const comments = await r.json();
+    comments.forEach(c => {
+      const a = parseAnnotationComment(c);
+      if (!a) return;
+      if (!communityAnnotations.has(a.occKey)) communityAnnotations.set(a.occKey, []);
+      communityAnnotations.get(a.occKey).push(a);
+    });
+  } catch (e) { /* network — degrade silently */ }
+}
+
+function communityAuthHeader() {
+  const pat = getStoredKey('github_pat');
+  return pat ? { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' }
+             : { 'Accept': 'application/vnd.github+json' };
+}
+
+async function ensureSpeciesIssue(species) {
+  let issue = await findSpeciesIssue(species.usageKey);
+  if (issue) return issue;
+  const pat = getStoredKey('github_pat');
+  if (!pat) throw new Error('Need a GitHub Personal Access Token to create a species thread.');
+  const headers = { ...communityAuthHeader(), 'Content-Type': 'application/json' };
+  const body = {
+    title: `Annotations: ${species.scientificName || species.canonicalName} (usageKey=${species.usageKey})`,
+    body: `Community annotations for this species. Each comment is a structured JSON block keyed by GBIF occurrence ID. Generated by Specimen Finder.\n\nGBIF species page: https://www.gbif.org/species/${species.usageKey}`,
+    labels: [COMMUNITY_LABEL]
+  };
+  const r = await fetch(`https://api.github.com/repos/${COMMUNITY_REPO}/issues`, {
+    method: 'POST', headers, body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error('GitHub: ' + (err.message || r.status));
+  }
+  const data = await r.json();
+  issue = { number: data.number, url: data.html_url };
+  sessionStorage.setItem('cf_issue_' + species.usageKey, JSON.stringify(issue));
+  return issue;
+}
+
+async function postCommunityAnnotation(species, occKey, status, notes) {
+  const pat = getStoredKey('github_pat');
+  if (!pat) throw new Error('Set a GitHub token first to share annotations.');
+  const issue = await ensureSpeciesIssue(species);
+  const payload = { occKey, status, notes, speciesKey: species.usageKey, v: 1 };
+  const body = {
+    body: `Annotation for occurrence ${occKey} — **${status}**\n\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\`\n\n[View on GBIF](https://www.gbif.org/occurrence/${occKey})`
+  };
+  const headers = { ...communityAuthHeader(), 'Content-Type': 'application/json' };
+  const r = await fetch(`https://api.github.com/repos/${COMMUNITY_REPO}/issues/${issue.number}/comments`, {
+    method: 'POST', headers, body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error('GitHub: ' + (err.message || r.status));
+  }
+  const data = await r.json();
+  const newEntry = {
+    occKey, status, notes,
+    author: data.user?.login || 'you',
+    url: data.html_url,
+    ts: data.created_at
+  };
+  if (!communityAnnotations.has(occKey)) communityAnnotations.set(occKey, []);
+  communityAnnotations.get(occKey).push(newEntry);
+  return newEntry;
+}
+
+function communityConsensus(list) {
+  if (!list || list.length === 0) return null;
+  const counts = {};
+  list.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+  let best = null, bestN = 0;
+  Object.entries(counts).forEach(([k, n]) => { if (n > bestN) { best = k; bestN = n; } });
+  return { status: best, count: bestN, total: list.length, counts };
+}
+
+function communityRowHtml(occKey) {
+  const list = communityAnnotations.get(String(occKey)) || [];
+  if (list.length === 0) return '';
+  const counts = { confirmed: 0, falsepositive: 0, review: 0 };
+  list.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++; });
+  const badgeOrder = ['confirmed', 'falsepositive', 'review'];
+  const badgeLabels = { confirmed: 'confirmed real', falsepositive: 'false positive', review: 'needs review' };
+  const badges = badgeOrder
+    .filter(s => counts[s] > 0)
+    .map(s => `<span class="community-badge ${s}">${counts[s]} &middot; ${badgeLabels[s]}</span>`)
+    .join('');
+  return `
+    <div class="community-row">
+      <span class="community-row-label">Community:</span>
+      ${badges}
+      <button type="button" class="community-expand" data-occ="${escapeHtml(String(occKey))}" style="background:transparent;border:none;color:var(--accent);font-family:Inter,sans-serif;font-size:11px;font-weight:600;cursor:pointer;padding:0;">View notes &darr;</button>
+      <div class="community-detail-list" data-occ="${escapeHtml(String(occKey))}" hidden>
+        ${list.map(a => `
+          <li>
+            <span class="community-badge ${a.status}">${escapeHtml(badgeLabels[a.status] || a.status)}</span>
+            <span class="community-detail-author">@${escapeHtml(a.author)}</span>
+            ${a.notes ? '&middot; ' + escapeHtml(a.notes.length > 240 ? a.notes.slice(0, 240) + '…' : a.notes) : ''}
+            ${a.url ? `&middot; <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;">View on GitHub &rarr;</a>` : ''}
+          </li>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
 
 function render() {
   const list = document.getElementById('specimen-list');
@@ -3503,6 +4394,12 @@ function render() {
     const annotation = getAnnotation(speciesKey, s.key);
     if (annotation && annotation.status) card.classList.add('annotated-' + annotation.status);
 
+    const commList = communityAnnotations.get(String(s.key)) || [];
+    const consensus = communityConsensus(commList);
+    if (consensus && consensus.status === 'falsepositive' && consensus.count >= 2) {
+      card.classList.add('community-falsepositive');
+    }
+
     const citation = `GBIF.org (${new Date().getFullYear()}). Occurrence Download. ` +
       `${s.scientificName || s.species} specimen, ${inst} #${cat}, ` +
       `collected ${year}${collector !== 'unknown collector' ? ' by ' + collector : ''}, ${truncPlace}. ` +
@@ -3525,6 +4422,7 @@ function render() {
       <div class="flags-row">
         ${s.flags.map(f => `<span class="flag-pill ${f.class}">${escapeHtml(f.text)}</span>`).join('')}
       </div>
+      ${communityRowHtml(s.key)}
       <div class="reason-text">${escapeHtml(firstEvidence?.text || '')}</div>
       ${firstPlain}
       <div class="action-row">
@@ -3565,6 +4463,7 @@ function render() {
         <button type="button" class="annotation-pill ${annotation?.status === 'falsepositive' ? 'selected falsepositive' : ''}" data-status="falsepositive">False positive</button>
         <button type="button" class="annotation-pill ${annotation?.status === 'review' ? 'selected review' : ''}" data-status="review">Needs review</button>
         <input type="text" class="annotation-notes" placeholder="Notes (optional, saved in this browser)" value="${escapeHtml(annotation?.notes || '')}" />
+        <button type="button" class="share-community-btn" data-occ="${escapeHtml(s.key)}" title="Share this annotation with the community (requires a GitHub token)">Share &rarr;</button>
         <span class="annotation-saved" aria-live="polite">Saved</span>
       </div>
     `;
@@ -3630,6 +4529,43 @@ function render() {
         flashSaved();
       });
     });
+    const commExpand = card.querySelector('.community-expand');
+    if (commExpand) {
+      commExpand.addEventListener('click', () => {
+        const detail = card.querySelector('.community-detail-list');
+        if (!detail) return;
+        const open = detail.hidden;
+        detail.hidden = !open;
+        commExpand.innerHTML = open ? 'Hide notes &uarr;' : 'View notes &darr;';
+      });
+    }
+    const shareBtn = card.querySelector('.share-community-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const current = getAnnotation(speciesKey, s.key);
+        if (!current || !current.status) {
+          alert('Pick a status (Confirmed real / False positive / Needs review) before sharing.');
+          return;
+        }
+        const pat = getStoredKey('github_pat');
+        if (!pat) {
+          if (!confirm('Sharing requires a one-time GitHub Personal Access Token (with `public_repo` scope). Open settings to add one now?')) return;
+          openKeyModal();
+          return;
+        }
+        shareBtn.classList.add('disabled');
+        shareBtn.textContent = 'Sharing...';
+        try {
+          await postCommunityAnnotation(currentResults.species, s.key, current.status, current.notes || notesInput.value.trim());
+          shareBtn.textContent = '✓ Shared';
+          setTimeout(() => render(), 400); // re-render to surface new badge
+        } catch (e) {
+          shareBtn.textContent = 'Share →';
+          shareBtn.classList.remove('disabled');
+          alert('Share failed: ' + e.message);
+        }
+      });
+    }
     let notesTimer;
     notesInput.addEventListener('input', () => {
       clearTimeout(notesTimer);

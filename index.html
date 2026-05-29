@@ -972,7 +972,9 @@
   .legend-dot.flagged { background: var(--accent); }
   #specimen-map {
     width: 100%;
-    height: 460px;
+    aspect-ratio: 16 / 9;
+    min-height: 320px;
+    max-height: 540px;
     background: var(--bg);
     position: relative;
   }
@@ -2089,14 +2091,22 @@
     </div>
 
     <div class="tab-panel" id="panel-name">
-      <label class="organ-label">Plant name <span style="font-weight:400;color:var(--text-muted);font-size:13px">(common or scientific &mdash; e.g., "pitcher plant" or <i>Sarracenia purpurea</i>)</span></label>
+      <label class="organ-label">Plant name <span style="font-weight:400;color:var(--text-muted);font-size:13px">(common name, group name, or scientific name &mdash; e.g., "rose", "pitcher plant", or <i>Sarracenia purpurea</i>)</span></label>
       <div class="search-row">
-        <input type="text" class="search-input" id="species-input" placeholder='try "swamp milkweed" or "Franklinia alatamaha"' autocomplete="off" />
+        <input type="text" class="search-input" id="species-input" placeholder='try "rose", "lavender", "swamp milkweed", or "Sarracenia purpurea"' autocomplete="off" />
         <button class="search-btn" id="search-btn">Search</button>
       </div>
       <div class="examples">
-        <strong>Try one of these:</strong><br/>
-        <button type="button" class="example-pill" data-species="pitcher plant">pitcher plant (multiple species)</button>
+        <strong>Everyday names &mdash; tap one to try:</strong><br/>
+        <button type="button" class="example-pill" data-species="rose">rose (genus, many species)</button>
+        <button type="button" class="example-pill" data-species="oak">oak</button>
+        <button type="button" class="example-pill" data-species="lavender">lavender</button>
+        <button type="button" class="example-pill" data-species="tulip">tulip</button>
+        <button type="button" class="example-pill" data-species="cactus">cactus</button>
+        <button type="button" class="example-pill" data-species="fern">fern</button>
+        <br/><br/>
+        <strong>Or one of these specific species:</strong><br/>
+        <button type="button" class="example-pill" data-species="pitcher plant">pitcher plant (disambiguates)</button>
         <button type="button" class="example-pill" data-species="swamp milkweed">swamp milkweed</button>
         <button type="button" class="example-pill" data-species="Franklinia alatamaha">Franklinia alatamaha (extinct in wild)</button>
         <button type="button" class="example-pill" data-species="passionflower">passionflower</button>
@@ -3108,6 +3118,10 @@ function renderMap(allOccs, flaggedOccs) {
 }
 
 // Knowledge panel: "What's known about this plant"
+// Wikipedia section fetch + cleanup.
+// Uses DOMParser (browser-native) so HTML entities decode automatically
+// (e.g. &#8260; → ⁄, &nbsp; → space) and image-caption / reference / infobox
+// containers can be removed structurally instead of fighting them with regex.
 async function getWikipediaSection(pageTitle, sectionPattern) {
   try {
     const secRes = await fetch('https://en.wikipedia.org/w/api.php?action=parse&page=' +
@@ -3123,42 +3137,63 @@ async function getWikipediaSection(pageTitle, sectionPattern) {
     if (!contentRes.ok) return null;
     const contentData = await contentRes.json();
     const html = contentData.parse?.text?.['*'] || '';
-    let text = html
-      // Drop entire <style>, <script>, <table> (citation/infobox cruft) blocks first,
-      // before stripping bare tags — otherwise their *contents* leak through.
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<table[\s\S]*?<\/table>/gi, '')
-      .replace(/<sup class="reference"[^>]*>[\s\S]*?<\/sup>/g, '')
-      .replace(/<span class="mw-editsection[^"]*"[\s\S]*?<\/span>\s*<\/span>/g, '') // nested span pattern Wikipedia uses
-      .replace(/<span class="mw-editsection[^"]*"[^>]*>[\s\S]*?<\/span>/g, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\[\d+\]/g, '')
-      .replace(/\[edit\]/gi, '')
-      .replace(/&#91;.*?&#93;/g, '')
-      .replace(/&#160;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/\s+/g, ' ')
-      .trim();
-    // The first chunk often duplicates the section heading and a trailing "edit"
-    // word that survived the span strip. Drop a leading "<heading>edit " or
-    // "<heading> " prefix if present, case-insensitively.
-    const headingName = match.line;
-    const escapedHeading = headingName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    text = text.replace(new RegExp('^' + escapedHeading + '(\\s*edit)?\\s*', 'i'), '');
-    // Cut off any stray CSS that survived (e.g. "{ ... } .foo{ ... }")
-    text = text.replace(/\s*\.mw-parser-output[\s\S]*$/, '').trim();
-    // Wikipedia's references list bleeds in as " ^ Citation text. ^ Citation text."
-    // — drop from the first reference back-pointer to end.
-    text = text.replace(/\s+\^\s+[\s\S]*$/, '').trim();
-    if (text.length > 1200) text = text.slice(0, 1200) + '...';
+    const text = cleanWikipediaHtml(html, match.line);
+    if (!text) return null;
     return { text, sectionName: match.line };
   } catch (e) {
     return null;
   }
+}
+
+function cleanWikipediaHtml(html, headingName) {
+  // Wrap so DOMParser treats it as a fragment regardless of how Wikipedia returns it
+  const doc = new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html');
+  const root = doc.body.firstChild;
+  if (!root) return '';
+
+  // Drop structural containers whose contents are noise (image captions,
+  // citation lists, navboxes, infoboxes, math display, hatnotes, edit links).
+  // Order matters slightly: remove tables/figures before headings so we don't
+  // accidentally strip a heading that lives inside an infobox.
+  const dropSelectors = [
+    'style', 'script', 'table',
+    'figure', '.thumb', '.thumbinner', '.thumbcaption', '.gallery', '.tright', '.tleft',
+    '.mw-default-size', '.floatright', '.floatleft', '.center',
+    '.reference', '.references', '.reflist', '.refbegin',
+    '.navbox', '.hatnote', '.dablink', '.rellink', '.sidebar',
+    '.infobox', '.metadata', '.mw-editsection', '.IPA',
+    '.noprint', '.mw-empty-elt',
+    '[role="note"]', '[aria-hidden="true"]',
+    'sup', '.error', '.cite-bracket',
+    'audio', 'video', 'math'
+  ];
+  dropSelectors.forEach(sel => {
+    root.querySelectorAll(sel).forEach(el => el.remove());
+  });
+  // Insert a space between block-level elements before extracting text, so
+  // adjacent paragraphs / list items don't run together as one wall of letters.
+  root.querySelectorAll('p, li, dd, dt, div, h1, h2, h3, h4, h5, h6, br').forEach(el => {
+    el.appendChild(doc.createTextNode(' '));
+  });
+
+  let text = (root.textContent || '')
+    .replace(/ /g, ' ')      // nbsp
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1') // collapse "word ." to "word."
+    .trim();
+
+  // Drop a leading "<heading>" or "<heading>edit" prefix that survived (some
+  // section payloads include their own heading text).
+  if (headingName) {
+    const escaped = headingName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    text = text.replace(new RegExp('^' + escaped + '(\\s*edit)?\\s*', 'i'), '');
+  }
+  // Common Wikipedia leading-link phrases that aren't useful as prose
+  text = text.replace(/^(Main article|See also|Further information|This article)\s*:[^.]*\.\s*/i, '');
+  // Drop any stray "^ Reference text." trailing block (back-pointers).
+  text = text.replace(/\s+\^\s+[\s\S]*$/, '').trim();
+  if (text.length > 1200) text = text.slice(0, 1200) + '...';
+  return text;
 }
 
 async function getGBIFVernacularNames(usageKey) {
@@ -3510,27 +3545,121 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
 }
 
 // Common name resolution via iNaturalist
+// Score a candidate against the user's query so that "rose" surfaces Rosa
+// (the genus) ahead of every random wildflower iNaturalist happens to know.
+// iNaturalist's /taxa?q= sorts by observation popularity, which buries the
+// most semantically relevant match under unrelated common species.
+function relevanceScore(query, candidate) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) return 0;
+  const qStem = q.replace(/(es|s)$/, ''); // crude depluraliser for "roses" → "rose"
+  const sci = (candidate.scientificName || '').toLowerCase();
+  const common = (candidate.commonName || '').toLowerCase();
+  let score = 0;
+  if (sci === q || sci === qStem) score += 20;          // genus Rosa for "rose"
+  if (common === q || common === qStem || common === q + 's' || common === qStem + 's') score += 18;
+  if (sci.startsWith(q + ' ') || sci.startsWith(qStem + ' ')) score += 10; // "Rosa canina"
+  if (common.startsWith(q + ' ') || common.startsWith(qStem + ' ')) score += 8;
+  if (sci.endsWith(' ' + q) || sci.endsWith(' ' + qStem)) score += 6;
+  if (common.endsWith(' ' + q) || common.endsWith(' ' + qStem)) score += 6;
+  // Whole-word contains (avoids "roselle" matching "rose")
+  const wordRe = new RegExp(`\\b${qStem.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`);
+  if (wordRe.test(sci)) score += 4;
+  if (wordRe.test(common)) score += 4;
+  // Tiny popularity boost so ties resolve by familiarity — only when the
+  // candidate already has a name match (otherwise pure-popularity plants
+  // would float in for queries they have nothing to do with).
+  if (score > 0 && candidate.observationCount > 0) {
+    score += Math.min(2, Math.log10(candidate.observationCount + 1) / 4);
+  }
+  return score;
+}
+
+// Resolve a free-text query to a list of plant taxa.
+// Strategy: try iNaturalist for species first, then expand to genus + family
+// (so "rose" finds Rosa, "cactus" finds Cactaceae). Then fall back to GBIF's
+// fuzzy species/suggest if iNaturalist returned nothing. Finally, score every
+// candidate against the query so the actual best match floats to the top.
 async function resolveCommonName(query) {
+  const out = [];
+  const seen = new Set();
+  const push = (entry) => {
+    if (!entry || !entry.scientificName) return;
+    const key = entry.scientificName.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(entry);
+  };
+
+  // Pass 1 — iNaturalist, species level (best matches for common-name queries)
   try {
     const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
       encodeURIComponent(query) + '&rank=species,subspecies,variety&is_active=true&per_page=10');
-    if (!r.ok) return [];
-    const data = await r.json();
-    const plants = (data.results || []).filter(t => {
-      const ancestors = t.ancestor_ids || [];
-      return ancestors.includes(47126) || t.iconic_taxon_name === 'Plantae';
-    });
-    return plants.map(t => ({
-      scientificName: t.name,
-      commonName: t.preferred_common_name || '',
-      rank: t.rank,
-      observationCount: t.observations_count || 0,
-      iconicGroup: t.iconic_taxon_name,
-      inatId: t.id
-    }));
-  } catch (e) {
-    return [];
+    if (r.ok) {
+      const data = await r.json();
+      (data.results || [])
+        .filter(t => (t.ancestor_ids || []).includes(47126) || t.iconic_taxon_name === 'Plantae')
+        .forEach(t => push({
+          scientificName: t.name,
+          commonName: t.preferred_common_name || '',
+          rank: t.rank,
+          observationCount: t.observations_count || 0,
+          iconicGroup: t.iconic_taxon_name,
+          inatId: t.id
+        }));
+    }
+  } catch (e) {}
+
+  // Pass 2 — iNaturalist, broaden to genus + family (catches "rose" → Rosa,
+  // "cactus" → Cactaceae, "fern" → Polypodiopsida, "oak" → Quercus).
+  try {
+    const r2 = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(query) + '&rank=genus,family,order&is_active=true&per_page=6');
+    if (r2.ok) {
+      const data = await r2.json();
+      (data.results || [])
+        .filter(t => (t.ancestor_ids || []).includes(47126) || t.iconic_taxon_name === 'Plantae')
+        .forEach(t => push({
+          scientificName: t.name,
+          commonName: t.preferred_common_name || '',
+          rank: t.rank,
+          observationCount: t.observations_count || 0,
+          iconicGroup: t.iconic_taxon_name,
+          inatId: t.id
+        }));
+    }
+  } catch (e) {}
+
+  // Pass 3 — GBIF's species/suggest. Fuzzy + much wider corpus, useful when
+  // iNaturalist returns nothing (rare common names, regional names).
+  if (out.length === 0) {
+    try {
+      const r3 = await fetch('https://api.gbif.org/v1/species/suggest?q=' +
+        encodeURIComponent(query) + '&kingdom=Plantae&limit=8');
+      if (r3.ok) {
+        const data = await r3.json();
+        (data || []).forEach(t => push({
+          scientificName: t.canonicalName || t.scientificName || '',
+          commonName: t.vernacularName || '',
+          rank: (t.rank || '').toLowerCase(),
+          observationCount: 0,
+          iconicGroup: 'Plantae',
+          inatId: null
+        }));
+      }
+    } catch (e) {}
   }
+
+  // Score every candidate by relevance to the query. Drop anything scoring
+  // zero (iNat's full-text search returns random popular plants for vague
+  // queries — those have no name overlap and shouldn't appear at all).
+  const scored = out
+    .map(c => ({ ...c, _score: relevanceScore(query, c) }))
+    .filter(c => c._score > 0)
+    .sort((a, b) => b._score - a._score);
+  // If scoring filtered everything out (rare), fall back to the original list
+  // so the user at least sees *something* and can pick from it.
+  return scored.length > 0 ? scored : out;
 }
 
 // Heuristic: does this query look like a Latin binomial?
@@ -3566,26 +3695,35 @@ function looksLikeScientificName(query) {
 // Disambiguation modal
 function openDisambig(candidates, originalQuery) {
   document.getElementById('disambig-title').textContent =
-    `"${originalQuery}" matches ${candidates.length} plants`;
+    `"${originalQuery}" matches ${candidates.length} plant${candidates.length === 1 ? '' : 's'}`;
   document.getElementById('disambig-text').textContent =
     candidates.length > 1
-      ? 'Common names can be ambiguous — multiple species share this name. Pick the one you meant:'
+      ? 'Pick the one you meant. Picking a genus or family returns specimens of every species in that group.'
       : 'Confirm the match:';
   const list = document.getElementById('disambig-list');
   list.innerHTML = '';
-  candidates.slice(0, 8).forEach(c => {
+  // resolveCommonName already sorts by relevance score; keep that order, just
+  // truncate to 10 items.
+  const sorted = [...candidates];
+  sorted.slice(0, 10).forEach(c => {
     const item = document.createElement('button');
     item.type = 'button';
     item.className = 'disambig-item';
     item.style.width = '100%';
+    const rankLower = (c.rank || '').toLowerCase();
+    const isGroup = ['genus','subgenus','family','subfamily','order','suborder'].includes(rankLower);
+    const rankLabel = c.rank
+      ? (isGroup ? `${rankLower} (all species in group)` : rankLower)
+      : '';
     const obsLabel = c.observationCount
-      ? `${c.observationCount.toLocaleString()} observations on iNaturalist`
-      : 'no observation data';
+      ? `${c.observationCount.toLocaleString()} iNat observations`
+      : '';
+    const meta = [rankLabel, obsLabel].filter(Boolean).join(' · ');
     item.innerHTML = `
       <div>
         <div class="disambig-sci">${escapeHtml(c.scientificName)}</div>
         ${c.commonName ? `<div class="disambig-common">${escapeHtml(c.commonName)}</div>` : ''}
-        <div class="disambig-fam">${escapeHtml(c.rank || '')} &middot; ${escapeHtml(obsLabel)}</div>
+        <div class="disambig-fam">${escapeHtml(meta)}</div>
       </div>
       <div class="disambig-arrow">&rarr;</div>
     `;
@@ -3621,6 +3759,15 @@ async function runSearch(speciesName) {
   try {
     const candidates = await resolveCommonName(name);
     if (candidates.length === 0) {
+      // Last-ditch: try the raw query against GBIF directly. If GBIF can't
+      // match it either, the user is searching a description or a name we
+      // don't know — give actionable guidance.
+      const wordCount = name.split(/\s+/).length;
+      if (wordCount >= 3) {
+        status(`No match for "${name}". This tool searches by plant name, not by description. Try a common name like "rose" or "lavender", or a scientific name like "Lavandula angustifolia". You can also use Identify from photo if you have a picture.`, 'error');
+        btn.disabled = false; btn.textContent = 'Search';
+        return;
+      }
       status(`No common-name match found. Trying "${name}" as a scientific name...`, 'info');
       btn.disabled = false; btn.textContent = 'Search';
       runSearchDirect(name);

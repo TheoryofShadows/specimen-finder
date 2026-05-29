@@ -35,7 +35,35 @@
     --yellow-light: #fef3c7;
     --blue: #1e40af;
     --blue-light: #dbeafe;
+    --shadow-popup: 0 4px 18px rgba(0,0,0,0.08);
   }
+  body.dark {
+    --bg: #14110d;
+    --bg-card: #1f1b15;
+    --text: #f4ede1;
+    --text-soft: #d6cebe;
+    --text-muted: #908774;
+    --line: #312a20;
+    --line-strong: #4a4233;
+    --accent: #f97316;
+    --accent-light: #3a2410;
+    --accent-dark: #ea580c;
+    --green: #4ade80;
+    --green-light: #14322a;
+    --red: #f87171;
+    --red-light: #3f1f1f;
+    --yellow: #fbbf24;
+    --yellow-light: #3a2c15;
+    --blue: #60a5fa;
+    --blue-light: #1a2740;
+    --shadow-popup: 0 4px 18px rgba(0,0,0,0.5);
+  }
+  body.dark .leaflet-tile { filter: brightness(0.7) saturate(0.8) hue-rotate(-5deg); }
+  body.dark .leaflet-popup-content-wrapper,
+  body.dark .leaflet-popup-tip { background: var(--bg-card); color: var(--text-soft); }
+  body.dark img.specimen-image,
+  body.dark .photo-strip-thumb img,
+  body.dark .gallery-thumb img { filter: brightness(0.92); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     background: var(--bg);
@@ -1968,6 +1996,204 @@
   }
   .bloom-summary strong { color: var(--text); }
 
+  /* Header icon-only buttons (theme toggle) */
+  .header-icon-btn {
+    padding: 7px 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Voice-search mic button (sits between input and Search) */
+  .mic-btn {
+    background: var(--bg-card);
+    border: 1.5px solid var(--line);
+    color: var(--text-soft);
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    transition: all 0.15s;
+  }
+  .mic-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .mic-btn.listening {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    animation: micPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(194, 65, 12, 0.5); }
+    50%      { box-shadow: 0 0 0 8px rgba(194, 65, 12, 0); }
+  }
+
+  /* Recent searches row */
+  .recent-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .recent-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .recent-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .recent-pill {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .recent-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .recent-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .recent-clear:hover { color: var(--accent); }
+
+  /* Hardiness-zone badge inside species banner */
+  .hardiness-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .hardiness-badge.fit {
+    border-color: var(--green);
+    background: var(--green-light);
+    color: var(--green);
+  }
+  .hardiness-badge.nofit {
+    border-color: var(--yellow);
+    background: var(--yellow-light);
+    color: var(--yellow);
+  }
+  .hardiness-badge.unknown {
+    border-color: var(--line-strong);
+    background: var(--bg);
+    color: var(--text-soft);
+  }
+  .hardiness-badge strong { font-weight: 700; }
+  .hardiness-badge a {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+  .hardiness-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+  }
+
+  /* Similar species row */
+  .similar-species {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .similar-species-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .similar-species-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .similar-pill {
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .similar-pill:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .similar-pill .similar-pill-common {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  /* Bloom hemisphere toggle */
+  .bloom-hemisphere {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 2px;
+  }
+  .bloom-hemisphere button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .bloom-hemisphere button.active {
+    background: var(--accent);
+    color: white;
+  }
+
   /* Care & growing chips + blocks */
   .care-chips {
     display: flex;
@@ -2147,6 +2373,10 @@
       </div>
       <button type="button" class="header-link" id="header-setup">Set up photo ID</button>
       <button type="button" class="header-link" id="header-garden">My garden <span class="header-garden-count" id="header-garden-count" hidden>0</span></button>
+      <button type="button" class="header-link header-icon-btn" id="header-theme" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" hidden><path fill="currentColor" d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
+      </button>
       <button type="button" class="header-link" id="header-about">About</button>
     </div>
   </header>
@@ -2260,7 +2490,15 @@
       <label class="organ-label">Plant name <span style="font-weight:400;color:var(--text-muted);font-size:13px">(common name, group name, or scientific name &mdash; e.g., "rose", "pitcher plant", or <i>Sarracenia purpurea</i>)</span></label>
       <div class="search-row">
         <input type="text" class="search-input" id="species-input" placeholder='try "rose", "lavender", "swamp milkweed", or "Sarracenia purpurea"' autocomplete="off" />
+        <button type="button" class="mic-btn" id="mic-btn" aria-label="Search by voice" title="Search by voice" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.91-3a.9.9 0 0 0-.91.86A5 5 0 0 1 7 11.91a.91.91 0 0 0-1.82 0A6.84 6.84 0 0 0 11 18.72V21a1 1 0 0 0 2 0v-2.28a6.84 6.84 0 0 0 5.82-6.77.91.91 0 0 0-.91-.95z"/></svg>
+        </button>
         <button class="search-btn" id="search-btn">Search</button>
+      </div>
+      <div class="recent-row" id="recent-row" hidden>
+        <span class="recent-label">Recent:</span>
+        <div class="recent-pills" id="recent-pills"></div>
+        <button type="button" class="recent-clear" id="recent-clear" aria-label="Clear recent searches">Clear</button>
       </div>
       <div class="examples">
         <strong>Everyday names &mdash; tap one to try:</strong><br/>
@@ -2306,9 +2544,11 @@
       </div>
     </div>
     <div class="species-summary" id="species-summary"></div>
+    <div class="hardiness-badge" id="hardiness-badge" hidden></div>
     <div class="photo-strip" id="photo-strip" aria-label="Living-plant photos"></div>
     <div class="native-range" id="native-range"></div>
     <div class="climate-envelope" id="climate-envelope"></div>
+    <div class="similar-species" id="similar-species" hidden></div>
   </div>
 
   <div class="knowledge-panel" id="knowledge-panel">
@@ -2537,6 +2777,9 @@ let timeWindow = { start: null, end: null, playing: false, speed: 80, showUndate
 let timeAnimHandle = null;
 let communityAnnotations = new Map(); // occKey -> [{status, notes, author, url, ts}]
 let phenologyByMonth = null; // [12] counts of flowering observations per month from iNaturalist
+let phenologyHemisphere = 'N'; // 'N' or 'S' — affects bloom calendar rendering
+let userHardinessZone = null; // integer 1-13 (USDA), or null if not detected
+let userLocation = null; // { lat, lon } when geolocation has been granted
 
 // "My garden" — favourite species, stored in localStorage as a list of
 // { sci, common, usageKey?, ts } so the user can come back to them.
@@ -3484,6 +3727,14 @@ function renderCareGrowing({ speciesName, wikiUrl, cultivationSection, propagati
   const combined = [cultivationSection, propagationSection, pestsSection, ecologySection]
     .map(s => s?.text || '')
     .join(' ');
+  // Stash combined text so the hardiness-zone badge can re-scan for USDA zones
+  // when knowledge panel finishes loading.
+  lastCareCombined = combined;
+  // If we already have a hardiness zone for the user, redraw the badge now
+  // that USDA zone text is available.
+  if (userHardinessZone && currentResults.species) {
+    setTimeout(() => renderHardinessBadge(currentResults.species), 0);
+  }
   const chips = extractCareChips(combined);
   const hasText = !!(cultivationSection || propagationSection || pestsSection);
 
@@ -4086,9 +4337,14 @@ async function runSearchDirect(speciesName) {
   climateEnvelope = null;
   communityAnnotations = new Map();
   leafletInitialFit = true;
+  lastCareCombined = '';
+  phenologyByMonth = null;
   document.getElementById('climate-envelope').classList.remove('visible', 'loading');
   document.getElementById('climate-envelope').innerHTML = '';
   document.getElementById('time-machine').hidden = true;
+  document.getElementById('hardiness-badge').hidden = true;
+  document.getElementById('similar-species').hidden = true;
+  document.getElementById('similar-species').innerHTML = '';
   stopTimeAnim();
   // Clear any previous comparison when starting a fresh search
   clearComparison();
@@ -4129,6 +4385,14 @@ async function runSearchDirect(speciesName) {
     ).join('');
     document.getElementById('species-banner').classList.add('visible');
     refreshFavButton();
+    pushRecent(name);
+    // Similar species + hardiness badge fire in parallel; they don't block
+    // the main analysis pipeline.
+    fetchSimilarSpecies(species).then(list => {
+      if (mySearchId !== searchId) return;
+      renderSimilarSpecies(list);
+    });
+    renderHardinessBadge(species);
 
     fetchWikipedia(species.canonicalName || name).then(wiki => {
       if (mySearchId !== searchId) return;
@@ -5106,15 +5370,18 @@ async function findInatTaxonId(scientificName) {
   } catch (e) { return null; }
 }
 
-function renderBloomCalendar(counts) {
-  if (!counts || counts.every(c => c === 0)) return '';
+function renderBloomCalendar(rawCounts) {
+  if (!rawCounts || rawCounts.every(c => c === 0)) return '';
+  // For Southern Hemisphere, shift by 6 months so the user sees bloom timing
+  // in *their* seasons (Jan/Feb on the chart = SH summer = NH July/August data).
+  const counts = phenologyHemisphere === 'S'
+    ? rawCounts.slice(6).concat(rawCounts.slice(0, 6))
+    : rawCounts.slice();
   const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
   const monthFull = ['January', 'February', 'March', 'April', 'May', 'June',
                      'July', 'August', 'September', 'October', 'November', 'December'];
   const max = Math.max(...counts);
   const totalObs = counts.reduce((a, b) => a + b, 0);
-  const peakIdx = counts.indexOf(max);
-  // A month counts as "peak" if it's within 80% of the absolute max
   const peakThreshold = max * 0.8;
   const peakMonths = counts
     .map((c, i) => (c >= peakThreshold ? monthFull[i] : null))
@@ -5136,10 +5403,39 @@ function renderBloomCalendar(counts) {
   return `
     <div class="bloom-calendar">${bars}</div>
     <div class="bloom-summary">
-      ${peakSummary} (Northern Hemisphere). Based on ${totalObs.toLocaleString()} flowering observations from <a href="https://www.inaturalist.org" target="_blank" rel="noopener" class="knowledge-source-link" style="display:inline">iNaturalist</a> citizen scientists. Reverse months for the Southern Hemisphere.
+      ${peakSummary} (${phenologyHemisphere === 'S' ? 'Southern' : 'Northern'} Hemisphere). Based on ${totalObs.toLocaleString()} flowering observations from <a href="https://www.inaturalist.org" target="_blank" rel="noopener" class="knowledge-source-link" style="display:inline">iNaturalist</a> citizen scientists.
+      <span class="bloom-hemisphere" role="radiogroup" aria-label="Hemisphere">
+        <button type="button" class="${phenologyHemisphere === 'N' ? 'active' : ''}" data-hem="N" aria-checked="${phenologyHemisphere === 'N'}">Northern</button>
+        <button type="button" class="${phenologyHemisphere === 'S' ? 'active' : ''}" data-hem="S" aria-checked="${phenologyHemisphere === 'S'}">Southern</button>
+      </span>
     </div>
   `;
 }
+
+// Wire the hemisphere toggle via event delegation, since the bloom chart
+// re-renders on each search and we don't want to rebind every time.
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.bloom-hemisphere button');
+  if (!btn) return;
+  const hem = btn.dataset.hem;
+  if (hem !== 'N' && hem !== 'S') return;
+  phenologyHemisphere = hem;
+  try { localStorage.setItem('specimenfinder_hem', hem); } catch (ex) {}
+  if (phenologyByMonth) {
+    const bloomContent = document.getElementById('bloom-content');
+    if (bloomContent) {
+      const link = bloomContent.querySelector('a.knowledge-source-link')?.outerHTML || '';
+      bloomContent.innerHTML = renderBloomCalendar(phenologyByMonth) + link;
+    }
+  }
+});
+// Restore hemisphere preference on load
+try {
+  const h = localStorage.getItem('specimenfinder_hem');
+  if (h === 'N' || h === 'S') phenologyHemisphere = h;
+} catch (e) {}
+// Default for first-time SH users: if we already know lat is negative, default to S
+if (userLocation && userLocation.lat < 0) phenologyHemisphere = 'S';
 
 // -----------------------------------------------------------------------------
 // My garden modal — open/close + render
@@ -5238,6 +5534,338 @@ document.getElementById('species-pronounce').addEventListener('click', () => {
 updateGardenCount();
 if ('speechSynthesis' in window) {
   document.getElementById('species-pronounce').hidden = false;
+}
+
+// -----------------------------------------------------------------------------
+// Dark mode — persisted in localStorage. Honours OS preference on first visit.
+const THEME_KEY = 'specimenfinder_theme';
+function applyTheme(theme) {
+  document.body.classList.toggle('dark', theme === 'dark');
+  document.getElementById('theme-icon-moon').hidden = theme === 'dark';
+  document.getElementById('theme-icon-sun').hidden = theme !== 'dark';
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+}
+function currentTheme() {
+  let stored = null;
+  try { stored = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (stored === 'dark' || stored === 'light') return stored;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+document.getElementById('header-theme').addEventListener('click', () => {
+  applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+  // Leaflet tiles need a redraw after theme flip to pick up the CSS filter
+  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(false), 50);
+});
+applyTheme(currentTheme());
+
+// -----------------------------------------------------------------------------
+// Recent searches — last 10 successful searches, kept in localStorage.
+const RECENT_KEY = 'specimenfinder_recent_v1';
+function loadRecent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function saveRecent(list) {
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); }
+  catch (e) {}
+}
+function pushRecent(query) {
+  const q = (query || '').trim();
+  if (!q) return;
+  let list = loadRecent().filter(x => x.toLowerCase() !== q.toLowerCase());
+  list.unshift(q);
+  list = list.slice(0, 10);
+  saveRecent(list);
+  renderRecent();
+}
+function renderRecent() {
+  const row = document.getElementById('recent-row');
+  const pills = document.getElementById('recent-pills');
+  const list = loadRecent();
+  if (list.length === 0) {
+    row.hidden = true;
+    pills.innerHTML = '';
+    return;
+  }
+  row.hidden = false;
+  pills.innerHTML = list.map(q =>
+    `<button type="button" class="recent-pill" data-q="${escapeHtml(q)}">${escapeHtml(q)}</button>`
+  ).join('');
+  pills.querySelectorAll('.recent-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.q;
+      document.getElementById('species-input').value = q;
+      runSearch(q);
+    });
+  });
+}
+document.getElementById('recent-clear').addEventListener('click', () => {
+  saveRecent([]);
+  renderRecent();
+});
+renderRecent();
+
+// Restore any previously-detected hardiness zone so the badge can render
+// immediately on the first search without re-prompting for location.
+(function restoreZone() {
+  const cached = loadZoneCache();
+  if (cached && cached.zone) {
+    userHardinessZone = cached.zone;
+    userLocation = { lat: cached.lat, lon: cached.lon };
+    if (cached.lat < 0) phenologyHemisphere = 'S';
+  }
+})();
+
+// -----------------------------------------------------------------------------
+// Voice search via the browser's SpeechRecognition API. Hidden when the
+// API isn't available (Safari iOS doesn't expose it, Firefox neither
+// in some builds).
+(function setupVoiceSearch() {
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('mic-btn');
+  if (!Rec || !btn) return;
+  btn.hidden = false;
+  let listening = false;
+  let recognition = null;
+  btn.addEventListener('click', () => {
+    if (listening) {
+      try { recognition.stop(); } catch (e) {}
+      return;
+    }
+    recognition = new Rec();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => {
+      listening = true;
+      btn.classList.add('listening');
+      btn.setAttribute('aria-label', 'Listening — tap to stop');
+    };
+    recognition.onresult = (e) => {
+      const text = e.results?.[0]?.[0]?.transcript || '';
+      if (text) {
+        document.getElementById('species-input').value = text;
+        runSearch(text);
+      }
+    };
+    const cleanup = () => {
+      listening = false;
+      btn.classList.remove('listening');
+      btn.setAttribute('aria-label', 'Search by voice');
+    };
+    recognition.onend = cleanup;
+    recognition.onerror = (e) => {
+      cleanup();
+      if (e.error !== 'aborted' && e.error !== 'no-speech') {
+        status(`Voice search failed: ${e.error}. Try typing instead.`, 'error');
+      }
+    };
+    try { recognition.start(); }
+    catch (e) { cleanup(); status('Voice search not available in this browser.', 'error'); }
+  });
+})();
+
+// -----------------------------------------------------------------------------
+// Hardiness zone auto-detect.
+// Geolocation → NASA POWER monthly T2M_MIN → coldest-month mean min temp →
+// USDA zone (1-13). Cached in localStorage so we only ask once.
+// The temperature thresholds follow USDA's official hardiness-zone definitions
+// (low-end mean annual extreme minimum, in °C).
+const ZONE_BREAKPOINTS_C = [
+  -51.1, -45.6, -40.0, -34.4, -28.9, -23.3, -17.8, -12.2, -6.7, -1.1, 4.4, 10.0
+];
+function tempCtoUsdaZone(tempC) {
+  // Zone N covers ZONE_BREAKPOINTS_C[N-1] to ZONE_BREAKPOINTS_C[N].
+  // Anything below zone 1 still gets zone 1; above zone 13, zone 13.
+  if (tempC < ZONE_BREAKPOINTS_C[0]) return 1;
+  for (let z = 1; z <= 12; z++) {
+    if (tempC >= ZONE_BREAKPOINTS_C[z - 1] && tempC < ZONE_BREAKPOINTS_C[z]) return z;
+  }
+  return 13;
+}
+const ZONE_CACHE_KEY = 'specimenfinder_zone_v1';
+function loadZoneCache() {
+  try { return JSON.parse(localStorage.getItem(ZONE_CACHE_KEY) || 'null'); }
+  catch (e) { return null; }
+}
+function saveZoneCache(obj) {
+  try { localStorage.setItem(ZONE_CACHE_KEY, JSON.stringify(obj)); }
+  catch (e) {}
+}
+async function detectUserZone(showStatus) {
+  // 1. Check cache
+  const cached = loadZoneCache();
+  if (cached && cached.zone && cached.lat !== undefined) {
+    userHardinessZone = cached.zone;
+    userLocation = { lat: cached.lat, lon: cached.lon };
+    return cached;
+  }
+  // 2. Request geolocation
+  if (!('geolocation' in navigator)) return null;
+  let pos;
+  try {
+    pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, maximumAge: 3600000 }));
+  } catch (e) {
+    return null; // permission denied, timeout, or unsupported
+  }
+  const lat = pos.coords.latitude, lon = pos.coords.longitude;
+  if (showStatus) status('Detecting your hardiness zone from NASA POWER climate data...');
+  // 3. Get monthly T2M_MIN from NASA POWER and take the coldest month's mean min
+  try {
+    const url = 'https://power.larc.nasa.gov/api/temporal/climatology/point' +
+      '?parameters=T2M_MIN&community=AG' +
+      '&longitude=' + lon.toFixed(3) + '&latitude=' + lat.toFixed(3) + '&format=JSON';
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const monthly = data?.properties?.parameter?.T2M_MIN || {};
+    const monthKeys = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const vals = monthKeys.map(k => monthly[k]).filter(v => typeof v === 'number' && v > -990);
+    if (vals.length === 0) return null;
+    const coldest = Math.min(...vals);
+    const zone = tempCtoUsdaZone(coldest);
+    const entry = { zone, coldestC: coldest, lat, lon, ts: Date.now() };
+    saveZoneCache(entry);
+    userHardinessZone = zone;
+    userLocation = { lat, lon };
+    if (showStatus) status(`Detected zone ${zone} for your area (coldest-month mean ${coldest.toFixed(1)} °C).`, 'done');
+    return entry;
+  } catch (e) {
+    return null;
+  }
+}
+function renderHardinessBadge(species) {
+  const el = document.getElementById('hardiness-badge');
+  if (!el) return;
+  if (!userHardinessZone) {
+    // Offer to detect — once the user clicks, we'll request geolocation.
+    // Skip the prompt if they dismissed it last time.
+    let dismissed = false;
+    try { dismissed = localStorage.getItem('specimenfinder_zone_dismissed') === '1'; } catch (e) {}
+    if (dismissed) { el.hidden = true; return; }
+    el.className = 'hardiness-badge unknown';
+    el.innerHTML = `
+      <svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+      <span><strong>Personalize for your area?</strong> Tap to check whether this species is hardy where you live.
+        <button type="button" id="hardiness-detect-btn" style="background:var(--accent);color:white;border:none;font-family:Inter,sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px;cursor:pointer;margin-left:6px;">Detect my zone</button>
+        <button type="button" id="hardiness-dismiss-btn" style="background:transparent;border:none;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;margin-left:4px;text-decoration:underline;">No thanks</button>
+      </span>
+    `;
+    el.hidden = false;
+    document.getElementById('hardiness-detect-btn').addEventListener('click', async () => {
+      const entry = await detectUserZone(true);
+      if (entry && currentResults.species) {
+        renderHardinessBadge(currentResults.species);
+      } else if (!entry) {
+        status('Could not detect your zone (location denied or no climate data).', 'error');
+        el.hidden = true;
+      }
+    });
+    document.getElementById('hardiness-dismiss-btn').addEventListener('click', () => {
+      try { localStorage.setItem('specimenfinder_zone_dismissed', '1'); } catch (e) {}
+      el.hidden = true;
+    });
+    return;
+  }
+  // Look for USDA zone chips that the care-section heuristic extracts.
+  // careChipsForCurrentSpecies is set inside renderCareGrowing when it builds
+  // the chip list, so we can read it here without re-running the regex.
+  const careText = lastCareCombined || '';
+  const usdaMatch = careText.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})(?:[ab])?\s*(?:to|[–—\-])\s*(\d{1,2})(?:[ab])?/i)
+    || careText.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})\b/i);
+  let html = '';
+  let cls = 'unknown';
+  if (usdaMatch) {
+    const lo = parseInt(usdaMatch[1], 10);
+    // "USDA zones 5-9" → exactly 5..9. "Hardy to zone 5" (single number) is the
+    // convention for "as cold as zone 5" — treat as 5..11 (typical garden upper).
+    const hi = usdaMatch[2] ? parseInt(usdaMatch[2], 10) : 11;
+    const u = userHardinessZone;
+    const singleZone = !usdaMatch[2]; // text said "zone 5", not "zones 5–9"
+    const rangeLabel = singleZone
+      ? `zone <strong>${lo}</strong> and warmer`
+      : `zones <strong>${lo}–${hi}</strong>`;
+    if (u >= lo && u <= hi) {
+      cls = 'fit';
+      html = `<svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` +
+        `<span><strong>Hardy in your area</strong> — you're in USDA zone <strong>${u}</strong>; this species is documented as hardy in ${rangeLabel}.</span>`;
+    } else {
+      cls = 'nofit';
+      const too = u < lo ? 'cold' : 'warm';
+      html = `<svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg>` +
+        `<span>Likely <strong>too ${too}</strong> for your area — you're in USDA zone <strong>${u}</strong>; this species is documented for ${rangeLabel}. May still survive with shelter or as an indoor plant.</span>`;
+    }
+  } else {
+    cls = 'unknown';
+    html = `<svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>` +
+      `<span>You're in USDA zone <strong>${userHardinessZone}</strong>. No hardiness data extracted from Wikipedia for this species — check the <a href="https://www.missouribotanicalgarden.org/plantfinder/plantfindersearch.aspx" target="_blank" rel="noopener">Missouri Botanical Garden</a> or your local extension office.</span>`;
+  }
+  el.className = 'hardiness-badge ' + cls;
+  el.innerHTML = html;
+  el.hidden = false;
+}
+let lastCareCombined = ''; // populated by renderCareGrowing so the hardiness badge can read it
+
+// -----------------------------------------------------------------------------
+// Similar species — siblings in the same GBIF genus, rendered as clickable pills.
+async function fetchSimilarSpecies(species) {
+  if (!species || !species.usageKey) return [];
+  try {
+    // species.parentKey points to the genus; if missing, look it up.
+    let parentKey = species.parentKey;
+    if (!parentKey) {
+      const sr = await fetch(`https://api.gbif.org/v1/species/${species.usageKey}`);
+      if (sr.ok) {
+        const sd = await sr.json();
+        parentKey = sd.parentKey;
+      }
+    }
+    if (!parentKey) return [];
+    const r = await fetch(`https://api.gbif.org/v1/species/${parentKey}/children?limit=30`);
+    if (!r.ok) return [];
+    const data = await r.json();
+    const selfCanonical = (species.canonicalName || species.scientificName || '').toLowerCase();
+    const seen = new Set([selfCanonical]);
+    const siblings = (data.results || [])
+      .filter(s => s.key !== species.usageKey)
+      .filter(s => s.rank === 'SPECIES')
+      .filter(s => s.taxonomicStatus === 'ACCEPTED' || !s.taxonomicStatus)
+      .filter(s => {
+        const c = (s.canonicalName || s.scientificName || '').toLowerCase();
+        if (!c || seen.has(c)) return false;
+        seen.add(c);
+        return true;
+      })
+      .slice(0, 12);
+    return siblings.map(s => ({
+      sci: s.canonicalName || s.scientificName,
+      common: s.vernacularName || '',
+      key: s.key
+    }));
+  } catch (e) { return []; }
+}
+function renderSimilarSpecies(list) {
+  const el = document.getElementById('similar-species');
+  if (!el || !list || list.length === 0) {
+    if (el) el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  el.innerHTML =
+    `<div class="similar-species-title">Similar species in the same genus (${list.length})</div>` +
+    `<div class="similar-species-pills">` +
+    list.map(s =>
+      `<button type="button" class="similar-pill" data-sci="${escapeHtml(s.sci)}">${escapeHtml(s.sci)}${s.common ? `<span class="similar-pill-common">${escapeHtml(s.common)}</span>` : ''}</button>`
+    ).join('') +
+    `</div>`;
+  el.querySelectorAll('.similar-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      const sci = b.dataset.sci;
+      document.getElementById('species-input').value = sci;
+      runSearchDirect(sci);
+    });
+  });
 }
 
 function communityRowHtml(occKey) {

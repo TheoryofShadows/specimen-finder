@@ -1803,6 +1803,171 @@
   }
   .climate-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
+  /* Species name row: name + pronounce + favourite */
+  .species-sci-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .species-sci-row .species-sci { margin-bottom: 0; }
+  .species-pronounce-btn,
+  .species-fav-btn {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex: 0 0 auto;
+    transition: all 0.15s;
+  }
+  .species-pronounce-btn:hover,
+  .species-fav-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .species-fav-btn[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .species-fav-btn[aria-pressed="true"]:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: white;
+  }
+  .species-pronounce-btn.speaking {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .header-garden-count {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 100px;
+    margin-left: 4px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  /* My garden modal list */
+  .garden-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    border-top: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .garden-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+  }
+  .garden-item:last-child { border-bottom: none; }
+  .garden-item-sci {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 0;
+    font-weight: 500;
+  }
+  .garden-item-sci:hover { color: var(--accent); }
+  .garden-item-common {
+    font-size: 12px;
+    color: var(--text-muted);
+    grid-column: 1 / 2;
+    margin-top: 2px;
+  }
+  .garden-item-remove {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .garden-item-remove:hover { border-color: var(--red); color: var(--red); }
+  .garden-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  /* Bloom calendar */
+  .bloom-calendar {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+  }
+  .bloom-month {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .bloom-bar-wrap {
+    width: 100%;
+    height: 60px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .bloom-bar {
+    width: 100%;
+    background: linear-gradient(to top, #c2410c, #f59e0b);
+    border-radius: 0 0 2px 2px;
+    transition: height 0.3s;
+  }
+  .bloom-month.peak .bloom-bar-wrap { border-color: var(--accent); }
+  .bloom-month-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+  .bloom-month.peak .bloom-month-label { color: var(--accent); }
+  .bloom-count {
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+  .bloom-summary {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-top: 8px;
+    line-height: 1.55;
+  }
+  .bloom-summary strong { color: var(--text); }
+
   /* Care & growing chips + blocks */
   .care-chips {
     display: flex;
@@ -1981,6 +2146,7 @@
         <span id="api-status-text">Photo ID off</span>
       </div>
       <button type="button" class="header-link" id="header-setup">Set up photo ID</button>
+      <button type="button" class="header-link" id="header-garden">My garden <span class="header-garden-count" id="header-garden-count" hidden>0</span></button>
       <button type="button" class="header-link" id="header-about">About</button>
     </div>
   </header>
@@ -2122,7 +2288,15 @@
   <div class="species-banner" id="species-banner">
     <div class="species-banner-top">
       <div class="species-info">
-        <div class="species-sci" id="species-sci"></div>
+        <div class="species-sci-row">
+          <div class="species-sci" id="species-sci"></div>
+          <button type="button" class="species-pronounce-btn" id="species-pronounce" aria-label="Hear how this name is pronounced" title="Hear pronunciation" hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06A9 9 0 0 0 14 3.23z"/></svg>
+          </button>
+          <button type="button" class="species-fav-btn" id="species-fav" aria-pressed="false" aria-label="Add this species to My garden" title="Save to My garden">
+            <svg class="fav-heart" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 21s-7-4.35-9.5-9C0.93 8.66 3 5 6.5 5c2 0 3.5 1 5.5 3 2-2 3.5-3 5.5-3 3.5 0 5.57 3.66 4 7-2.5 4.65-9.5 9-9.5 9z"/></svg>
+          </button>
+        </div>
         <div class="species-common" id="species-common"></div>
         <div class="species-tax" id="species-tax"></div>
         <div class="species-links" id="species-links"></div>
@@ -2306,6 +2480,19 @@
   </div>
 </div>
 
+<!-- My garden modal -->
+<div class="modal-overlay" id="garden-overlay">
+  <div class="modal" style="max-width: 540px;">
+    <h2>My garden</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Your saved species. Stored only in this browser. Click any entry to re-run the search.</p>
+    <div class="garden-list" id="garden-list"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="garden-close">Close</button>
+      <button class="modal-btn" id="garden-export" style="background:var(--bg);border:1px solid var(--line-strong);color:var(--text-soft);">Export as link</button>
+    </div>
+  </div>
+</div>
+
 <!-- About modal -->
 <div class="modal-overlay" id="about-overlay">
   <div class="modal">
@@ -2349,6 +2536,44 @@ let climateEnvelope = null; // { tMed, tMad, pMed, pMad, n }
 let timeWindow = { start: null, end: null, playing: false, speed: 80, showUndated: true };
 let timeAnimHandle = null;
 let communityAnnotations = new Map(); // occKey -> [{status, notes, author, url, ts}]
+let phenologyByMonth = null; // [12] counts of flowering observations per month from iNaturalist
+
+// "My garden" — favourite species, stored in localStorage as a list of
+// { sci, common, usageKey?, ts } so the user can come back to them.
+const GARDEN_STORE_KEY = 'specimenfinder_garden_v1';
+function loadGarden() {
+  try { return JSON.parse(localStorage.getItem(GARDEN_STORE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function saveGarden(list) {
+  try { localStorage.setItem(GARDEN_STORE_KEY, JSON.stringify(list)); }
+  catch (e) {}
+}
+function isInGarden(sci) {
+  const norm = (sci || '').toLowerCase();
+  return loadGarden().some(g => (g.sci || '').toLowerCase() === norm);
+}
+function addToGarden(entry) {
+  const list = loadGarden();
+  const norm = (entry.sci || '').toLowerCase();
+  if (list.some(g => (g.sci || '').toLowerCase() === norm)) return list;
+  list.unshift({ ...entry, ts: Date.now() });
+  saveGarden(list);
+  return list;
+}
+function removeFromGarden(sci) {
+  const norm = (sci || '').toLowerCase();
+  const list = loadGarden().filter(g => (g.sci || '').toLowerCase() !== norm);
+  saveGarden(list);
+  return list;
+}
+function updateGardenCount() {
+  const c = loadGarden().length;
+  const el = document.getElementById('header-garden-count');
+  if (!el) return;
+  el.textContent = String(c);
+  el.hidden = c === 0;
+}
 
 // Annotation storage (saved/reviewed flag state, persisted per species+occurrence)
 const ANNOTATION_STORE_KEY = 'specimenfinder_annotations_v1';
@@ -3347,6 +3572,12 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   // If user has started a new search while we were fetching, abort UI update
   if (mySearchId !== searchId) return;
 
+  // Phenology — kick off once we know the iNat taxon ID. The bloom-calendar
+  // section gets rendered with the rest of the panel; if the fetch takes
+  // longer than the panel render, we patch in the chart afterwards.
+  phenologyByMonth = null;
+  const phenologyPromise = inat?.id ? fetchPhenology(inat.id) : Promise.resolve(null);
+
   let conservationHtml = '';
   if (wikidata?.iucnStatus || inat?.extinct || (inat?.conservationStatuses && inat.conservationStatuses.length > 0)) {
     const statusColor = (s) => {
@@ -3392,6 +3623,7 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     { label: 'Field observations', has: !!(inat?.observationsCount > 0) },
     { label: 'Description', has: !!descriptionSection },
     { label: 'Ecology', has: !!ecologySection },
+    { label: 'Bloom calendar', has: !!inat?.id },
     { label: 'Documented uses', has: !!usesSection },
     { label: 'Care & growing', has: !!(cultivationSection || propagationSection || pestsSection) },
     { label: 'Toxicity / hazards', has: !!toxicitySection },
@@ -3450,6 +3682,20 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
         <div class="knowledge-content">
           <p>${escapeHtml(ecologySection.text)}</p>
           <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(ecologySection.sectionName)} →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  // Bloom calendar placeholder — patched in by the .then() below once
+  // iNaturalist phenology data arrives. Always present if we have a taxon ID
+  // so a "Loading bloom data..." line shows while it's fetching.
+  if (inat?.id) {
+    sectionsHtml += `
+      <div class="knowledge-section" id="bloom-section">
+        <h3>Bloom calendar <span class="evidence-level med">iNaturalist citizen science</span></h3>
+        <div class="knowledge-content" id="bloom-content">
+          <div class="knowledge-loading">Fetching flowering observations from iNaturalist...</div>
         </div>
       </div>
     `;
@@ -3542,6 +3788,22 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   `;
 
   sections.innerHTML = sectionsHtml;
+
+  // Patch in the bloom calendar when the phenology fetch returns.
+  if (inat?.id) {
+    phenologyPromise.then(counts => {
+      if (mySearchId !== searchId) return;
+      phenologyByMonth = counts;
+      const bloomContent = document.getElementById('bloom-content');
+      if (!bloomContent) return;
+      if (counts && counts.some(c => c > 0)) {
+        bloomContent.innerHTML = renderBloomCalendar(counts) +
+          `<a href="https://www.inaturalist.org/taxa/${inat.id}" target="_blank" rel="noopener" class="knowledge-source-link">Source: iNaturalist phenology annotations &rarr;</a>`;
+      } else {
+        bloomContent.innerHTML = `<p class="knowledge-empty">No flowering observations recorded on iNaturalist yet for this species. Common for rare or cryptic species — try the parent genus instead.</p>`;
+      }
+    });
+  }
 }
 
 // Common name resolution via iNaturalist
@@ -3866,6 +4128,7 @@ async function runSearchDirect(speciesName) {
       `<a href="${l.url}" target="_blank" rel="noopener" class="species-link">${l.label} ↗</a>`
     ).join('');
     document.getElementById('species-banner').classList.add('visible');
+    refreshFavButton();
 
     fetchWikipedia(species.canonicalName || name).then(wiki => {
       if (mySearchId !== searchId) return;
@@ -4769,6 +5032,214 @@ function communityConsensus(list) {
   return { status: best, count: bestN, total: list.length, counts };
 }
 
+// -----------------------------------------------------------------------------
+// Pronounce a scientific name via the browser's built-in SpeechSynthesis API.
+// No key, no quota — but availability varies across browsers. The button is
+// hidden when the API is unavailable.
+function pronounceScientific(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Prefer an Italian voice if present (closest phonetics to botanical Latin),
+    // then English, then default. The list may be empty on first call in some
+    // browsers — that's OK, default voice still works.
+    const voices = window.speechSynthesis.getVoices();
+    const it = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('it'));
+    const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+    if (it) utterance.voice = it;
+    else if (en) utterance.voice = en;
+    utterance.rate = 0.85;
+    utterance.pitch = 1.0;
+    const btn = document.getElementById('species-pronounce');
+    if (btn) btn.classList.add('speaking');
+    utterance.onend = () => { if (btn) btn.classList.remove('speaking'); };
+    utterance.onerror = () => { if (btn) btn.classList.remove('speaking'); };
+    window.speechSynthesis.speak(utterance);
+  } catch (e) { /* ignore */ }
+}
+
+// -----------------------------------------------------------------------------
+// Bloom calendar via iNaturalist's observation histogram. We ask for
+// "flowering" plant-phenology observations bucketed by month_of_year, which
+// gives a 12-bucket "when does this species bloom" signal.
+async function fetchPhenology(inatTaxonId) {
+  if (!inatTaxonId) return null;
+  try {
+    // term_id=12 is iNaturalist's "Plant Phenology" annotation;
+    // term_value_id=13 is "Flowering".
+    const url = 'https://api.inaturalist.org/v1/observations/histogram' +
+      '?taxon_id=' + inatTaxonId +
+      '&date_field=observed&interval=month_of_year' +
+      '&term_id=12&term_value_id=13&verifiable=true';
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const buckets = data.results?.month_of_year || {};
+    const arr = new Array(12).fill(0);
+    Object.entries(buckets).forEach(([k, v]) => {
+      const m = parseInt(k, 10) - 1;
+      if (m >= 0 && m < 12) arr[m] = v;
+    });
+    return arr;
+  } catch (e) { return null; }
+}
+
+// Look up the species' iNaturalist taxon ID by scientific name.
+// Cached per session.
+async function findInatTaxonId(scientificName) {
+  try {
+    const cached = sessionStorage.getItem('inat_tax_' + scientificName);
+    if (cached) return cached === 'null' ? null : parseInt(cached, 10);
+  } catch (e) {}
+  try {
+    const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(scientificName) + '&is_active=true&per_page=5');
+    if (!r.ok) return null;
+    const data = await r.json();
+    const t = (data.results || []).find(x =>
+      x.name?.toLowerCase() === scientificName.toLowerCase()
+    );
+    const id = t?.id || null;
+    try { sessionStorage.setItem('inat_tax_' + scientificName, id ? String(id) : 'null'); } catch (e) {}
+    return id;
+  } catch (e) { return null; }
+}
+
+function renderBloomCalendar(counts) {
+  if (!counts || counts.every(c => c === 0)) return '';
+  const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+  const monthFull = ['January', 'February', 'March', 'April', 'May', 'June',
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const max = Math.max(...counts);
+  const totalObs = counts.reduce((a, b) => a + b, 0);
+  const peakIdx = counts.indexOf(max);
+  // A month counts as "peak" if it's within 80% of the absolute max
+  const peakThreshold = max * 0.8;
+  const peakMonths = counts
+    .map((c, i) => (c >= peakThreshold ? monthFull[i] : null))
+    .filter(Boolean);
+  const peakSummary = peakMonths.length === 1
+    ? `Peak bloom in <strong>${peakMonths[0]}</strong>`
+    : `Peak bloom from <strong>${peakMonths[0]}</strong> through <strong>${peakMonths[peakMonths.length - 1]}</strong>`;
+  const bars = counts.map((c, i) => {
+    const pct = max > 0 ? Math.max(2, Math.round((c / max) * 100)) : 0;
+    const isPeak = c >= peakThreshold && c > 0;
+    return `
+      <div class="bloom-month${isPeak ? ' peak' : ''}" title="${escapeHtml(monthFull[i])}: ${c.toLocaleString()} flowering observations">
+        <div class="bloom-bar-wrap"><div class="bloom-bar" style="height:${pct}%"></div></div>
+        <div class="bloom-month-label">${months[i]}</div>
+        <div class="bloom-count">${c >= 1000 ? Math.round(c / 100) / 10 + 'k' : c}</div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="bloom-calendar">${bars}</div>
+    <div class="bloom-summary">
+      ${peakSummary} (Northern Hemisphere). Based on ${totalObs.toLocaleString()} flowering observations from <a href="https://www.inaturalist.org" target="_blank" rel="noopener" class="knowledge-source-link" style="display:inline">iNaturalist</a> citizen scientists. Reverse months for the Southern Hemisphere.
+    </div>
+  `;
+}
+
+// -----------------------------------------------------------------------------
+// My garden modal — open/close + render
+function renderGardenList() {
+  const list = loadGarden();
+  const el = document.getElementById('garden-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="garden-empty">No saved species yet. Tap the heart next to any species name to save it.</div>';
+    return;
+  }
+  el.innerHTML = list.map(g => `
+    <div class="garden-item">
+      <button type="button" class="garden-item-sci" data-sci="${escapeHtml(g.sci)}">${escapeHtml(g.sci)}</button>
+      <span style="font-size:11px;color:var(--text-muted);">${escapeHtml(g.common || '')}</span>
+      <button type="button" class="garden-item-remove" data-sci="${escapeHtml(g.sci)}" aria-label="Remove from garden">Remove</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.garden-item-sci').forEach(b => {
+    b.addEventListener('click', () => {
+      closeGardenModal();
+      const sci = b.dataset.sci;
+      document.getElementById('species-input').value = sci;
+      // Switch to the name tab so the user sees the query
+      const nameTab = document.querySelector('.tab[data-tab="name"]');
+      if (nameTab) nameTab.click();
+      runSearchDirect(sci);
+    });
+  });
+  el.querySelectorAll('.garden-item-remove').forEach(b => {
+    b.addEventListener('click', () => {
+      removeFromGarden(b.dataset.sci);
+      updateGardenCount();
+      renderGardenList();
+      // Refresh the heart button on the current species banner if it's the
+      // species being removed
+      refreshFavButton();
+    });
+  });
+}
+function openGardenModal() {
+  renderGardenList();
+  document.getElementById('garden-overlay').classList.add('open');
+}
+function closeGardenModal() {
+  document.getElementById('garden-overlay').classList.remove('open');
+}
+
+function refreshFavButton() {
+  const sci = currentResults.species?.canonicalName || currentResults.species?.scientificName;
+  if (!sci) return;
+  const fav = document.getElementById('species-fav');
+  if (!fav) return;
+  const inGarden = isInGarden(sci);
+  fav.setAttribute('aria-pressed', inGarden ? 'true' : 'false');
+  fav.setAttribute('aria-label', inGarden ? 'Remove from My garden' : 'Save to My garden');
+  fav.title = inGarden ? 'In My garden — click to remove' : 'Save to My garden';
+}
+
+document.getElementById('header-garden').addEventListener('click', openGardenModal);
+document.getElementById('garden-close').addEventListener('click', closeGardenModal);
+document.getElementById('garden-overlay').addEventListener('click', e => {
+  if (e.target.id === 'garden-overlay') closeGardenModal();
+});
+document.getElementById('garden-export').addEventListener('click', () => {
+  const list = loadGarden();
+  if (list.length === 0) { alert('Save some species first.'); return; }
+  // Build a URL with ?garden=sci1|sci2|sci3 so the list can be shared.
+  const names = list.map(g => g.sci).filter(Boolean).join('|');
+  const url = location.origin + location.pathname + '?garden=' + encodeURIComponent(names);
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('garden-export').textContent = 'Copied link!';
+    setTimeout(() => { document.getElementById('garden-export').textContent = 'Export as link'; }, 1600);
+  }).catch(() => alert('Copy failed. URL: ' + url));
+});
+
+document.getElementById('species-fav').addEventListener('click', () => {
+  const sp = currentResults.species;
+  if (!sp) return;
+  const sci = sp.canonicalName || sp.scientificName;
+  if (isInGarden(sci)) {
+    removeFromGarden(sci);
+  } else {
+    const commonEl = document.getElementById('species-common');
+    addToGarden({ sci, common: (commonEl?.textContent || '').trim(), usageKey: sp.usageKey });
+  }
+  updateGardenCount();
+  refreshFavButton();
+});
+
+document.getElementById('species-pronounce').addEventListener('click', () => {
+  const sciText = document.getElementById('species-sci').textContent;
+  if (sciText) pronounceScientific(sciText);
+});
+
+// Initialise garden count + the pronounce button visibility on load
+updateGardenCount();
+if ('speechSynthesis' in window) {
+  document.getElementById('species-pronounce').hidden = false;
+}
+
 function communityRowHtml(occKey) {
   const list = communityAnnotations.get(String(occKey)) || [];
   if (list.length === 0) return '';
@@ -5096,7 +5567,19 @@ document.addEventListener('keydown', e => {
 // Shareable URL: if the page loaded with ?q=<species>, run that search.
 (function loadFromUrl() {
   try {
-    const q = new URLSearchParams(location.search).get('q');
+    const params = new URLSearchParams(location.search);
+    // Shared garden lists: ?garden=Sci1|Sci2|Sci3 — merge into the local
+    // garden (deduped) and open the garden modal so the user sees them.
+    const garden = params.get('garden');
+    if (garden) {
+      const names = garden.split('|').map(s => s.trim()).filter(Boolean);
+      names.forEach(sci => addToGarden({ sci, common: '', usageKey: null }));
+      updateGardenCount();
+      if (names.length > 0) {
+        setTimeout(() => openGardenModal(), 400);
+      }
+    }
+    const q = params.get('q');
     if (q && q.trim()) {
       document.getElementById('species-input').value = q;
       // Switch to the name tab so the user sees what's running

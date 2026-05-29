@@ -9,6 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Leaflet for the world map (MIT, ~140KB JS + 14KB CSS) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root {
     --bg: #fafaf7;
@@ -966,11 +972,76 @@
   .legend-dot.flagged { background: var(--accent); }
   #specimen-map {
     width: 100%;
-    height: 360px;
+    height: 460px;
     background: var(--bg);
     position: relative;
   }
-  .map-canvas { width: 100%; height: 100%; cursor: crosshair; }
+  .leaflet-map { width: 100%; height: 100%; }
+  /* Leaflet popup styling — keep it in the project's typography */
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .leaflet-popup-content {
+    margin: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text-soft);
+    line-height: 1.45;
+    min-width: 180px;
+    max-width: 280px;
+  }
+  .popup-name {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .popup-flagged {
+    display: inline-block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .popup-meta {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-bottom: 8px;
+  }
+  .popup-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .popup-link {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .popup-link:hover { text-decoration: underline; }
+  .popup-photo-btn {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .popup-photo-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Empty + footer */
   .empty-state {
@@ -1730,6 +1801,52 @@
   }
   .climate-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
+  /* Care & growing chips + blocks */
+  .care-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .care-chip {
+    font-size: 12px;
+    padding: 4px 11px;
+    border-radius: 100px;
+    border: 1.5px solid;
+    background: var(--bg-card);
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.2;
+  }
+  .care-block {
+    background: var(--bg);
+    border-left: 3px solid var(--green);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 10px;
+  }
+  .care-block strong {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--green);
+    margin-bottom: 5px;
+  }
+  .care-block p {
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--text-soft);
+  }
+  .care-links {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--text-soft);
+  }
+
   /* Community-curation badges */
   .community-row {
     margin-top: 8px;
@@ -2068,7 +2185,7 @@
       </div>
     </div>
     <div id="specimen-map">
-      <canvas id="map-canvas" class="map-canvas"></canvas>
+      <div id="leaflet-map" class="leaflet-map"></div>
     </div>
     <div class="time-machine" id="time-machine" hidden>
       <div class="tm-row tm-row-controls">
@@ -2206,7 +2323,6 @@
 </div>
 
 <script src="analysis.js"></script>
-<script src="coastlines.js"></script>
 <script>
 // State
 let plantnetKey = null;
@@ -2862,63 +2978,56 @@ function makeFalsify(flags) {
   return 'Open the specimen record and verify the flagged fields against the physical specimen or its label image.';
 }
 
-// Map render (no external deps)
+// Map render — Leaflet with OpenStreetMap tiles.
+// Markers are clickable and open a popup with the specimen's GBIF link + a
+// "View photo" button (if the specimen has imagery) that triggers the lightbox.
+let leafletMap = null;
+let leafletLayers = { normal: null, flagged: null, compare: null };
+let leafletInitialFit = true;
+
+function buildSpecimenPopup(o, isFlagged) {
+  const inst = o.institutionCode || 'Unknown';
+  const cat = o.catalogNumber || o.key;
+  const year = o.year || '?';
+  const place = [o.locality, o.stateProvince, o.country].filter(Boolean).join(', ') || 'unknown';
+  const truncPlace = place.length > 90 ? place.slice(0, 90) + '…' : place;
+  const imgUrl = o.media && o.media[0] && o.media[0].identifier;
+  const gbifUrl = `https://www.gbif.org/occurrence/${o.key}`;
+  const sci = o.scientificName || o.species || '';
+  const html =
+    `<div class="popup-name">${escapeHtml(sci)}</div>` +
+    (isFlagged ? '<div class="popup-flagged">Flagged</div>' : '') +
+    `<div class="popup-meta"><strong>${escapeHtml(inst)}</strong> · #${escapeHtml(cat)}<br/>` +
+    `${escapeHtml(String(year))} · ${escapeHtml(truncPlace)}</div>` +
+    '<div class="popup-actions">' +
+      (imgUrl ? `<button type="button" class="popup-photo-btn" data-photo="1">View photo</button>` : '') +
+      `<a href="${escapeHtml(gbifUrl)}" target="_blank" rel="noopener" class="popup-link">View on GBIF &rarr;</a>` +
+    '</div>';
+  return { html, imgUrl, gbifUrl, caption: `${sci} · ${inst} · ${year} · ${truncPlace}` };
+}
+
 function renderMap(allOccs, flaggedOccs) {
-  const canvas = document.getElementById('map-canvas');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
-
-  const w = rect.width, h = rect.height;
-  ctx.fillStyle = '#f4ede1';
-  ctx.fillRect(0, 0, w, h);
-
-  const proj = (lat, lon) => ({
-    x: (lon + 180) / 360 * w,
-    y: (90 - lat) / 180 * h
+  if (typeof L === 'undefined') {
+    console.warn('Leaflet did not load — map disabled.');
+    return;
+  }
+  if (!leafletMap) {
+    leafletMap = L.map('leaflet-map', {
+      worldCopyJump: true,
+      minZoom: 1,
+      scrollWheelZoom: 'center',
+      attributionControl: true
+    }).setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(leafletMap);
+    leafletInitialFit = true;
+  }
+  // Tear down previous marker layers
+  ['normal', 'flagged', 'compare'].forEach(k => {
+    if (leafletLayers[k]) { leafletMap.removeLayer(leafletLayers[k]); leafletLayers[k] = null; }
   });
-
-  ctx.strokeStyle = '#d8d4cc';
-  ctx.lineWidth = 0.5;
-  for (let lon = -180; lon <= 180; lon += 30) {
-    const p = proj(0, lon);
-    ctx.beginPath();
-    ctx.moveTo(p.x, 0);
-    ctx.lineTo(p.x, h);
-    ctx.stroke();
-  }
-  for (let lat = -60; lat <= 60; lat += 30) {
-    const p = proj(lat, 0);
-    ctx.beginPath();
-    ctx.moveTo(0, p.y);
-    ctx.lineTo(w, p.y);
-    ctx.stroke();
-  }
-  // Coastlines (from coastlines.js — 110m Natural Earth via world-atlas, MIT)
-  if (window.SpecimenFinderCoastlines) {
-    ctx.strokeStyle = '#a8a098';
-    ctx.lineWidth = 0.8;
-    window.SpecimenFinderCoastlines.forEach(line => {
-      ctx.beginPath();
-      for (let i = 0; i < line.length; i++) {
-        const p = proj(line[i][1], line[i][0]); // [lon, lat]
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.stroke();
-    });
-  }
-
-  ctx.strokeStyle = '#b8b3a8';
-  ctx.lineWidth = 1;
-  const eq = proj(0, 0);
-  ctx.beginPath();
-  ctx.moveTo(0, eq.y);
-  ctx.lineTo(w, eq.y);
-  ctx.stroke();
 
   const flaggedKeys = new Set(flaggedOccs.map(f => f.key));
   const passesTime = (o) => {
@@ -2926,36 +3035,76 @@ function renderMap(allOccs, flaggedOccs) {
     if (!o.year) return timeWindow.showUndated;
     return o.year >= timeWindow.start && o.year <= timeWindow.end;
   };
+
+  const normalLayer = L.layerGroup();
+  const flaggedLayer = L.layerGroup();
+  const bounds = [];
+
   allOccs.forEach(o => {
     if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
     if (o.decimalLatitude === 0 && o.decimalLongitude === 0) return;
-    const visible = passesTime(o);
-    const p = proj(o.decimalLatitude, o.decimalLongitude);
+    if (!passesTime(o)) return;
     const isFlagged = flaggedKeys.has(o.key);
-    if (visible) {
-      ctx.fillStyle = isFlagged ? '#c2410c' : 'rgba(90, 90, 90, 0.45)';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, isFlagged ? 4 : 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // Out-of-window dots are kept as a faint ghost so the user perceives motion
-      ctx.fillStyle = 'rgba(140, 140, 140, 0.08)';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    const m = L.circleMarker([o.decimalLatitude, o.decimalLongitude], {
+      radius: isFlagged ? 7 : 5,
+      color: isFlagged ? '#c2410c' : '#3f3f3f',
+      weight: isFlagged ? 1.5 : 0.5,
+      fillColor: isFlagged ? '#c2410c' : '#5a5a5a',
+      fillOpacity: isFlagged ? 0.85 : 0.5
+    });
+    const popup = buildSpecimenPopup(o, isFlagged);
+    m.bindPopup(popup.html, { maxWidth: 300 });
+    m.on('popupopen', (ev) => {
+      const el = ev.popup.getElement();
+      const btn = el?.querySelector('.popup-photo-btn[data-photo]');
+      if (btn && popup.imgUrl) {
+        btn.addEventListener('click', () => openLightbox(popup.imgUrl, popup.caption, popup.gbifUrl, 'GBIF record'));
+      }
+    });
+    (isFlagged ? flaggedLayer : normalLayer).addLayer(m);
+    bounds.push([o.decimalLatitude, o.decimalLongitude]);
   });
-  // Comparison species overlay (drawn last so it sits on top)
+  normalLayer.addTo(leafletMap);
+  flaggedLayer.addTo(leafletMap); // drawn on top
+  leafletLayers.normal = normalLayer;
+  leafletLayers.flagged = flaggedLayer;
+
+  // Comparison species overlay (blue), drawn on top of everything else
   if (compareResults && compareResults.occs.length > 0) {
+    const compareLayer = L.layerGroup();
     compareResults.occs.forEach(o => {
       if (!passesTime(o)) return;
-      const p = proj(o.decimalLatitude, o.decimalLongitude);
-      ctx.fillStyle = 'rgba(30, 64, 175, 0.55)';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fill();
+      const m = L.circleMarker([o.decimalLatitude, o.decimalLongitude], {
+        radius: 5,
+        color: '#1e40af',
+        weight: 0.5,
+        fillColor: '#1e40af',
+        fillOpacity: 0.6
+      });
+      const inst = o.institutionCode || 'Unknown';
+      const year = o.year || '?';
+      const gbifUrl = `https://www.gbif.org/occurrence/${o.key}`;
+      const sci = compareResults.species.scientificName || compareResults.species.canonicalName || '';
+      m.bindPopup(
+        `<div class="popup-name" style="color:#1e40af">${escapeHtml(sci)}</div>` +
+        `<div class="popup-meta"><strong>${escapeHtml(inst)}</strong> · ${escapeHtml(String(year))}<br/>${escapeHtml(o.country || '')}</div>` +
+        `<div class="popup-actions"><a href="${escapeHtml(gbifUrl)}" target="_blank" rel="noopener" class="popup-link">View on GBIF &rarr;</a></div>`,
+        { maxWidth: 280 }
+      );
+      compareLayer.addLayer(m);
     });
+    compareLayer.addTo(leafletMap);
+    leafletLayers.compare = compareLayer;
   }
+
+  // First render of a search: fit the map to the data. Subsequent renders (time
+  // scrub, comparison toggle) keep the user's zoom and pan.
+  if (leafletInitialFit && bounds.length > 0) {
+    leafletMap.fitBounds(L.latLngBounds(bounds).pad(0.15), { animate: false });
+    leafletInitialFit = false;
+  }
+  // Defensive: in case the map container was hidden when initialised
+  setTimeout(() => leafletMap.invalidateSize(false), 0);
 }
 
 // Knowledge panel: "What's known about this plant"
@@ -2975,7 +3124,13 @@ async function getWikipediaSection(pageTitle, sectionPattern) {
     const contentData = await contentRes.json();
     const html = contentData.parse?.text?.['*'] || '';
     let text = html
+      // Drop entire <style>, <script>, <table> (citation/infobox cruft) blocks first,
+      // before stripping bare tags — otherwise their *contents* leak through.
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<table[\s\S]*?<\/table>/gi, '')
       .replace(/<sup class="reference"[^>]*>[\s\S]*?<\/sup>/g, '')
+      .replace(/<span class="mw-editsection[^"]*"[\s\S]*?<\/span>\s*<\/span>/g, '') // nested span pattern Wikipedia uses
       .replace(/<span class="mw-editsection[^"]*"[^>]*>[\s\S]*?<\/span>/g, '')
       .replace(/<[^>]+>/g, '')
       .replace(/\[\d+\]/g, '')
@@ -2988,6 +3143,17 @@ async function getWikipediaSection(pageTitle, sectionPattern) {
       .replace(/&quot;/g, '"')
       .replace(/\s+/g, ' ')
       .trim();
+    // The first chunk often duplicates the section heading and a trailing "edit"
+    // word that survived the span strip. Drop a leading "<heading>edit " or
+    // "<heading> " prefix if present, case-insensitively.
+    const headingName = match.line;
+    const escapedHeading = headingName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    text = text.replace(new RegExp('^' + escapedHeading + '(\\s*edit)?\\s*', 'i'), '');
+    // Cut off any stray CSS that survived (e.g. "{ ... } .foo{ ... }")
+    text = text.replace(/\s*\.mw-parser-output[\s\S]*$/, '').trim();
+    // Wikipedia's references list bleeds in as " ^ Citation text. ^ Citation text."
+    // — drop from the first reference back-pointer to end.
+    text = text.replace(/\s+\^\s+[\s\S]*$/, '').trim();
     if (text.length > 1200) text = text.slice(0, 1200) + '...';
     return { text, sectionName: match.line };
   } catch (e) {
@@ -3006,6 +3172,115 @@ async function getGBIFVernacularNames(usageKey) {
   }
 }
 
+// Care & growing: heuristic chip extraction from Wikipedia text + a curated
+// links panel. For species not commonly cultivated this stays sparse on
+// purpose — the disclaimer makes that explicit.
+function extractCareChips(text) {
+  const t = (text || '').toLowerCase();
+  const chips = [];
+  const seen = new Set();
+  const add = (label, kind, hint) => {
+    const k = kind + ':' + label;
+    if (seen.has(k)) return;
+    seen.add(k);
+    chips.push({ label, kind, hint });
+  };
+  // Sun / light
+  if (/\bfull\s+sun\b/.test(t)) add('Full sun', 'sun', 'At least 6 hours direct sun');
+  if (/\b(partial\s+(?:sun|shade)|part\s+(?:sun|shade)|dappled\s+(?:sun|shade)|filtered\s+sunlight)\b/.test(t)) add('Partial shade', 'sun', '3–6 hours direct sun');
+  if (/\b(full\s+shade|deep\s+shade|fully\s+shaded)\b/.test(t)) add('Full shade', 'sun', 'Less than 3 hours direct sun');
+  // Water
+  if (/\b(drought[\s\-]tolerant|drought\s+resistant|xeric|low\s+water\s+(consumption|needs|requirements?)|water[\s\-]wise|water[\s\-]thrifty)\b/.test(t)) add('Drought tolerant', 'water', 'Low water needs once established');
+  if (/\b(moisture[\s\-]loving|moisture[\s\-]retaining|wetland|bog|riparian|water-loving|aquatic|prefers\s+(?:moist|wet)\s+soils?)\b/.test(t)) add('Moist / wet soils', 'water', 'Prefers consistently moist conditions');
+  if (/\b(does\s+not\s+grow\s+well\s+in\s+continuously\s+damp|cannot\s+tolerate\s+wet\s+soils?|hates\s+wet\s+feet|dislikes\s+wet)/.test(t)) add('Dislikes wet feet', 'water', 'Avoid waterlogged or constantly damp soil');
+  if (/\b(well[\s\-]drained|good\s+drainage|sharp\s+drainage)\b/.test(t)) add('Well-drained soil', 'soil', 'Avoid waterlogged ground');
+  // Soil types
+  if (/\bsandy\s+soil\b/.test(t)) add('Sandy soil', 'soil', null);
+  if (/\bclay\s+soil\b/.test(t)) add('Tolerates clay', 'soil', null);
+  if (/\bloam(y)?\b/.test(t)) add('Loamy soil', 'soil', null);
+  if (/\b(acidic|low\s+pH|ericaceous)\b/.test(t)) add('Acidic soil', 'soil', 'pH below ~6.5');
+  if (/\b(alkaline|chalky|calcareous)\b/.test(t)) add('Alkaline soil', 'soil', 'pH above ~7.5');
+  // Hardiness
+  const usdaRange = t.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})(?:[ab])?\s*(?:to|[–—\-])\s*(\d{1,2})(?:[ab])?/);
+  if (usdaRange) add(`USDA zones ${usdaRange[1]}–${usdaRange[2]}`, 'hardiness', 'United States hardiness zones');
+  else {
+    const usdaOne = t.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})(?:[ab])?\b/);
+    if (usdaOne) add(`USDA zone ${usdaOne[1]}`, 'hardiness', 'United States hardiness zone');
+  }
+  const rhs = t.match(/rhs(?:\s+zone)?\s+h(\d)\b/);
+  if (rhs) add(`RHS H${rhs[1]}`, 'hardiness', 'UK Royal Horticultural Society hardiness rating');
+  if (/\bfrost\s+tender\b/.test(t)) add('Frost tender', 'hardiness', null);
+  if (/\b(frost\s+hardy|fully\s+hardy|cold[\s\-]hardy|hardy\s+to\s+[\-−]?\d+|tolerant\s+of\s+low\s+temperatures)/.test(t)) add('Cold-hardy', 'hardiness', null);
+  // Propagation
+  if (/\b(stem|softwood|hardwood|semi[\s\-]ripe)\s+cuttings?\b/.test(t)) add('From cuttings', 'propagation', null);
+  if (/\b(division|divide\s+the\s+(roots|clumps|rhizomes))\b/.test(t)) add('Divide clumps', 'propagation', null);
+  if (/\b(seed|sow(n)?|stratif)/.test(t)) add('From seed', 'propagation', null);
+  if (/\b(grafting|grafted)\b/.test(t)) add('Grafting', 'propagation', null);
+  if (/\b(layering|layered)\b/.test(t)) add('Layering', 'propagation', null);
+  return chips;
+}
+
+function renderCareGrowing({ speciesName, wikiUrl, cultivationSection, propagationSection, pestsSection, ecologySection, nativeRangeCountries }) {
+  const combined = [cultivationSection, propagationSection, pestsSection, ecologySection]
+    .map(s => s?.text || '')
+    .join(' ');
+  const chips = extractCareChips(combined);
+  const hasText = !!(cultivationSection || propagationSection || pestsSection);
+
+  const chipColors = { sun: '#f59e0b', water: '#0284c7', soil: '#92400e', hardiness: '#475569', propagation: '#15803d' };
+  const chipsHtml = chips.length > 0
+    ? '<div class="care-chips">' + chips.map(c =>
+        `<span class="care-chip" style="border-color:${chipColors[c.kind] || '#888'};color:${chipColors[c.kind] || '#888'}" title="${escapeHtml(c.hint || c.kind)}">${escapeHtml(c.label)}</span>`
+      ).join('') + '</div>'
+    : '';
+
+  const wikiName = encodeURIComponent((speciesName || '').replace(/ /g, '_'));
+  const queryName = encodeURIComponent(speciesName || '');
+
+  const sectionsBlocks = [];
+  if (cultivationSection) {
+    sectionsBlocks.push(`<div class="care-block"><strong>Cultivation (from Wikipedia &mdash; ${escapeHtml(cultivationSection.sectionName)})</strong><p>${escapeHtml(cultivationSection.text)}</p></div>`);
+  }
+  if (propagationSection) {
+    sectionsBlocks.push(`<div class="care-block"><strong>Propagation</strong><p>${escapeHtml(propagationSection.text)}</p></div>`);
+  }
+  if (pestsSection) {
+    sectionsBlocks.push(`<div class="care-block"><strong>Pests &amp; diseases</strong><p>${escapeHtml(pestsSection.text)}</p></div>`);
+  }
+
+  const nativeHint = (nativeRangeCountries && nativeRangeCountries.size >= 3)
+    ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px"><strong>Tip:</strong> this species is recorded as native in ${nativeRangeCountries.size} countries. For best results, match the climate, light, and soil of its native range &mdash; the Climate envelope panel above shows that range explicitly.</p>`
+    : '';
+
+  const bodyHtml = hasText
+    ? sectionsBlocks.join('')
+    : `<p class="knowledge-empty">No cultivation, propagation, or pest sections were found on Wikipedia for this species. Many wild and rare species aren't documented as garden plants &mdash; "care" for them usually means leaving them in their native habitat. Use the authoritative growing-resource links below to dig deeper.</p>`;
+
+  return `
+    <div class="knowledge-section">
+      <h3>Care &amp; growing <span class="evidence-level ${hasText ? 'med' : 'low'}">${hasText ? 'Wikipedia + heuristics' : 'limited data'}</span></h3>
+      <div class="knowledge-content">
+        <p style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:12px">
+          Species-specific growing guidance, extracted from Wikipedia's Cultivation / Propagation / Pests sections plus heuristic tag extraction. <strong>Not a substitute for local horticultural advice.</strong> Climate, soil, and pest pressure vary by region &mdash; cross-check with your local extension office or botanic garden before relying on this for a serious planting decision.
+        </p>
+        ${chipsHtml}
+        ${bodyHtml}
+        ${nativeHint}
+        <div class="care-links">
+          <strong>Go deeper at authoritative growing resources:</strong>
+          <ul style="list-style:disc;padding-left:20px;margin-top:6px;font-size:13px;">
+            <li><a href="https://pfaf.org/user/Plant.aspx?LatinName=${queryName}" target="_blank" rel="noopener">Plants for a Future (PFAF)</a> &mdash; edibility, medicinal uses, cultivation</li>
+            <li><a href="https://www.rhs.org.uk/plants/search-results?form-mode=true&query=${queryName}" target="_blank" rel="noopener">Royal Horticultural Society (RHS)</a> &mdash; UK-focused garden guidance</li>
+            <li><a href="https://www.missouribotanicalgarden.org/plantfinder/plantfindersearch.aspx?taxon=${queryName}" target="_blank" rel="noopener">Missouri Botanical Garden &mdash; Plant Finder</a> &mdash; the most authoritative free US guide</li>
+            <li><a href="https://plants.usda.gov/home/plantProfile?symbol=&plantName=${queryName}" target="_blank" rel="noopener">USDA PLANTS Database</a> &mdash; native status, distribution, conservation</li>
+            <li><a href="https://en.wikipedia.org/wiki/${wikiName}" target="_blank" rel="noopener">Wikipedia article</a> &mdash; full taxonomic + horticultural overview</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   const panel = document.getElementById('knowledge-panel');
   const pills = document.getElementById('knowledge-pills');
@@ -3018,13 +3293,17 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   const wikiTitle = (speciesName || '').replace(/ /g, '_');
 
   const [usesSection, ecologySection, toxicitySection, medicinalSection, descriptionSection,
+         cultivationSection, propagationSection, pestsSection,
          vernacularNames, wikidata, inat] =
     await Promise.all([
-      getWikipediaSection(wikiTitle, /^(uses|cultivation|economic\s+uses|human\s+uses|culinary)$/i),
+      getWikipediaSection(wikiTitle, /^(uses|economic\s+uses|human\s+uses|culinary)$/i),
       getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology)$/i),
       getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)$/i),
       getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry)/i),
       getWikipediaSection(wikiTitle, /^(description|morphology)$/i),
+      getWikipediaSection(wikiTitle, /^(cultivation|cultivars?|in\s+cultivation|garden(ing)?|growing|horticulture|care)$/i),
+      getWikipediaSection(wikiTitle, /^(propagation|reproduction)$/i),
+      getWikipediaSection(wikiTitle, /^(pests?(\s+and\s+diseases?)?|diseases?)$/i),
       gbifSpecies.usageKey ? getGBIFVernacularNames(gbifSpecies.usageKey) : Promise.resolve([]),
       getWikidataInfo(speciesName),
       getINaturalistInfo(speciesName)
@@ -3079,6 +3358,7 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     { label: 'Description', has: !!descriptionSection },
     { label: 'Ecology', has: !!ecologySection },
     { label: 'Documented uses', has: !!usesSection },
+    { label: 'Care & growing', has: !!(cultivationSection || propagationSection || pestsSection) },
     { label: 'Toxicity / hazards', has: !!toxicitySection },
     { label: 'Compounds studied', has: !!medicinalSection }
   ];
@@ -3154,6 +3434,16 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
       </div>
     `;
   }
+
+  sectionsHtml += renderCareGrowing({
+    speciesName,
+    wikiUrl,
+    cultivationSection,
+    propagationSection,
+    pestsSection,
+    ecologySection,
+    nativeRangeCountries
+  });
 
   sectionsHtml += `
     <div class="knowledge-section">
@@ -3386,6 +3676,7 @@ async function runSearchDirect(speciesName) {
   climateCache = null;
   climateEnvelope = null;
   communityAnnotations = new Map();
+  leafletInitialFit = true;
   document.getElementById('climate-envelope').classList.remove('visible', 'loading');
   document.getElementById('climate-envelope').innerHTML = '';
   document.getElementById('time-machine').hidden = true;
@@ -3566,11 +3857,16 @@ function buildFilters(flagged) {
     unimaged: 'Historical, not imaged',
     climate: 'Climate outliers'
   };
+  // Count specimens in the flagged list that have at least one community annotation
+  const communityCount = flagged.reduce((n, f) => n + (communityAnnotations.has(String(f.key)) ? 1 : 0), 0);
   bar.innerHTML = '<span class="filters-label">Filter:</span>' +
     `<button type="button" class="filter-chip ${activeFilter === 'all' ? 'active' : ''}" data-filter="all" aria-pressed="${activeFilter === 'all'}">All (${flagged.length})</button>` +
     Object.entries(counts).map(([k, v]) =>
       `<button type="button" class="filter-chip ${activeFilter === k ? 'active' : ''}" data-filter="${k}" aria-pressed="${activeFilter === k}">${escapeHtml(flagLabels[k] || k)} (${v})</button>`
-    ).join('');
+    ).join('') +
+    (communityCount > 0
+      ? `<button type="button" class="filter-chip ${activeFilter === 'community' ? 'active' : ''}" data-filter="community" aria-pressed="${activeFilter === 'community'}">Community-flagged (${communityCount})</button>`
+      : '');
   bar.classList.add('visible');
   bar.querySelectorAll('.filter-chip').forEach(c => {
     c.addEventListener('click', () => {
@@ -4360,7 +4656,9 @@ function render() {
   const list = document.getElementById('specimen-list');
   list.innerHTML = '';
   let items = currentResults.flagged;
-  if (activeFilter !== 'all') {
+  if (activeFilter === 'community') {
+    items = items.filter(s => communityAnnotations.has(String(s.key)));
+  } else if (activeFilter !== 'all') {
     items = items.filter(s => s.flags.some(f => f.key === activeFilter));
   }
   let sorted = [...items];
@@ -4635,7 +4933,9 @@ let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if (currentResults.all.length) renderMap(currentResults.all, currentResults.flagged);
+    if (leafletMap) leafletMap.invalidateSize(false);
+    // Time-machine histogram is canvas-based; redraw on width changes
+    if (currentResults.all && currentResults.all.length) refreshTimeView();
   }, 200);
 });
 

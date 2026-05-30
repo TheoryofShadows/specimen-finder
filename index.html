@@ -110,6 +110,31 @@
     display: flex; align-items: center; gap: 18px;
     font-size: 13px;
   }
+  .header-burger {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 9px;
+    cursor: pointer;
+    flex-direction: column;
+    gap: 4px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-burger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .header-burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .header-burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .header-burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
   .api-status { display: flex; align-items: center; gap: 8px; color: var(--text-soft); }
   .api-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
   .api-dot.connected { background: var(--green); }
@@ -2596,10 +2621,59 @@
     .tm-readout { min-width: 0; text-align: left; }
     .tm-row { flex-wrap: wrap; }
   }
+  @media (max-width: 720px) {
+    /* Collapse header into a hamburger menu — six full-text buttons don't
+       fit on a phone, and the resulting horizontal overflow pushed a big
+       white panel off the right edge of the viewport. */
+    header { flex-wrap: wrap; gap: 12px; position: relative; }
+    .header-burger { display: flex; }
+    .header-right {
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      order: 3;
+    }
+    .header-right.open { display: flex; }
+    .header-right .api-status {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 4px;
+    }
+    .header-right .header-link {
+      padding: 12px 14px;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 15px;
+      justify-content: flex-start;
+    }
+    .header-right .header-icon-btn { padding: 12px 14px; gap: 10px; }
+    .header-right .header-icon-btn::after {
+      content: 'Toggle theme';
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+  }
   @media (max-width: 600px) {
-    .container { padding: 0 18px; }
-    .hero { padding: 36px 0 24px; }
-    .hero h1 { font-size: 30px; }
+    .container { padding: 0 16px; }
+    /* Belt + suspenders: prevent any rogue child from triggering a
+       horizontal scrollbar on narrow viewports. */
+    html, body { overflow-x: hidden; }
+    .hero { padding: 32px 0 24px; }
+    .hero::before { inset: 0 -16px; border-radius: 16px; } /* keep glow inside visible area */
+    .hero h1 { font-size: 30px; line-height: 1.08; }
+    .hero-lead { font-size: 16px; margin-bottom: 22px; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 22px; }
+    .hero-stat { padding: 14px 16px; }
+    .hero-stat strong { font-size: 24px; }
+    .how { padding: 20px 22px; }
     .specimen-top { grid-template-columns: 1fr; }
     .id-candidate { grid-template-columns: 1fr; gap: 10px; }
     .candidate-confidence { text-align: left; }
@@ -2608,6 +2682,8 @@
     .tab-panel { padding: 22px 20px; }
     .photo-strip-thumb { width: 100px; height: 100px; }
     .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+    .featured-card { width: 200px; }
+    .gallery-show-all { padding: 7px 12px; font-size: 12px; }
   }
 </style>
 </head>
@@ -2623,7 +2699,10 @@
         <div class="brand-sub">Plant records, made findable</div>
       </div>
     </div>
-    <div class="header-right">
+    <button type="button" class="header-burger" id="header-burger" aria-label="Open menu" aria-expanded="false" aria-controls="header-right">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="header-right" id="header-right">
       <div class="api-status">
         <div class="api-dot" id="api-dot"></div>
         <span id="api-status-text">Photo ID off</span>
@@ -3219,6 +3298,35 @@ if (!howIsDismissed()) howCard.hidden = false;
 document.getElementById('how-dismiss').addEventListener('click', hideHowCard);
 document.getElementById('how-gotit').addEventListener('click', hideHowCard);
 document.getElementById('header-how').addEventListener('click', showHowCard);
+
+// Mobile hamburger — toggle header menu visibility on narrow viewports
+(function wireBurger() {
+  const burger = document.getElementById('header-burger');
+  const menu = document.getElementById('header-right');
+  if (!burger || !menu) return;
+  burger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = menu.classList.toggle('open');
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+  // Tapping any menu item, or clicking outside, closes the menu
+  menu.addEventListener('click', (e) => {
+    if (e.target.closest('button, a')) {
+      menu.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      burger.setAttribute('aria-label', 'Open menu');
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.classList.contains('open')) return;
+    if (e.target === burger || burger.contains(e.target)) return;
+    if (menu.contains(e.target)) return;
+    menu.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+    burger.setAttribute('aria-label', 'Open menu');
+  });
+})();
 
 // Knowledge panel toggle
 const kHeader = document.getElementById('knowledge-header');

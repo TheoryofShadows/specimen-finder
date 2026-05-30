@@ -9,6 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Leaflet for the world map (MIT, ~140KB JS + 14KB CSS) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root {
     --bg: #fafaf7;
@@ -29,7 +35,35 @@
     --yellow-light: #fef3c7;
     --blue: #1e40af;
     --blue-light: #dbeafe;
+    --shadow-popup: 0 4px 18px rgba(0,0,0,0.08);
   }
+  body.dark {
+    --bg: #14110d;
+    --bg-card: #1f1b15;
+    --text: #f4ede1;
+    --text-soft: #d6cebe;
+    --text-muted: #908774;
+    --line: #312a20;
+    --line-strong: #4a4233;
+    --accent: #f97316;
+    --accent-light: #3a2410;
+    --accent-dark: #ea580c;
+    --green: #4ade80;
+    --green-light: #14322a;
+    --red: #f87171;
+    --red-light: #3f1f1f;
+    --yellow: #fbbf24;
+    --yellow-light: #3a2c15;
+    --blue: #60a5fa;
+    --blue-light: #1a2740;
+    --shadow-popup: 0 4px 18px rgba(0,0,0,0.5);
+  }
+  body.dark .leaflet-tile { filter: brightness(0.7) saturate(0.8) hue-rotate(-5deg); }
+  body.dark .leaflet-popup-content-wrapper,
+  body.dark .leaflet-popup-tip { background: var(--bg-card); color: var(--text-soft); }
+  body.dark img.specimen-image,
+  body.dark .photo-strip-thumb img,
+  body.dark .gallery-thumb img { filter: brightness(0.92); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     background: var(--bg);
@@ -92,90 +126,166 @@
   .header-link.accent { color: var(--accent); }
   .header-link.accent:hover { background: var(--accent-light); }
 
-  /* Hero */
-  .hero { padding: 56px 0 36px; }
+  /* Hero — 2026 polish: softer accent eyebrow, larger headline, glow-tinted
+     stat tiles on a subtle gradient backdrop. */
+  .hero {
+    padding: 72px 0 44px;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0 -40px;
+    background:
+      radial-gradient(60% 80% at 12% 20%, var(--accent-light) 0%, transparent 55%),
+      radial-gradient(50% 60% at 90% 10%, var(--green-light) 0%, transparent 60%);
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: 24px;
+  }
+  body.dark .hero::before { opacity: 0.4; }
   .hero-eyebrow {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    background: var(--accent-light);
-    padding: 6px 12px;
+    letter-spacing: 0.1em;
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    padding: 6px 14px;
     border-radius: 100px;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(194, 65, 12, 0.08);
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--accent-light);
   }
   .hero h1 {
     font-family: 'Fraunces', serif;
-    font-size: 52px;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    font-size: 58px;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
     font-weight: 500;
-    margin-bottom: 20px;
-    max-width: 900px;
+    margin-bottom: 22px;
+    max-width: 920px;
     color: var(--text);
   }
   .hero h1 em {
     font-style: italic;
-    color: var(--accent);
+    background: linear-gradient(135deg, var(--accent), #ea580c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   .hero-lead {
     font-size: 19px;
     color: var(--text-soft);
     max-width: 760px;
-    line-height: 1.6;
-    margin-bottom: 28px;
+    line-height: 1.65;
+    margin-bottom: 36px;
   }
   .hero-stats {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-    padding-top: 24px;
-    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 28px;
   }
   .hero-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 22px;
     font-size: 13px;
     color: var(--text-muted);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  .hero-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    border-color: var(--accent-light);
+  }
+  body.dark .hero-stat { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
   .hero-stat strong {
     display: block;
     font-family: 'Fraunces', serif;
-    font-size: 24px;
+    font-size: 30px;
     color: var(--text);
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    line-height: 1;
+    letter-spacing: -0.02em;
   }
 
-  /* How it works */
+  /* How it works — collapsed by default for return visitors, dismissable */
   .how {
     background: var(--bg-card);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 28px 32px;
+    border-radius: 16px;
+    padding: 26px 30px;
     margin-bottom: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
+  .how[hidden] { display: none; }
   .how-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 18px;
-    cursor: pointer;
+    gap: 12px;
   }
   .how-header h2 {
     font-family: 'Fraunces', serif;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 600;
   }
-  .how-toggle {
-    font-size: 13px;
+  .how-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .how-dismiss {
+    background: transparent;
+    border: none;
     color: var(--text-muted);
-    font-weight: 600;
+    font-size: 22px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
   }
-  .how-body { display: none; }
-  .how.open .how-body { display: block; }
-  .how.open .how-toggle::after { content: ' \25B4'; }
-  .how:not(.open) .how-toggle::after { content: ' \25BE'; }
+  .how-dismiss:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .how-gotit {
+    margin-top: 22px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .how-gotit:hover { background: var(--accent-dark); transform: translateY(-1px); }
   .how-steps {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -183,41 +293,49 @@
     margin-top: 6px;
   }
   .how-step {
-    padding-left: 44px;
+    padding-left: 48px;
     position: relative;
     font-size: 14px;
     color: var(--text-soft);
-    line-height: 1.55;
+    line-height: 1.6;
   }
   .how-step::before {
     content: attr(data-num);
     position: absolute;
     left: 0; top: -2px;
-    width: 32px; height: 32px;
-    background: var(--accent);
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), #ea580c);
     color: white;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-weight: 700;
     font-size: 15px;
+    box-shadow: 0 4px 10px rgba(194, 65, 12, 0.25);
   }
   .how-step strong {
     display: block;
     color: var(--text);
     font-size: 15px;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
   }
 
   /* Input card */
   .input-card {
     background: var(--bg-card);
-    border: 2px solid var(--text);
-    border-radius: 12px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
     margin-bottom: 28px;
     overflow: hidden;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  .input-card:focus-within {
+    box-shadow: 0 8px 32px rgba(194, 65, 12, 0.10);
+    border-color: var(--accent);
+  }
+  body.dark .input-card { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4); }
+  body.dark .input-card:focus-within { box-shadow: 0 8px 32px rgba(249, 115, 22, 0.25); }
   /* Button reset for elements styled with chip/tab/pill classes */
   button.tab, button.organ-pill, button.filter-chip, button.example-pill,
   button.header-link, button.disambig-item {
@@ -966,11 +1084,78 @@
   .legend-dot.flagged { background: var(--accent); }
   #specimen-map {
     width: 100%;
-    height: 360px;
+    aspect-ratio: 16 / 9;
+    min-height: 320px;
+    max-height: 540px;
     background: var(--bg);
     position: relative;
   }
-  .map-canvas { width: 100%; height: 100%; cursor: crosshair; }
+  .leaflet-map { width: 100%; height: 100%; }
+  /* Leaflet popup styling — keep it in the project's typography */
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .leaflet-popup-content {
+    margin: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text-soft);
+    line-height: 1.45;
+    min-width: 180px;
+    max-width: 280px;
+  }
+  .popup-name {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .popup-flagged {
+    display: inline-block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .popup-meta {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-bottom: 8px;
+  }
+  .popup-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .popup-link {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .popup-link:hover { text-decoration: underline; }
+  .popup-photo-btn {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .popup-photo-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Empty + footer */
   .empty-state {
@@ -1442,73 +1627,246 @@
   /* Specimen gallery */
   .gallery-section {
     display: none;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     background: var(--bg-card);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 16px;
     overflow: hidden;
+    box-shadow: var(--shadow-popup);
   }
   .gallery-section.visible { display: block; }
   .gallery-header {
-    padding: 14px 20px;
+    padding: 20px 24px 14px;
     border-bottom: 1px solid var(--line);
+  }
+  .gallery-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
   }
   .gallery-title {
     font-family: 'Fraunces', serif;
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 600;
+    color: var(--text);
   }
   .gallery-count {
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     color: var(--text-muted);
     font-weight: 500;
-    margin-left: 6px;
+    margin-left: 8px;
   }
   .gallery-sub {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
-    margin-top: 3px;
+    margin-top: 4px;
+    max-width: 600px;
+    line-height: 1.5;
+  }
+  .gallery-show-all {
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .gallery-show-all:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .gallery-show-all svg { transition: transform 0.2s; }
+  .gallery-show-all.expanded svg { transform: rotate(180deg); }
+  .gallery-show-all-count {
+    background: rgba(0,0,0,0.08);
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .gallery-show-all:hover .gallery-show-all-count {
+    background: rgba(255,255,255,0.2);
+  }
+
+  /* Featured strip — horizontal scroll, snap, larger cards with rich captions */
+  .gallery-featured {
+    display: flex;
+    gap: 14px;
+    padding: 20px 24px 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scroll-padding: 24px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gallery-featured::-webkit-scrollbar { height: 6px; }
+  .gallery-featured::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 3px;
+  }
+  .featured-card {
+    flex: 0 0 auto;
+    width: 240px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: zoom-in;
+    padding: 0;
+    text-align: left;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-snap-align: start;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .featured-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+    border-color: var(--line-strong);
+  }
+  body.dark .featured-card { box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  body.dark .featured-card:hover { box-shadow: 0 12px 28px rgba(0,0,0,0.6); }
+  .featured-card.flagged {
+    border-color: var(--accent);
+  }
+  .featured-img-wrap {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+  }
+  .featured-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .featured-card:hover .featured-img-wrap img { transform: scale(1.06); }
+  .featured-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .featured-tag.historical { background: #7c2d12; }
+  .featured-tag.recent { background: var(--green); }
+  .featured-caption {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .featured-caption-name {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.25;
+    font-weight: 500;
+  }
+  .featured-caption-inst {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+    letter-spacing: 0.02em;
+  }
+  .featured-caption-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .featured-empty {
+    width: 100%;
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  /* Full grid (revealed on demand) */
+  .gallery-full {
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .gallery-full-header {
+    padding: 16px 24px 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 700;
   }
   .gallery-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
-    padding: 14px;
-    max-height: 520px;
+    gap: 10px;
+    padding: 12px 20px 20px;
+    max-height: 540px;
     overflow-y: auto;
   }
   .gallery-thumb {
     aspect-ratio: 1;
     overflow: hidden;
-    border-radius: 6px;
-    background: var(--bg);
+    border-radius: 10px;
+    background: var(--bg-card);
     border: 1px solid var(--line);
     cursor: zoom-in;
     position: relative;
     padding: 0;
-    transition: transform 0.15s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .gallery-thumb:hover { transform: scale(1.04); z-index: 2; border-color: var(--accent); }
+  .gallery-thumb:hover {
+    transform: scale(1.04);
+    z-index: 2;
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  }
   .gallery-thumb.flagged { border: 2px solid var(--accent); }
   .gallery-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  .gallery-thumb:hover img { transform: scale(1.06); }
   .gallery-thumb-label {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    background: linear-gradient(transparent, rgba(0,0,0,0.78));
     color: white;
     font-size: 10px;
-    padding: 14px 6px 4px;
+    padding: 18px 8px 6px;
     font-weight: 600;
     pointer-events: none;
-    line-height: 1.25;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
   }
   .gallery-empty {
     grid-column: 1 / -1;
@@ -1566,6 +1924,668 @@
   }
   .lightbox-close:hover { background: rgba(255,255,255,0.08); }
 
+  /* Time machine (decade slider + histogram + play) */
+  .time-machine {
+    padding: 14px 20px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+  }
+  .time-machine[hidden] { display: none; }
+  .tm-row { display: flex; align-items: center; gap: 14px; }
+  .tm-row-meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .tm-hint kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+  .tm-undated {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tm-playbtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s;
+  }
+  .tm-playbtn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .tm-playbtn.playing { background: var(--accent); color: white; border-color: var(--accent); }
+  .tm-range-wrap {
+    position: relative;
+    flex: 1;
+    height: 64px;
+    min-width: 240px;
+  }
+  .tm-histogram {
+    position: absolute;
+    inset: 0 0 26px 0;
+    width: 100%;
+    height: 38px;
+    pointer-events: none;
+  }
+  .tm-slider {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    margin: 0;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 26px;
+  }
+  .tm-slider::-webkit-slider-runnable-track {
+    height: 3px;
+    background: var(--line);
+    border-radius: 3px;
+  }
+  .tm-slider::-moz-range-track {
+    height: 3px;
+    background: var(--line);
+    border-radius: 3px;
+  }
+  .tm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    pointer-events: auto;
+    margin-top: -7px;
+  }
+  .tm-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .tm-readout {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-soft);
+    white-space: nowrap;
+    text-align: right;
+    min-width: 180px;
+    flex: 0 0 auto;
+  }
+  .tm-readout strong { color: var(--text); font-weight: 700; }
+
+  /* Climate envelope panel */
+  .climate-envelope {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.55;
+  }
+  .climate-envelope.visible { display: block; }
+  .climate-envelope.loading { display: block; color: var(--text-muted); font-style: italic; }
+  .climate-envelope-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .climate-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .climate-stat {
+    background: var(--bg);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+  }
+  .climate-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .climate-stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .climate-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Species name row: name + pronounce + favourite */
+  .species-sci-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .species-sci-row .species-sci { margin-bottom: 0; }
+  .species-pronounce-btn,
+  .species-fav-btn {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex: 0 0 auto;
+    transition: all 0.15s;
+  }
+  .species-pronounce-btn:hover,
+  .species-fav-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .species-fav-btn[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .species-fav-btn[aria-pressed="true"]:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: white;
+  }
+  .species-pronounce-btn.speaking {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .header-garden-count {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 100px;
+    margin-left: 4px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  /* My garden modal list */
+  .garden-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    border-top: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .garden-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+  }
+  .garden-item:last-child { border-bottom: none; }
+  .garden-item-sci {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 0;
+    font-weight: 500;
+  }
+  .garden-item-sci:hover { color: var(--accent); }
+  .garden-item-common {
+    font-size: 12px;
+    color: var(--text-muted);
+    grid-column: 1 / 2;
+    margin-top: 2px;
+  }
+  .garden-item-remove {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .garden-item-remove:hover { border-color: var(--red); color: var(--red); }
+  .garden-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  /* Bloom calendar */
+  .bloom-calendar {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+  }
+  .bloom-month {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .bloom-bar-wrap {
+    width: 100%;
+    height: 60px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .bloom-bar {
+    width: 100%;
+    background: linear-gradient(to top, #c2410c, #f59e0b);
+    border-radius: 0 0 2px 2px;
+    transition: height 0.3s;
+  }
+  .bloom-month.peak .bloom-bar-wrap { border-color: var(--accent); }
+  .bloom-month-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+  .bloom-month.peak .bloom-month-label { color: var(--accent); }
+  .bloom-count {
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+  .bloom-summary {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-top: 8px;
+    line-height: 1.55;
+  }
+  .bloom-summary strong { color: var(--text); }
+
+  /* Header icon-only buttons (theme toggle) */
+  .header-icon-btn {
+    padding: 7px 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Voice-search mic button (sits between input and Search) */
+  .mic-btn {
+    background: var(--bg-card);
+    border: 1.5px solid var(--line);
+    color: var(--text-soft);
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    transition: all 0.15s;
+  }
+  .mic-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .mic-btn.listening {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    animation: micPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(194, 65, 12, 0.5); }
+    50%      { box-shadow: 0 0 0 8px rgba(194, 65, 12, 0); }
+  }
+
+  /* Recent searches row */
+  .recent-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .recent-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .recent-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .recent-pill {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .recent-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .recent-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .recent-clear:hover { color: var(--accent); }
+
+  /* Hardiness-zone badge inside species banner */
+  .hardiness-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .hardiness-badge.fit {
+    border-color: var(--green);
+    background: var(--green-light);
+    color: var(--green);
+  }
+  .hardiness-badge.nofit {
+    border-color: var(--yellow);
+    background: var(--yellow-light);
+    color: var(--yellow);
+  }
+  .hardiness-badge.unknown {
+    border-color: var(--line-strong);
+    background: var(--bg);
+    color: var(--text-soft);
+  }
+  .hardiness-badge strong { font-weight: 700; }
+  .hardiness-badge a {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+  .hardiness-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+  }
+
+  /* Similar species row */
+  .similar-species {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .similar-species-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .similar-species-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .similar-pill {
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .similar-pill:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .similar-pill .similar-pill-common {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  /* Bloom hemisphere toggle */
+  .bloom-hemisphere {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 2px;
+  }
+  .bloom-hemisphere button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .bloom-hemisphere button.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Care & growing chips + blocks */
+  .care-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .care-chip {
+    font-size: 12px;
+    padding: 4px 11px;
+    border-radius: 100px;
+    border: 1.5px solid;
+    background: var(--bg-card);
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.2;
+  }
+  .care-block {
+    background: var(--bg);
+    border-left: 3px solid var(--green);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 10px;
+  }
+  .care-block strong {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--green);
+    margin-bottom: 5px;
+  }
+  .care-block p {
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--text-soft);
+  }
+  .care-links {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--text-soft);
+  }
+
+  /* Community-curation badges */
+  .community-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .community-row-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .community-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+  .community-badge.confirmed {
+    background: var(--red-light);
+    color: var(--red);
+    border-color: var(--red);
+  }
+  .community-badge.falsepositive {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .community-badge.review {
+    background: var(--yellow-light);
+    color: var(--yellow);
+    border-color: var(--yellow);
+  }
+  .community-detail-list {
+    margin-top: 10px;
+    padding: 0;
+    list-style: none;
+    font-size: 12px;
+    border-top: 1px dashed var(--line);
+    padding-top: 10px;
+  }
+  .community-detail-list li {
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--line);
+  }
+  .community-detail-list li:last-child { border-bottom: none; }
+  .community-detail-author {
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .specimen-card.community-falsepositive {
+    opacity: 0.65;
+    border-left: 3px solid var(--green);
+  }
+  .share-community-btn {
+    background: var(--bg);
+    border: 1px dashed var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .share-community-btn:hover {
+    border-color: var(--accent);
+    border-style: solid;
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .share-community-btn.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
   @media (max-width: 900px) {
     .hero h1 { font-size: 38px; }
     .hero-lead { font-size: 17px; }
@@ -1573,6 +2593,8 @@
     .summary { grid-template-columns: repeat(2, 1fr); }
     footer .footer-grid { grid-template-columns: 1fr; }
     .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .tm-readout { min-width: 0; text-align: left; }
+    .tm-row { flex-wrap: wrap; }
   }
   @media (max-width: 600px) {
     .container { padding: 0 18px; }
@@ -1607,6 +2629,12 @@
         <span id="api-status-text">Photo ID off</span>
       </div>
       <button type="button" class="header-link" id="header-setup">Set up photo ID</button>
+      <button type="button" class="header-link" id="header-garden">My garden <span class="header-garden-count" id="header-garden-count" hidden>0</span></button>
+      <button type="button" class="header-link header-icon-btn" id="header-theme" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" hidden><path fill="currentColor" d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
+      </button>
+      <button type="button" class="header-link" id="header-how">How it works</button>
       <button type="button" class="header-link" id="header-about">About</button>
     </div>
   </header>
@@ -1623,10 +2651,12 @@
     </div>
   </section>
 
-  <div class="how open" id="how-card">
-    <div class="how-header" id="how-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="how-body">
+  <div class="how" id="how-card" hidden>
+    <div class="how-header" id="how-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="how-body">
       <h2>How it works</h2>
-      <div class="how-toggle">Show</div>
+      <div class="how-header-actions">
+        <button type="button" class="how-dismiss" id="how-dismiss" aria-label="Dismiss this panel" title="Hide — use How it works in the header to bring it back">&times;</button>
+      </div>
     </div>
     <div class="how-body" id="how-body">
       <div class="how-steps">
@@ -1643,6 +2673,7 @@
           Statistical analysis surfaces records that don't fit the pattern: outliers in geography, time, or data quality. Each flag shows its reasoning, links to the original specimen, and explains how you'd verify or disprove it.
         </div>
       </div>
+      <button type="button" class="how-gotit" id="how-gotit">Got it, hide this</button>
     </div>
   </div>
 
@@ -1717,14 +2748,30 @@
     </div>
 
     <div class="tab-panel" id="panel-name">
-      <label class="organ-label">Plant name <span style="font-weight:400;color:var(--text-muted);font-size:13px">(common or scientific &mdash; e.g., "pitcher plant" or <i>Sarracenia purpurea</i>)</span></label>
+      <label class="organ-label">Plant name <span style="font-weight:400;color:var(--text-muted);font-size:13px">(common name, group name, or scientific name &mdash; e.g., "rose", "pitcher plant", or <i>Sarracenia purpurea</i>)</span></label>
       <div class="search-row">
-        <input type="text" class="search-input" id="species-input" placeholder='try "swamp milkweed" or "Franklinia alatamaha"' autocomplete="off" />
+        <input type="text" class="search-input" id="species-input" placeholder='try "rose", "lavender", "swamp milkweed", or "Sarracenia purpurea"' autocomplete="off" />
+        <button type="button" class="mic-btn" id="mic-btn" aria-label="Search by voice" title="Search by voice" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.91-3a.9.9 0 0 0-.91.86A5 5 0 0 1 7 11.91a.91.91 0 0 0-1.82 0A6.84 6.84 0 0 0 11 18.72V21a1 1 0 0 0 2 0v-2.28a6.84 6.84 0 0 0 5.82-6.77.91.91 0 0 0-.91-.95z"/></svg>
+        </button>
         <button class="search-btn" id="search-btn">Search</button>
       </div>
+      <div class="recent-row" id="recent-row" hidden>
+        <span class="recent-label">Recent:</span>
+        <div class="recent-pills" id="recent-pills"></div>
+        <button type="button" class="recent-clear" id="recent-clear" aria-label="Clear recent searches">Clear</button>
+      </div>
       <div class="examples">
-        <strong>Try one of these:</strong><br/>
-        <button type="button" class="example-pill" data-species="pitcher plant">pitcher plant (multiple species)</button>
+        <strong>Everyday names &mdash; tap one to try:</strong><br/>
+        <button type="button" class="example-pill" data-species="rose">rose (genus, many species)</button>
+        <button type="button" class="example-pill" data-species="oak">oak</button>
+        <button type="button" class="example-pill" data-species="lavender">lavender</button>
+        <button type="button" class="example-pill" data-species="tulip">tulip</button>
+        <button type="button" class="example-pill" data-species="cactus">cactus</button>
+        <button type="button" class="example-pill" data-species="fern">fern</button>
+        <br/><br/>
+        <strong>Or one of these specific species:</strong><br/>
+        <button type="button" class="example-pill" data-species="pitcher plant">pitcher plant (disambiguates)</button>
         <button type="button" class="example-pill" data-species="swamp milkweed">swamp milkweed</button>
         <button type="button" class="example-pill" data-species="Franklinia alatamaha">Franklinia alatamaha (extinct in wild)</button>
         <button type="button" class="example-pill" data-species="passionflower">passionflower</button>
@@ -1740,7 +2787,15 @@
   <div class="species-banner" id="species-banner">
     <div class="species-banner-top">
       <div class="species-info">
-        <div class="species-sci" id="species-sci"></div>
+        <div class="species-sci-row">
+          <div class="species-sci" id="species-sci"></div>
+          <button type="button" class="species-pronounce-btn" id="species-pronounce" aria-label="Hear how this name is pronounced" title="Hear pronunciation" hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06A9 9 0 0 0 14 3.23z"/></svg>
+          </button>
+          <button type="button" class="species-fav-btn" id="species-fav" aria-pressed="false" aria-label="Add this species to My garden" title="Save to My garden">
+            <svg class="fav-heart" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 21s-7-4.35-9.5-9C0.93 8.66 3 5 6.5 5c2 0 3.5 1 5.5 3 2-2 3.5-3 5.5-3 3.5 0 5.57 3.66 4 7-2.5 4.65-9.5 9-9.5 9z"/></svg>
+          </button>
+        </div>
         <div class="species-common" id="species-common"></div>
         <div class="species-tax" id="species-tax"></div>
         <div class="species-links" id="species-links"></div>
@@ -1750,8 +2805,11 @@
       </div>
     </div>
     <div class="species-summary" id="species-summary"></div>
+    <div class="hardiness-badge" id="hardiness-badge" hidden></div>
     <div class="photo-strip" id="photo-strip" aria-label="Living-plant photos"></div>
     <div class="native-range" id="native-range"></div>
+    <div class="climate-envelope" id="climate-envelope"></div>
+    <div class="similar-species" id="similar-species" hidden></div>
   </div>
 
   <div class="knowledge-panel" id="knowledge-panel">
@@ -1812,16 +2870,44 @@
       </div>
     </div>
     <div id="specimen-map">
-      <canvas id="map-canvas" class="map-canvas"></canvas>
+      <div id="leaflet-map" class="leaflet-map"></div>
+    </div>
+    <div class="time-machine" id="time-machine" hidden>
+      <div class="tm-row tm-row-controls">
+        <button type="button" class="tm-playbtn" id="tm-playbtn" aria-label="Play timeline">&#9654;</button>
+        <div class="tm-range-wrap">
+          <canvas class="tm-histogram" id="tm-histogram" aria-hidden="true"></canvas>
+          <input type="range" class="tm-slider tm-start" id="tm-start" aria-label="Start year" />
+          <input type="range" class="tm-slider tm-end" id="tm-end" aria-label="End year" />
+        </div>
+        <div class="tm-readout" id="tm-readout"></div>
+      </div>
+      <div class="tm-row tm-row-meta">
+        <label class="tm-undated"><input type="checkbox" id="tm-show-undated" checked /> Show specimens without a date</label>
+        <span class="tm-hint">Scrub the slider to filter the map. Press <kbd>Play</kbd> to animate.</span>
+      </div>
     </div>
   </div>
 
   <div class="gallery-section" id="gallery-section">
     <div class="gallery-header">
-      <div class="gallery-title">Specimen photo gallery <span class="gallery-count" id="gallery-count">0</span></div>
-      <div class="gallery-sub">Imaged specimens from this search. Flagged specimens have an orange border.</div>
+      <div class="gallery-header-row">
+        <div>
+          <div class="gallery-title">Featured specimens</div>
+          <div class="gallery-sub" id="gallery-sub">A curated selection from this search &mdash; flagged records, historical firsts, and the most recent. Swipe or scroll horizontally.</div>
+        </div>
+        <button type="button" class="gallery-show-all" id="gallery-show-all" hidden>
+          <span>Show all imaged</span>
+          <span class="gallery-show-all-count" id="gallery-show-all-count">0</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="gallery-grid" id="gallery-grid"></div>
+    <div class="gallery-featured" id="gallery-featured"></div>
+    <div class="gallery-full" id="gallery-full" hidden>
+      <div class="gallery-full-header">All imaged specimens</div>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </div>
   </div>
 
   <div class="results-header" id="results-header">
@@ -1894,9 +2980,29 @@
     </ol>
     <input type="text" class="modal-input" id="api-key-input" placeholder="Paste your Pl@ntNet API key here" autocomplete="off" />
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">Your key is stored only in this browser, never sent anywhere except directly to Pl@ntNet. You can change or remove it anytime.</p>
+
+    <hr style="margin: 22px 0 18px; border: none; border-top: 1px solid var(--line);" />
+    <h2 style="font-size: 18px;">Optional: share annotations with the community</h2>
+    <p>If you want to contribute your "False positive / Confirmed / Needs review" annotations to the public community record, paste a GitHub <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Personal Access Token</a> with <code>public_repo</code> scope. Reads are always public &mdash; you only need a token to <em>post</em> annotations. The token stays in your browser; it's never sent anywhere except directly to GitHub.</p>
+    <input type="password" class="modal-input" id="github-pat-input" placeholder="ghp_... (only needed if you want to share annotations)" autocomplete="off" />
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">Recommended scope: <code>public_repo</code> only. The community archive lives at <a href="https://github.com/TheoryofShadows/specimen-finder-annotations" target="_blank" rel="noopener" style="color:var(--accent)">TheoryofShadows/specimen-finder-annotations</a>.</p>
+
     <div class="modal-actions">
       <button class="modal-btn cancel" id="modal-cancel">Skip &mdash; I'll search by name</button>
-      <button class="modal-btn save" id="modal-save">Save key</button>
+      <button class="modal-btn save" id="modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- My garden modal -->
+<div class="modal-overlay" id="garden-overlay">
+  <div class="modal" style="max-width: 540px;">
+    <h2>My garden</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Your saved species. Stored only in this browser. Click any entry to re-run the search.</p>
+    <div class="garden-list" id="garden-list"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="garden-close">Close</button>
+      <button class="modal-btn" id="garden-export" style="background:var(--bg);border:1px solid var(--line-strong);color:var(--text-soft);">Export as link</button>
     </div>
   </div>
 </div>
@@ -1928,7 +3034,6 @@
 </div>
 
 <script src="analysis.js"></script>
-<script src="coastlines.js"></script>
 <script>
 // State
 let plantnetKey = null;
@@ -1940,6 +3045,52 @@ let activeFilter = 'all';
 let searchId = 0; // Race-condition guard: ignore stale async results
 let compareResults = null; // { species, occs } when a comparison species is loaded
 let nativeRangeCountries = null; // Set of ISO2 country codes considered native for the current species
+let climateCache = null; // { occKey: {t2m, prec} } for the current search
+let climateEnvelope = null; // { tMed, tMad, pMed, pMad, n }
+let timeWindow = { start: null, end: null, playing: false, speed: 80, showUndated: true };
+let timeAnimHandle = null;
+let communityAnnotations = new Map(); // occKey -> [{status, notes, author, url, ts}]
+let phenologyByMonth = null; // [12] counts of flowering observations per month from iNaturalist
+let phenologyHemisphere = 'N'; // 'N' or 'S' — affects bloom calendar rendering
+let userHardinessZone = null; // integer 1-13 (USDA), or null if not detected
+let userLocation = null; // { lat, lon } when geolocation has been granted
+
+// "My garden" — favourite species, stored in localStorage as a list of
+// { sci, common, usageKey?, ts } so the user can come back to them.
+const GARDEN_STORE_KEY = 'specimenfinder_garden_v1';
+function loadGarden() {
+  try { return JSON.parse(localStorage.getItem(GARDEN_STORE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function saveGarden(list) {
+  try { localStorage.setItem(GARDEN_STORE_KEY, JSON.stringify(list)); }
+  catch (e) {}
+}
+function isInGarden(sci) {
+  const norm = (sci || '').toLowerCase();
+  return loadGarden().some(g => (g.sci || '').toLowerCase() === norm);
+}
+function addToGarden(entry) {
+  const list = loadGarden();
+  const norm = (entry.sci || '').toLowerCase();
+  if (list.some(g => (g.sci || '').toLowerCase() === norm)) return list;
+  list.unshift({ ...entry, ts: Date.now() });
+  saveGarden(list);
+  return list;
+}
+function removeFromGarden(sci) {
+  const norm = (sci || '').toLowerCase();
+  const list = loadGarden().filter(g => (g.sci || '').toLowerCase() !== norm);
+  saveGarden(list);
+  return list;
+}
+function updateGardenCount() {
+  const c = loadGarden().length;
+  const el = document.getElementById('header-garden-count');
+  if (!el) return;
+  el.textContent = String(c);
+  el.hidden = c === 0;
+}
 
 // Annotation storage (saved/reviewed flag state, persisted per species+occurrence)
 const ANNOTATION_STORE_KEY = 'specimenfinder_annotations_v1';
@@ -1970,13 +3121,20 @@ function setAnnotation(speciesKey, occKey, status, notes) {
 }
 
 // Storage
-function getStoredKey() {
-  try { return localStorage.getItem('plantnet_api_key') || null; }
-  catch (e) { return window.__plantnet_key__ || null; }
+function getStoredKey(name) {
+  const key = name || 'plantnet_api_key';
+  try { return localStorage.getItem(key) || null; }
+  catch (e) { return (window.__keys__ && window.__keys__[key]) || null; }
 }
-function setStoredKey(key) {
-  try { localStorage.setItem('plantnet_api_key', key); }
-  catch (e) { window.__plantnet_key__ = key; }
+function setStoredKey(value, name) {
+  const key = name || 'plantnet_api_key';
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch (e) {
+    window.__keys__ = window.__keys__ || {};
+    window.__keys__[key] = value || null;
+  }
 }
 
 function updateApiStatus() {
@@ -2000,6 +3158,7 @@ function updateApiStatus() {
 // Modals
 function openKeyModal() {
   document.getElementById('api-key-input').value = plantnetKey || '';
+  document.getElementById('github-pat-input').value = getStoredKey('github_pat') || '';
   document.getElementById('modal-overlay').classList.add('open');
 }
 function closeKeyModal() {
@@ -2018,12 +3177,15 @@ document.getElementById('modal-cancel').addEventListener('click', closeKeyModal)
 document.getElementById('about-close').addEventListener('click', closeAboutModal);
 document.getElementById('modal-save').addEventListener('click', () => {
   const key = document.getElementById('api-key-input').value.trim();
-  if (key) { plantnetKey = key; setStoredKey(key); }
+  const pat = document.getElementById('github-pat-input').value.trim();
+  plantnetKey = key || null;
+  setStoredKey(key || null, 'plantnet_api_key');
+  setStoredKey(pat || null, 'github_pat');
   updateApiStatus();
   closeKeyModal();
 });
 
-plantnetKey = getStoredKey();
+plantnetKey = getStoredKey('plantnet_api_key');
 updateApiStatus();
 
 // Activate-on-Enter/Space for elements with role="button" that aren't native buttons
@@ -2036,13 +3198,27 @@ function wireKeyActivation(el) {
   });
 }
 
-// How toggle
-const howToggle = document.getElementById('how-toggle');
-howToggle.addEventListener('click', () => {
-  const open = document.getElementById('how-card').classList.toggle('open');
-  howToggle.setAttribute('aria-expanded', String(open));
-});
-wireKeyActivation(howToggle);
+// How it works panel — show on first visit only; once dismissed, it's hidden
+// completely. The header "How it works" link brings it back on demand.
+const HOW_DISMISSED_KEY = 'specimenfinder_how_dismissed_v1';
+const howCard = document.getElementById('how-card');
+function howIsDismissed() {
+  try { return localStorage.getItem(HOW_DISMISSED_KEY) === '1'; }
+  catch (e) { return false; }
+}
+function showHowCard() {
+  howCard.hidden = false;
+  howCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function hideHowCard() {
+  howCard.hidden = true;
+  try { localStorage.setItem(HOW_DISMISSED_KEY, '1'); } catch (e) {}
+}
+// First-time visitors see it; returning visitors don't.
+if (!howIsDismissed()) howCard.hidden = false;
+document.getElementById('how-dismiss').addEventListener('click', hideHowCard);
+document.getElementById('how-gotit').addEventListener('click', hideHowCard);
+document.getElementById('header-how').addEventListener('click', showHowCard);
 
 // Knowledge panel toggle
 const kHeader = document.getElementById('knowledge-header');
@@ -2488,6 +3664,63 @@ function analyze(occs) {
   });
   return flagged;
 }
+// Apply climate-envelope flags after NASA POWER data has been fetched.
+// Mutates the flagged list AND can add specimens that were previously unflagged.
+function applyClimateFlags(allOccs, flagged) {
+  if (!climateCache || !climateEnvelope) return flagged;
+  const { tMed, tMad, pMed, pMad } = climateEnvelope;
+  if (!tMad || !pMad) return flagged;
+  const byKey = new Map(flagged.map(f => [f.key, f]));
+  allOccs.forEach(o => {
+    const c = climateCache[o.key];
+    if (!c) return;
+    const zt = modifiedZScore(c.t2m, tMed, tMad);
+    const zp = modifiedZScore(c.prec, pMed, pMad);
+    if (Math.abs(zt) <= 3.5 && Math.abs(zp) <= 3.5) return;
+    const dominant = Math.abs(zt) > Math.abs(zp) ? 'temperature' : 'precipitation';
+    const dir = (dominant === 'temperature')
+      ? (zt < 0 ? 'colder' : 'warmer')
+      : (zp < 0 ? 'drier' : 'wetter');
+    const text = `Climate outlier (${dominant} — ${dir})`;
+    const evidenceText = `Site climate: ${c.t2m.toFixed(1)} °C mean annual temperature, ${Math.round(c.prec)} mm annual precipitation. ` +
+      `Species envelope: ${tMed.toFixed(1)} °C ± ${tMad.toFixed(1)}, ${Math.round(pMed)} ± ${Math.round(pMad)} mm. ` +
+      `Modified Z-scores: T=${zt.toFixed(1)}, P=${zp.toFixed(1)}. ` +
+      `This specimen falls outside the species' typical climate envelope on ${dominant}.`;
+    const plain = plainLanguageForZ(Math.max(Math.abs(zt), Math.abs(zp)), 'distance')
+      .replace('unusual a location', `${dir}-climate site`);
+    const existing = byKey.get(o.key);
+    if (existing) {
+      existing.flags.push({ text, class: 'red', key: 'climate' });
+      existing.evidence.push({
+        text: evidenceText,
+        source: `NASA POWER 30-year climate normals (community=AG, parameters=T2M,PRECTOTCORR)`,
+        plain
+      });
+      existing.priority = Math.min(0.99, existing.priority + 0.2);
+      if (existing.priority >= 0.5) existing.level = 'high';
+      else if (existing.priority >= 0.25) existing.level = 'med';
+      existing.falsify = makeFalsify(existing.flags);
+    } else {
+      const priority = 0.25;
+      const f = {
+        ...o,
+        flags: [{ text, class: 'red', key: 'climate' }],
+        evidence: [{
+          text: evidenceText,
+          source: 'NASA POWER 30-year climate normals',
+          plain
+        }],
+        priority,
+        level: 'med',
+        falsify: makeFalsify([{ text, class: 'red', key: 'climate' }])
+      };
+      flagged.push(f);
+      byKey.set(o.key, f);
+    }
+  });
+  return flagged;
+}
+
 function makeFalsify(flags) {
   const t = flags.map(f => f.text);
   if (t.some(x => x.includes('Far from typical'))) {
@@ -2505,91 +3738,146 @@ function makeFalsify(flags) {
   if (t.some(x => x.includes('Very old') || x.includes('Recent'))) {
     return 'For a temporal outlier: verify the collection date on the original label. Verification confirms or corrects the historical or recent record.';
   }
+  if (t.some(x => x.includes('Climate outlier'))) {
+    return 'Cross-check the coordinates against WorldClim or local meteorological records. If the climate really is outside the species\' typical envelope, this may be a range-shift specimen worth reporting; if not, the coordinates may need correction.';
+  }
   return 'Open the specimen record and verify the flagged fields against the physical specimen or its label image.';
 }
 
-// Map render (no external deps)
+// Map render — Leaflet with OpenStreetMap tiles.
+// Markers are clickable and open a popup with the specimen's GBIF link + a
+// "View photo" button (if the specimen has imagery) that triggers the lightbox.
+let leafletMap = null;
+let leafletLayers = { normal: null, flagged: null, compare: null };
+let leafletInitialFit = true;
+
+function buildSpecimenPopup(o, isFlagged) {
+  const inst = o.institutionCode || 'Unknown';
+  const cat = o.catalogNumber || o.key;
+  const year = o.year || '?';
+  const place = [o.locality, o.stateProvince, o.country].filter(Boolean).join(', ') || 'unknown';
+  const truncPlace = place.length > 90 ? place.slice(0, 90) + '…' : place;
+  const imgUrl = o.media && o.media[0] && o.media[0].identifier;
+  const gbifUrl = `https://www.gbif.org/occurrence/${o.key}`;
+  const sci = o.scientificName || o.species || '';
+  const html =
+    `<div class="popup-name">${escapeHtml(sci)}</div>` +
+    (isFlagged ? '<div class="popup-flagged">Flagged</div>' : '') +
+    `<div class="popup-meta"><strong>${escapeHtml(inst)}</strong> · #${escapeHtml(cat)}<br/>` +
+    `${escapeHtml(String(year))} · ${escapeHtml(truncPlace)}</div>` +
+    '<div class="popup-actions">' +
+      (imgUrl ? `<button type="button" class="popup-photo-btn" data-photo="1">View photo</button>` : '') +
+      `<a href="${escapeHtml(gbifUrl)}" target="_blank" rel="noopener" class="popup-link">View on GBIF &rarr;</a>` +
+    '</div>';
+  return { html, imgUrl, gbifUrl, caption: `${sci} · ${inst} · ${year} · ${truncPlace}` };
+}
+
 function renderMap(allOccs, flaggedOccs) {
-  const canvas = document.getElementById('map-canvas');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
-
-  const w = rect.width, h = rect.height;
-  ctx.fillStyle = '#f4ede1';
-  ctx.fillRect(0, 0, w, h);
-
-  const proj = (lat, lon) => ({
-    x: (lon + 180) / 360 * w,
-    y: (90 - lat) / 180 * h
+  if (typeof L === 'undefined') {
+    console.warn('Leaflet did not load — map disabled.');
+    return;
+  }
+  if (!leafletMap) {
+    leafletMap = L.map('leaflet-map', {
+      worldCopyJump: true,
+      minZoom: 1,
+      scrollWheelZoom: 'center',
+      attributionControl: true
+    }).setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(leafletMap);
+    leafletInitialFit = true;
+  }
+  // Tear down previous marker layers
+  ['normal', 'flagged', 'compare'].forEach(k => {
+    if (leafletLayers[k]) { leafletMap.removeLayer(leafletLayers[k]); leafletLayers[k] = null; }
   });
 
-  ctx.strokeStyle = '#d8d4cc';
-  ctx.lineWidth = 0.5;
-  for (let lon = -180; lon <= 180; lon += 30) {
-    const p = proj(0, lon);
-    ctx.beginPath();
-    ctx.moveTo(p.x, 0);
-    ctx.lineTo(p.x, h);
-    ctx.stroke();
-  }
-  for (let lat = -60; lat <= 60; lat += 30) {
-    const p = proj(lat, 0);
-    ctx.beginPath();
-    ctx.moveTo(0, p.y);
-    ctx.lineTo(w, p.y);
-    ctx.stroke();
-  }
-  // Coastlines (from coastlines.js — 110m Natural Earth via world-atlas, MIT)
-  if (window.SpecimenFinderCoastlines) {
-    ctx.strokeStyle = '#a8a098';
-    ctx.lineWidth = 0.8;
-    window.SpecimenFinderCoastlines.forEach(line => {
-      ctx.beginPath();
-      for (let i = 0; i < line.length; i++) {
-        const p = proj(line[i][1], line[i][0]); // [lon, lat]
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.stroke();
-    });
-  }
-
-  ctx.strokeStyle = '#b8b3a8';
-  ctx.lineWidth = 1;
-  const eq = proj(0, 0);
-  ctx.beginPath();
-  ctx.moveTo(0, eq.y);
-  ctx.lineTo(w, eq.y);
-  ctx.stroke();
-
   const flaggedKeys = new Set(flaggedOccs.map(f => f.key));
+  const passesTime = (o) => {
+    if (timeWindow.start === null || timeWindow.end === null) return true;
+    if (!o.year) return timeWindow.showUndated;
+    return o.year >= timeWindow.start && o.year <= timeWindow.end;
+  };
+
+  const normalLayer = L.layerGroup();
+  const flaggedLayer = L.layerGroup();
+  const bounds = [];
+
   allOccs.forEach(o => {
     if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
     if (o.decimalLatitude === 0 && o.decimalLongitude === 0) return;
-    const p = proj(o.decimalLatitude, o.decimalLongitude);
+    if (!passesTime(o)) return;
     const isFlagged = flaggedKeys.has(o.key);
-    ctx.fillStyle = isFlagged ? '#c2410c' : 'rgba(90, 90, 90, 0.45)';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, isFlagged ? 4 : 2.5, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  // Comparison species overlay (drawn last so it sits on top)
-  if (compareResults && compareResults.occs.length > 0) {
-    compareResults.occs.forEach(o => {
-      const p = proj(o.decimalLatitude, o.decimalLongitude);
-      ctx.fillStyle = 'rgba(30, 64, 175, 0.55)';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fill();
+    const m = L.circleMarker([o.decimalLatitude, o.decimalLongitude], {
+      radius: isFlagged ? 7 : 5,
+      color: isFlagged ? '#c2410c' : '#3f3f3f',
+      weight: isFlagged ? 1.5 : 0.5,
+      fillColor: isFlagged ? '#c2410c' : '#5a5a5a',
+      fillOpacity: isFlagged ? 0.85 : 0.5
     });
+    const popup = buildSpecimenPopup(o, isFlagged);
+    m.bindPopup(popup.html, { maxWidth: 300 });
+    m.on('popupopen', (ev) => {
+      const el = ev.popup.getElement();
+      const btn = el?.querySelector('.popup-photo-btn[data-photo]');
+      if (btn && popup.imgUrl) {
+        btn.addEventListener('click', () => openLightbox(popup.imgUrl, popup.caption, popup.gbifUrl, 'GBIF record'));
+      }
+    });
+    (isFlagged ? flaggedLayer : normalLayer).addLayer(m);
+    bounds.push([o.decimalLatitude, o.decimalLongitude]);
+  });
+  normalLayer.addTo(leafletMap);
+  flaggedLayer.addTo(leafletMap); // drawn on top
+  leafletLayers.normal = normalLayer;
+  leafletLayers.flagged = flaggedLayer;
+
+  // Comparison species overlay (blue), drawn on top of everything else
+  if (compareResults && compareResults.occs.length > 0) {
+    const compareLayer = L.layerGroup();
+    compareResults.occs.forEach(o => {
+      if (!passesTime(o)) return;
+      const m = L.circleMarker([o.decimalLatitude, o.decimalLongitude], {
+        radius: 5,
+        color: '#1e40af',
+        weight: 0.5,
+        fillColor: '#1e40af',
+        fillOpacity: 0.6
+      });
+      const inst = o.institutionCode || 'Unknown';
+      const year = o.year || '?';
+      const gbifUrl = `https://www.gbif.org/occurrence/${o.key}`;
+      const sci = compareResults.species.scientificName || compareResults.species.canonicalName || '';
+      m.bindPopup(
+        `<div class="popup-name" style="color:#1e40af">${escapeHtml(sci)}</div>` +
+        `<div class="popup-meta"><strong>${escapeHtml(inst)}</strong> · ${escapeHtml(String(year))}<br/>${escapeHtml(o.country || '')}</div>` +
+        `<div class="popup-actions"><a href="${escapeHtml(gbifUrl)}" target="_blank" rel="noopener" class="popup-link">View on GBIF &rarr;</a></div>`,
+        { maxWidth: 280 }
+      );
+      compareLayer.addLayer(m);
+    });
+    compareLayer.addTo(leafletMap);
+    leafletLayers.compare = compareLayer;
   }
+
+  // First render of a search: fit the map to the data. Subsequent renders (time
+  // scrub, comparison toggle) keep the user's zoom and pan.
+  if (leafletInitialFit && bounds.length > 0) {
+    leafletMap.fitBounds(L.latLngBounds(bounds).pad(0.15), { animate: false });
+    leafletInitialFit = false;
+  }
+  // Defensive: in case the map container was hidden when initialised
+  setTimeout(() => leafletMap.invalidateSize(false), 0);
 }
 
 // Knowledge panel: "What's known about this plant"
+// Wikipedia section fetch + cleanup.
+// Uses DOMParser (browser-native) so HTML entities decode automatically
+// (e.g. &#8260; → ⁄, &nbsp; → space) and image-caption / reference / infobox
+// containers can be removed structurally instead of fighting them with regex.
 async function getWikipediaSection(pageTitle, sectionPattern) {
   try {
     const secRes = await fetch('https://en.wikipedia.org/w/api.php?action=parse&page=' +
@@ -2605,25 +3893,63 @@ async function getWikipediaSection(pageTitle, sectionPattern) {
     if (!contentRes.ok) return null;
     const contentData = await contentRes.json();
     const html = contentData.parse?.text?.['*'] || '';
-    let text = html
-      .replace(/<sup class="reference"[^>]*>[\s\S]*?<\/sup>/g, '')
-      .replace(/<span class="mw-editsection[^"]*"[^>]*>[\s\S]*?<\/span>/g, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\[\d+\]/g, '')
-      .replace(/\[edit\]/gi, '')
-      .replace(/&#91;.*?&#93;/g, '')
-      .replace(/&#160;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (text.length > 1200) text = text.slice(0, 1200) + '...';
+    const text = cleanWikipediaHtml(html, match.line);
+    if (!text) return null;
     return { text, sectionName: match.line };
   } catch (e) {
     return null;
   }
+}
+
+function cleanWikipediaHtml(html, headingName) {
+  // Wrap so DOMParser treats it as a fragment regardless of how Wikipedia returns it
+  const doc = new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html');
+  const root = doc.body.firstChild;
+  if (!root) return '';
+
+  // Drop structural containers whose contents are noise (image captions,
+  // citation lists, navboxes, infoboxes, math display, hatnotes, edit links).
+  // Order matters slightly: remove tables/figures before headings so we don't
+  // accidentally strip a heading that lives inside an infobox.
+  const dropSelectors = [
+    'style', 'script', 'table',
+    'figure', '.thumb', '.thumbinner', '.thumbcaption', '.gallery', '.tright', '.tleft',
+    '.mw-default-size', '.floatright', '.floatleft', '.center',
+    '.reference', '.references', '.reflist', '.refbegin',
+    '.navbox', '.hatnote', '.dablink', '.rellink', '.sidebar',
+    '.infobox', '.metadata', '.mw-editsection', '.IPA',
+    '.noprint', '.mw-empty-elt',
+    '[role="note"]', '[aria-hidden="true"]',
+    'sup', '.error', '.cite-bracket',
+    'audio', 'video', 'math'
+  ];
+  dropSelectors.forEach(sel => {
+    root.querySelectorAll(sel).forEach(el => el.remove());
+  });
+  // Insert a space between block-level elements before extracting text, so
+  // adjacent paragraphs / list items don't run together as one wall of letters.
+  root.querySelectorAll('p, li, dd, dt, div, h1, h2, h3, h4, h5, h6, br').forEach(el => {
+    el.appendChild(doc.createTextNode(' '));
+  });
+
+  let text = (root.textContent || '')
+    .replace(/ /g, ' ')      // nbsp
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1') // collapse "word ." to "word."
+    .trim();
+
+  // Drop a leading "<heading>" or "<heading>edit" prefix that survived (some
+  // section payloads include their own heading text).
+  if (headingName) {
+    const escaped = headingName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    text = text.replace(new RegExp('^' + escaped + '(\\s*edit)?\\s*', 'i'), '');
+  }
+  // Common Wikipedia leading-link phrases that aren't useful as prose
+  text = text.replace(/^(Main article|See also|Further information|This article)\s*:[^.]*\.\s*/i, '');
+  // Drop any stray "^ Reference text." trailing block (back-pointers).
+  text = text.replace(/\s+\^\s+[\s\S]*$/, '').trim();
+  if (text.length > 1200) text = text.slice(0, 1200) + '...';
+  return text;
 }
 
 async function getGBIFVernacularNames(usageKey) {
@@ -2635,6 +3961,123 @@ async function getGBIFVernacularNames(usageKey) {
   } catch (e) {
     return [];
   }
+}
+
+// Care & growing: heuristic chip extraction from Wikipedia text + a curated
+// links panel. For species not commonly cultivated this stays sparse on
+// purpose — the disclaimer makes that explicit.
+function extractCareChips(text) {
+  const t = (text || '').toLowerCase();
+  const chips = [];
+  const seen = new Set();
+  const add = (label, kind, hint) => {
+    const k = kind + ':' + label;
+    if (seen.has(k)) return;
+    seen.add(k);
+    chips.push({ label, kind, hint });
+  };
+  // Sun / light
+  if (/\bfull\s+sun\b/.test(t)) add('Full sun', 'sun', 'At least 6 hours direct sun');
+  if (/\b(partial\s+(?:sun|shade)|part\s+(?:sun|shade)|dappled\s+(?:sun|shade)|filtered\s+sunlight)\b/.test(t)) add('Partial shade', 'sun', '3–6 hours direct sun');
+  if (/\b(full\s+shade|deep\s+shade|fully\s+shaded)\b/.test(t)) add('Full shade', 'sun', 'Less than 3 hours direct sun');
+  // Water
+  if (/\b(drought[\s\-]tolerant|drought\s+resistant|xeric|low\s+water\s+(consumption|needs|requirements?)|water[\s\-]wise|water[\s\-]thrifty)\b/.test(t)) add('Drought tolerant', 'water', 'Low water needs once established');
+  if (/\b(moisture[\s\-]loving|moisture[\s\-]retaining|wetland|bog|riparian|water-loving|aquatic|prefers\s+(?:moist|wet)\s+soils?)\b/.test(t)) add('Moist / wet soils', 'water', 'Prefers consistently moist conditions');
+  if (/\b(does\s+not\s+grow\s+well\s+in\s+continuously\s+damp|cannot\s+tolerate\s+wet\s+soils?|hates\s+wet\s+feet|dislikes\s+wet)/.test(t)) add('Dislikes wet feet', 'water', 'Avoid waterlogged or constantly damp soil');
+  if (/\b(well[\s\-]drained|good\s+drainage|sharp\s+drainage)\b/.test(t)) add('Well-drained soil', 'soil', 'Avoid waterlogged ground');
+  // Soil types
+  if (/\bsandy\s+soil\b/.test(t)) add('Sandy soil', 'soil', null);
+  if (/\bclay\s+soil\b/.test(t)) add('Tolerates clay', 'soil', null);
+  if (/\bloam(y)?\b/.test(t)) add('Loamy soil', 'soil', null);
+  if (/\b(acidic|low\s+pH|ericaceous)\b/.test(t)) add('Acidic soil', 'soil', 'pH below ~6.5');
+  if (/\b(alkaline|chalky|calcareous)\b/.test(t)) add('Alkaline soil', 'soil', 'pH above ~7.5');
+  // Hardiness
+  const usdaRange = t.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})(?:[ab])?\s*(?:to|[–—\-])\s*(\d{1,2})(?:[ab])?/);
+  if (usdaRange) add(`USDA zones ${usdaRange[1]}–${usdaRange[2]}`, 'hardiness', 'United States hardiness zones');
+  else {
+    const usdaOne = t.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})(?:[ab])?\b/);
+    if (usdaOne) add(`USDA zone ${usdaOne[1]}`, 'hardiness', 'United States hardiness zone');
+  }
+  const rhs = t.match(/rhs(?:\s+zone)?\s+h(\d)\b/);
+  if (rhs) add(`RHS H${rhs[1]}`, 'hardiness', 'UK Royal Horticultural Society hardiness rating');
+  if (/\bfrost\s+tender\b/.test(t)) add('Frost tender', 'hardiness', null);
+  if (/\b(frost\s+hardy|fully\s+hardy|cold[\s\-]hardy|hardy\s+to\s+[\-−]?\d+|tolerant\s+of\s+low\s+temperatures)/.test(t)) add('Cold-hardy', 'hardiness', null);
+  // Propagation
+  if (/\b(stem|softwood|hardwood|semi[\s\-]ripe)\s+cuttings?\b/.test(t)) add('From cuttings', 'propagation', null);
+  if (/\b(division|divide\s+the\s+(roots|clumps|rhizomes))\b/.test(t)) add('Divide clumps', 'propagation', null);
+  if (/\b(seed|sow(n)?|stratif)/.test(t)) add('From seed', 'propagation', null);
+  if (/\b(grafting|grafted)\b/.test(t)) add('Grafting', 'propagation', null);
+  if (/\b(layering|layered)\b/.test(t)) add('Layering', 'propagation', null);
+  return chips;
+}
+
+function renderCareGrowing({ speciesName, wikiUrl, cultivationSection, propagationSection, pestsSection, ecologySection, nativeRangeCountries }) {
+  const combined = [cultivationSection, propagationSection, pestsSection, ecologySection]
+    .map(s => s?.text || '')
+    .join(' ');
+  // Stash combined text so the hardiness-zone badge can re-scan for USDA zones
+  // when knowledge panel finishes loading.
+  lastCareCombined = combined;
+  // If we already have a hardiness zone for the user, redraw the badge now
+  // that USDA zone text is available.
+  if (userHardinessZone && currentResults.species) {
+    setTimeout(() => renderHardinessBadge(currentResults.species), 0);
+  }
+  const chips = extractCareChips(combined);
+  const hasText = !!(cultivationSection || propagationSection || pestsSection);
+
+  const chipColors = { sun: '#f59e0b', water: '#0284c7', soil: '#92400e', hardiness: '#475569', propagation: '#15803d' };
+  const chipsHtml = chips.length > 0
+    ? '<div class="care-chips">' + chips.map(c =>
+        `<span class="care-chip" style="border-color:${chipColors[c.kind] || '#888'};color:${chipColors[c.kind] || '#888'}" title="${escapeHtml(c.hint || c.kind)}">${escapeHtml(c.label)}</span>`
+      ).join('') + '</div>'
+    : '';
+
+  const wikiName = encodeURIComponent((speciesName || '').replace(/ /g, '_'));
+  const queryName = encodeURIComponent(speciesName || '');
+
+  const sectionsBlocks = [];
+  if (cultivationSection) {
+    sectionsBlocks.push(`<div class="care-block"><strong>Cultivation (from Wikipedia &mdash; ${escapeHtml(cultivationSection.sectionName)})</strong><p>${escapeHtml(cultivationSection.text)}</p></div>`);
+  }
+  if (propagationSection) {
+    sectionsBlocks.push(`<div class="care-block"><strong>Propagation</strong><p>${escapeHtml(propagationSection.text)}</p></div>`);
+  }
+  if (pestsSection) {
+    sectionsBlocks.push(`<div class="care-block"><strong>Pests &amp; diseases</strong><p>${escapeHtml(pestsSection.text)}</p></div>`);
+  }
+
+  const nativeHint = (nativeRangeCountries && nativeRangeCountries.size >= 3)
+    ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px"><strong>Tip:</strong> this species is recorded as native in ${nativeRangeCountries.size} countries. For best results, match the climate, light, and soil of its native range &mdash; the Climate envelope panel above shows that range explicitly.</p>`
+    : '';
+
+  const bodyHtml = hasText
+    ? sectionsBlocks.join('')
+    : `<p class="knowledge-empty">No cultivation, propagation, or pest sections were found on Wikipedia for this species. Many wild and rare species aren't documented as garden plants &mdash; "care" for them usually means leaving them in their native habitat. Use the authoritative growing-resource links below to dig deeper.</p>`;
+
+  return `
+    <div class="knowledge-section">
+      <h3>Care &amp; growing <span class="evidence-level ${hasText ? 'med' : 'low'}">${hasText ? 'Wikipedia + heuristics' : 'limited data'}</span></h3>
+      <div class="knowledge-content">
+        <p style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:12px">
+          Species-specific growing guidance, extracted from Wikipedia's Cultivation / Propagation / Pests sections plus heuristic tag extraction. <strong>Not a substitute for local horticultural advice.</strong> Climate, soil, and pest pressure vary by region &mdash; cross-check with your local extension office or botanic garden before relying on this for a serious planting decision.
+        </p>
+        ${chipsHtml}
+        ${bodyHtml}
+        ${nativeHint}
+        <div class="care-links">
+          <strong>Go deeper at authoritative growing resources:</strong>
+          <ul style="list-style:disc;padding-left:20px;margin-top:6px;font-size:13px;">
+            <li><a href="https://pfaf.org/user/Plant.aspx?LatinName=${queryName}" target="_blank" rel="noopener">Plants for a Future (PFAF)</a> &mdash; edibility, medicinal uses, cultivation</li>
+            <li><a href="https://www.rhs.org.uk/plants/search-results?form-mode=true&query=${queryName}" target="_blank" rel="noopener">Royal Horticultural Society (RHS)</a> &mdash; UK-focused garden guidance</li>
+            <li><a href="https://www.missouribotanicalgarden.org/plantfinder/plantfindersearch.aspx?taxon=${queryName}" target="_blank" rel="noopener">Missouri Botanical Garden &mdash; Plant Finder</a> &mdash; the most authoritative free US guide</li>
+            <li><a href="https://plants.usda.gov/home/plantProfile?symbol=&plantName=${queryName}" target="_blank" rel="noopener">USDA PLANTS Database</a> &mdash; native status, distribution, conservation</li>
+            <li><a href="https://en.wikipedia.org/wiki/${wikiName}" target="_blank" rel="noopener">Wikipedia article</a> &mdash; full taxonomic + horticultural overview</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
@@ -2649,13 +4092,17 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   const wikiTitle = (speciesName || '').replace(/ /g, '_');
 
   const [usesSection, ecologySection, toxicitySection, medicinalSection, descriptionSection,
+         cultivationSection, propagationSection, pestsSection,
          vernacularNames, wikidata, inat] =
     await Promise.all([
-      getWikipediaSection(wikiTitle, /^(uses|cultivation|economic\s+uses|human\s+uses|culinary)$/i),
+      getWikipediaSection(wikiTitle, /^(uses|economic\s+uses|human\s+uses|culinary)$/i),
       getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology)$/i),
       getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)$/i),
       getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry)/i),
       getWikipediaSection(wikiTitle, /^(description|morphology)$/i),
+      getWikipediaSection(wikiTitle, /^(cultivation|cultivars?|in\s+cultivation|garden(ing)?|growing|horticulture|care)$/i),
+      getWikipediaSection(wikiTitle, /^(propagation|reproduction)$/i),
+      getWikipediaSection(wikiTitle, /^(pests?(\s+and\s+diseases?)?|diseases?)$/i),
       gbifSpecies.usageKey ? getGBIFVernacularNames(gbifSpecies.usageKey) : Promise.resolve([]),
       getWikidataInfo(speciesName),
       getINaturalistInfo(speciesName)
@@ -2663,6 +4110,12 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
 
   // If user has started a new search while we were fetching, abort UI update
   if (mySearchId !== searchId) return;
+
+  // Phenology — kick off once we know the iNat taxon ID. The bloom-calendar
+  // section gets rendered with the rest of the panel; if the fetch takes
+  // longer than the panel render, we patch in the chart afterwards.
+  phenologyByMonth = null;
+  const phenologyPromise = inat?.id ? fetchPhenology(inat.id) : Promise.resolve(null);
 
   let conservationHtml = '';
   if (wikidata?.iucnStatus || inat?.extinct || (inat?.conservationStatuses && inat.conservationStatuses.length > 0)) {
@@ -2709,7 +4162,9 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     { label: 'Field observations', has: !!(inat?.observationsCount > 0) },
     { label: 'Description', has: !!descriptionSection },
     { label: 'Ecology', has: !!ecologySection },
+    { label: 'Bloom calendar', has: !!inat?.id },
     { label: 'Documented uses', has: !!usesSection },
+    { label: 'Care & growing', has: !!(cultivationSection || propagationSection || pestsSection) },
     { label: 'Toxicity / hazards', has: !!toxicitySection },
     { label: 'Compounds studied', has: !!medicinalSection }
   ];
@@ -2771,6 +4226,20 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     `;
   }
 
+  // Bloom calendar placeholder — patched in by the .then() below once
+  // iNaturalist phenology data arrives. Always present if we have a taxon ID
+  // so a "Loading bloom data..." line shows while it's fetching.
+  if (inat?.id) {
+    sectionsHtml += `
+      <div class="knowledge-section" id="bloom-section">
+        <h3>Bloom calendar <span class="evidence-level med">iNaturalist citizen science</span></h3>
+        <div class="knowledge-content" id="bloom-content">
+          <div class="knowledge-loading">Fetching flowering observations from iNaturalist...</div>
+        </div>
+      </div>
+    `;
+  }
+
   if (usesSection) {
     sectionsHtml += `
       <div class="knowledge-section">
@@ -2785,6 +4254,16 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
       </div>
     `;
   }
+
+  sectionsHtml += renderCareGrowing({
+    speciesName,
+    wikiUrl,
+    cultivationSection,
+    propagationSection,
+    pestsSection,
+    ecologySection,
+    nativeRangeCountries
+  });
 
   sectionsHtml += `
     <div class="knowledge-section">
@@ -2848,30 +4327,140 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   `;
 
   sections.innerHTML = sectionsHtml;
+
+  // Patch in the bloom calendar when the phenology fetch returns.
+  if (inat?.id) {
+    phenologyPromise.then(counts => {
+      if (mySearchId !== searchId) return;
+      phenologyByMonth = counts;
+      const bloomContent = document.getElementById('bloom-content');
+      if (!bloomContent) return;
+      if (counts && counts.some(c => c > 0)) {
+        bloomContent.innerHTML = renderBloomCalendar(counts) +
+          `<a href="https://www.inaturalist.org/taxa/${inat.id}" target="_blank" rel="noopener" class="knowledge-source-link">Source: iNaturalist phenology annotations &rarr;</a>`;
+      } else {
+        bloomContent.innerHTML = `<p class="knowledge-empty">No flowering observations recorded on iNaturalist yet for this species. Common for rare or cryptic species — try the parent genus instead.</p>`;
+      }
+    });
+  }
 }
 
 // Common name resolution via iNaturalist
+// Score a candidate against the user's query so that "rose" surfaces Rosa
+// (the genus) ahead of every random wildflower iNaturalist happens to know.
+// iNaturalist's /taxa?q= sorts by observation popularity, which buries the
+// most semantically relevant match under unrelated common species.
+function relevanceScore(query, candidate) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) return 0;
+  const qStem = q.replace(/(es|s)$/, ''); // crude depluraliser for "roses" → "rose"
+  const sci = (candidate.scientificName || '').toLowerCase();
+  const common = (candidate.commonName || '').toLowerCase();
+  let score = 0;
+  if (sci === q || sci === qStem) score += 20;          // genus Rosa for "rose"
+  if (common === q || common === qStem || common === q + 's' || common === qStem + 's') score += 18;
+  if (sci.startsWith(q + ' ') || sci.startsWith(qStem + ' ')) score += 10; // "Rosa canina"
+  if (common.startsWith(q + ' ') || common.startsWith(qStem + ' ')) score += 8;
+  if (sci.endsWith(' ' + q) || sci.endsWith(' ' + qStem)) score += 6;
+  if (common.endsWith(' ' + q) || common.endsWith(' ' + qStem)) score += 6;
+  // Whole-word contains (avoids "roselle" matching "rose")
+  const wordRe = new RegExp(`\\b${qStem.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`);
+  if (wordRe.test(sci)) score += 4;
+  if (wordRe.test(common)) score += 4;
+  // Tiny popularity boost so ties resolve by familiarity — only when the
+  // candidate already has a name match (otherwise pure-popularity plants
+  // would float in for queries they have nothing to do with).
+  if (score > 0 && candidate.observationCount > 0) {
+    score += Math.min(2, Math.log10(candidate.observationCount + 1) / 4);
+  }
+  return score;
+}
+
+// Resolve a free-text query to a list of plant taxa.
+// Strategy: try iNaturalist for species first, then expand to genus + family
+// (so "rose" finds Rosa, "cactus" finds Cactaceae). Then fall back to GBIF's
+// fuzzy species/suggest if iNaturalist returned nothing. Finally, score every
+// candidate against the query so the actual best match floats to the top.
 async function resolveCommonName(query) {
+  const out = [];
+  const seen = new Set();
+  const push = (entry) => {
+    if (!entry || !entry.scientificName) return;
+    const key = entry.scientificName.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(entry);
+  };
+
+  // Pass 1 — iNaturalist, species level (best matches for common-name queries)
   try {
     const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
       encodeURIComponent(query) + '&rank=species,subspecies,variety&is_active=true&per_page=10');
-    if (!r.ok) return [];
-    const data = await r.json();
-    const plants = (data.results || []).filter(t => {
-      const ancestors = t.ancestor_ids || [];
-      return ancestors.includes(47126) || t.iconic_taxon_name === 'Plantae';
-    });
-    return plants.map(t => ({
-      scientificName: t.name,
-      commonName: t.preferred_common_name || '',
-      rank: t.rank,
-      observationCount: t.observations_count || 0,
-      iconicGroup: t.iconic_taxon_name,
-      inatId: t.id
-    }));
-  } catch (e) {
-    return [];
+    if (r.ok) {
+      const data = await r.json();
+      (data.results || [])
+        .filter(t => (t.ancestor_ids || []).includes(47126) || t.iconic_taxon_name === 'Plantae')
+        .forEach(t => push({
+          scientificName: t.name,
+          commonName: t.preferred_common_name || '',
+          rank: t.rank,
+          observationCount: t.observations_count || 0,
+          iconicGroup: t.iconic_taxon_name,
+          inatId: t.id
+        }));
+    }
+  } catch (e) {}
+
+  // Pass 2 — iNaturalist, broaden to genus + family (catches "rose" → Rosa,
+  // "cactus" → Cactaceae, "fern" → Polypodiopsida, "oak" → Quercus).
+  try {
+    const r2 = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(query) + '&rank=genus,family,order&is_active=true&per_page=6');
+    if (r2.ok) {
+      const data = await r2.json();
+      (data.results || [])
+        .filter(t => (t.ancestor_ids || []).includes(47126) || t.iconic_taxon_name === 'Plantae')
+        .forEach(t => push({
+          scientificName: t.name,
+          commonName: t.preferred_common_name || '',
+          rank: t.rank,
+          observationCount: t.observations_count || 0,
+          iconicGroup: t.iconic_taxon_name,
+          inatId: t.id
+        }));
+    }
+  } catch (e) {}
+
+  // Pass 3 — GBIF's species/suggest. Fuzzy + much wider corpus, useful when
+  // iNaturalist returns nothing (rare common names, regional names).
+  if (out.length === 0) {
+    try {
+      const r3 = await fetch('https://api.gbif.org/v1/species/suggest?q=' +
+        encodeURIComponent(query) + '&kingdom=Plantae&limit=8');
+      if (r3.ok) {
+        const data = await r3.json();
+        (data || []).forEach(t => push({
+          scientificName: t.canonicalName || t.scientificName || '',
+          commonName: t.vernacularName || '',
+          rank: (t.rank || '').toLowerCase(),
+          observationCount: 0,
+          iconicGroup: 'Plantae',
+          inatId: null
+        }));
+      }
+    } catch (e) {}
   }
+
+  // Score every candidate by relevance to the query. Drop anything scoring
+  // zero (iNat's full-text search returns random popular plants for vague
+  // queries — those have no name overlap and shouldn't appear at all).
+  const scored = out
+    .map(c => ({ ...c, _score: relevanceScore(query, c) }))
+    .filter(c => c._score > 0)
+    .sort((a, b) => b._score - a._score);
+  // If scoring filtered everything out (rare), fall back to the original list
+  // so the user at least sees *something* and can pick from it.
+  return scored.length > 0 ? scored : out;
 }
 
 // Heuristic: does this query look like a Latin binomial?
@@ -2907,26 +4496,35 @@ function looksLikeScientificName(query) {
 // Disambiguation modal
 function openDisambig(candidates, originalQuery) {
   document.getElementById('disambig-title').textContent =
-    `"${originalQuery}" matches ${candidates.length} plants`;
+    `"${originalQuery}" matches ${candidates.length} plant${candidates.length === 1 ? '' : 's'}`;
   document.getElementById('disambig-text').textContent =
     candidates.length > 1
-      ? 'Common names can be ambiguous — multiple species share this name. Pick the one you meant:'
+      ? 'Pick the one you meant. Picking a genus or family returns specimens of every species in that group.'
       : 'Confirm the match:';
   const list = document.getElementById('disambig-list');
   list.innerHTML = '';
-  candidates.slice(0, 8).forEach(c => {
+  // resolveCommonName already sorts by relevance score; keep that order, just
+  // truncate to 10 items.
+  const sorted = [...candidates];
+  sorted.slice(0, 10).forEach(c => {
     const item = document.createElement('button');
     item.type = 'button';
     item.className = 'disambig-item';
     item.style.width = '100%';
+    const rankLower = (c.rank || '').toLowerCase();
+    const isGroup = ['genus','subgenus','family','subfamily','order','suborder'].includes(rankLower);
+    const rankLabel = c.rank
+      ? (isGroup ? `${rankLower} (all species in group)` : rankLower)
+      : '';
     const obsLabel = c.observationCount
-      ? `${c.observationCount.toLocaleString()} observations on iNaturalist`
-      : 'no observation data';
+      ? `${c.observationCount.toLocaleString()} iNat observations`
+      : '';
+    const meta = [rankLabel, obsLabel].filter(Boolean).join(' · ');
     item.innerHTML = `
       <div>
         <div class="disambig-sci">${escapeHtml(c.scientificName)}</div>
         ${c.commonName ? `<div class="disambig-common">${escapeHtml(c.commonName)}</div>` : ''}
-        <div class="disambig-fam">${escapeHtml(c.rank || '')} &middot; ${escapeHtml(obsLabel)}</div>
+        <div class="disambig-fam">${escapeHtml(meta)}</div>
       </div>
       <div class="disambig-arrow">&rarr;</div>
     `;
@@ -2962,6 +4560,15 @@ async function runSearch(speciesName) {
   try {
     const candidates = await resolveCommonName(name);
     if (candidates.length === 0) {
+      // Last-ditch: try the raw query against GBIF directly. If GBIF can't
+      // match it either, the user is searching a description or a name we
+      // don't know — give actionable guidance.
+      const wordCount = name.split(/\s+/).length;
+      if (wordCount >= 3) {
+        status(`No match for "${name}". This tool searches by plant name, not by description. Try a common name like "rose" or "lavender", or a scientific name like "Lavandula angustifolia". You can also use Identify from photo if you have a picture.`, 'error');
+        btn.disabled = false; btn.textContent = 'Search';
+        return;
+      }
       status(`No common-name match found. Trying "${name}" as a scientific name...`, 'info');
       btn.disabled = false; btn.textContent = 'Search';
       runSearchDirect(name);
@@ -3014,6 +4621,19 @@ async function runSearchDirect(speciesName) {
   document.getElementById('native-range').classList.remove('visible');
   document.getElementById('native-range').innerHTML = '';
   nativeRangeCountries = null;
+  climateCache = null;
+  climateEnvelope = null;
+  communityAnnotations = new Map();
+  leafletInitialFit = true;
+  lastCareCombined = '';
+  phenologyByMonth = null;
+  document.getElementById('climate-envelope').classList.remove('visible', 'loading');
+  document.getElementById('climate-envelope').innerHTML = '';
+  document.getElementById('time-machine').hidden = true;
+  document.getElementById('hardiness-badge').hidden = true;
+  document.getElementById('similar-species').hidden = true;
+  document.getElementById('similar-species').innerHTML = '';
+  stopTimeAnim();
   // Clear any previous comparison when starting a fresh search
   clearComparison();
 
@@ -3052,6 +4672,15 @@ async function runSearchDirect(speciesName) {
       `<a href="${l.url}" target="_blank" rel="noopener" class="species-link">${l.label} ↗</a>`
     ).join('');
     document.getElementById('species-banner').classList.add('visible');
+    refreshFavButton();
+    pushRecent(name);
+    // Similar species + hardiness badge fire in parallel; they don't block
+    // the main analysis pipeline.
+    fetchSimilarSpecies(species).then(list => {
+      if (mySearchId !== searchId) return;
+      renderSimilarSpecies(list);
+    });
+    renderHardinessBadge(species);
 
     fetchWikipedia(species.canonicalName || name).then(wiki => {
       if (mySearchId !== searchId) return;
@@ -3113,7 +4742,7 @@ async function runSearchDirect(speciesName) {
     document.getElementById('stat-geo-sub').textContent = `${stats.withCoords.length} georeferenced`;
 
     status(`Analyzing for anomalies...`);
-    const flagged = analyze(occs).sort((a,b) => b.priority - a.priority);
+    let flagged = analyze(occs).sort((a,b) => b.priority - a.priority);
     document.getElementById('stat-flagged').textContent = flagged.length;
     document.getElementById('stat-flagged-sub').textContent = `${Math.round(100 * flagged.length / occs.length)}% of loaded records`;
     document.getElementById('summary').classList.add('visible');
@@ -3123,6 +4752,10 @@ async function runSearchDirect(speciesName) {
     currentResults = { flagged, all: occs, stats, species };
 
     document.getElementById('map-section').classList.add('visible');
+    // Time machine is per-search; reset window so it picks up fresh range
+    timeWindow.start = timeWindow.end = null;
+    stopTimeAnim();
+    renderTimeMachine();
     setTimeout(() => {
       if (mySearchId === searchId) renderMap(occs, flagged);
     }, 50);
@@ -3132,6 +4765,36 @@ async function runSearchDirect(speciesName) {
 
     buildFilters(flagged);
     render();
+
+    // Climate envelope + community curation kick off in the background after
+    // the initial render so the user sees results immediately.
+    document.getElementById('climate-envelope').classList.add('visible', 'loading');
+    document.getElementById('climate-envelope').innerHTML =
+      '<div class="climate-envelope-title">Climate envelope</div><div>Fetching 30-year climate normals from NASA POWER for each specimen...</div>';
+
+    Promise.allSettled([
+      fetchClimateForOccurrences(occs, mySearchId),
+      species.usageKey ? fetchCommunityAnnotations(species.usageKey) : Promise.resolve()
+    ]).then(() => {
+      if (mySearchId !== searchId) return;
+      document.getElementById('climate-envelope').classList.remove('loading');
+      computeClimateEnvelope();
+      flagged = applyClimateFlags(occs, currentResults.flagged).sort((a,b) => b.priority - a.priority);
+      currentResults.flagged = flagged;
+      document.getElementById('stat-flagged').textContent = flagged.length;
+      document.getElementById('stat-flagged-sub').textContent = `${Math.round(100 * flagged.length / occs.length)}% of loaded records`;
+      renderClimateEnvelope();
+      renderMap(occs, flagged);
+      const flaggedKeys2 = new Set(flagged.map(f => f.key));
+      renderGallery(occs, flaggedKeys2);
+      buildFilters(flagged);
+      render();
+      status(`Climate + community data loaded. ${flagged.length} specimens now flagged.`, 'done');
+    }).catch(e => {
+      if (mySearchId !== searchId) return;
+      document.getElementById('climate-envelope').classList.remove('loading', 'visible');
+      status(`Climate / community fetch failed: ${e.message}. Core results unaffected.`, 'info');
+    });
   } catch (e) {
     if (mySearchId !== searchId) return;
     status(`Search failed: ${e.message}`, 'error');
@@ -3153,13 +4816,19 @@ function buildFilters(flagged) {
     nocoord: 'No coordinates',
     zerozero: 'Bad coordinates',
     quality: 'Data quality issues',
-    unimaged: 'Historical, not imaged'
+    unimaged: 'Historical, not imaged',
+    climate: 'Climate outliers'
   };
+  // Count specimens in the flagged list that have at least one community annotation
+  const communityCount = flagged.reduce((n, f) => n + (communityAnnotations.has(String(f.key)) ? 1 : 0), 0);
   bar.innerHTML = '<span class="filters-label">Filter:</span>' +
     `<button type="button" class="filter-chip ${activeFilter === 'all' ? 'active' : ''}" data-filter="all" aria-pressed="${activeFilter === 'all'}">All (${flagged.length})</button>` +
     Object.entries(counts).map(([k, v]) =>
       `<button type="button" class="filter-chip ${activeFilter === k ? 'active' : ''}" data-filter="${k}" aria-pressed="${activeFilter === k}">${escapeHtml(flagLabels[k] || k)} (${v})</button>`
-    ).join('');
+    ).join('') +
+    (communityCount > 0
+      ? `<button type="button" class="filter-chip ${activeFilter === 'community' ? 'active' : ''}" data-filter="community" aria-pressed="${activeFilter === 'community'}">Community-flagged (${communityCount})</button>`
+      : '');
   bar.classList.add('visible');
   bar.querySelectorAll('.filter-chip').forEach(c => {
     c.addEventListener('click', () => {
@@ -3342,16 +5011,105 @@ function renderNativeRange(range) {
 // Specimen photo gallery — every loaded specimen that has an image
 function renderGallery(allOccs, flaggedKeys) {
   const sec = document.getElementById('gallery-section');
+  const featured = document.getElementById('gallery-featured');
   const grid = document.getElementById('gallery-grid');
-  const count = document.getElementById('gallery-count');
+  const showAllBtn = document.getElementById('gallery-show-all');
+  const showAllCount = document.getElementById('gallery-show-all-count');
+  const fullWrap = document.getElementById('gallery-full');
+  featured.innerHTML = '';
   grid.innerHTML = '';
+
   const withImages = allOccs.filter(o => o.media && o.media[0] && o.media[0].identifier);
-  count.textContent = withImages.length.toLocaleString();
   if (withImages.length === 0) {
-    grid.innerHTML = '<div class="gallery-empty">None of the loaded specimens have digital images attached to the GBIF record.</div>';
+    featured.innerHTML = '<div class="featured-empty">None of the loaded specimens have digital images attached to the GBIF record.</div>';
+    showAllBtn.hidden = true;
+    fullWrap.hidden = true;
     sec.classList.add('visible');
     return;
   }
+
+  // Rank specimens for the "Featured" strip — flagged first, then historical
+  // and most-recent, varying institutions for visual variety.
+  const years = withImages.map(o => o.year).filter(y => y);
+  const minYear = years.length ? Math.min(...years) : null;
+  const maxYear = years.length ? Math.max(...years) : null;
+  const scored = withImages.map(o => {
+    let score = 0;
+    let tag = null;
+    if (flaggedKeys.has(o.key)) { score += 100; tag = { text: 'Flagged', cls: '' }; }
+    if (o.year && minYear !== null && o.year === minYear) { score += 60; tag = tag || { text: 'Earliest', cls: 'historical' }; }
+    if (o.year && maxYear !== null && o.year === maxYear) { score += 40; tag = tag || { text: 'Most recent', cls: 'recent' }; }
+    if (o.year && o.year < 1900) score += 20;
+    if (o.locality && o.locality.length > 10) score += 5;
+    return { o, score, tag };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  // Reserve at least one slot each for the earliest + most-recent specimens
+  // so the strip always shows temporal variety, not just a wall of "Flagged".
+  const featuredList = [];
+  const used = new Set();
+  const usedInst = new Set();
+  const reserve = (predicate) => {
+    const found = scored.find(s => !used.has(s.o.key) && predicate(s));
+    if (found) {
+      featuredList.push(found);
+      used.add(found.o.key);
+      usedInst.add(found.o.institutionCode || '');
+    }
+  };
+  reserve(s => s.tag?.cls === 'historical');
+  reserve(s => s.tag?.cls === 'recent');
+  // Then greedily fill from the scored list, varying institutions.
+  for (const item of scored) {
+    if (featuredList.length >= 8) break;
+    if (used.has(item.o.key)) continue;
+    const inst = item.o.institutionCode || '';
+    if (usedInst.has(inst) && featuredList.length < 6) continue;
+    featuredList.push(item);
+    used.add(item.o.key);
+    usedInst.add(inst);
+  }
+  // Top up if institution-variety filter trimmed too much
+  for (const item of scored) {
+    if (featuredList.length >= 8) break;
+    if (used.has(item.o.key)) continue;
+    featuredList.push(item);
+    used.add(item.o.key);
+  }
+
+  const truncate = (s, n) => (s && s.length > n) ? s.slice(0, n - 1) + '…' : (s || '');
+  featuredList.forEach(({ o, tag }) => {
+    const img = o.media[0].identifier;
+    const inst = o.institutionCode || 'Unknown institution';
+    const cat = o.catalogNumber || o.key;
+    const year = o.year || 'undated';
+    const collector = o.recordedBy ? truncate(o.recordedBy, 28) : '';
+    const place = [o.locality, o.country].filter(Boolean).join(', ') || 'Locality not recorded';
+    const truncPlace = truncate(place, 60);
+    const sci = o.scientificName || o.species || '';
+    const caption = `${sci} · ${inst} · ${year} · ${place}`;
+    const gbifUrl = `https://www.gbif.org/occurrence/${o.key}`;
+    const isFlagged = flaggedKeys.has(o.key);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'featured-card' + (isFlagged ? ' flagged' : '');
+    card.innerHTML = `
+      <div class="featured-img-wrap">
+        <img src="${escapeHtml(img)}" alt="Specimen photo from ${escapeHtml(inst)}, ${escapeHtml(String(year))}" loading="lazy" />
+        ${tag ? `<span class="featured-tag ${tag.cls}">${escapeHtml(tag.text)}</span>` : ''}
+      </div>
+      <div class="featured-caption">
+        <div class="featured-caption-name">${escapeHtml(sci)}</div>
+        <div class="featured-caption-inst">${escapeHtml(inst)} · #${escapeHtml(String(cat))}</div>
+        <div class="featured-caption-meta">${escapeHtml(String(year))}${collector ? ' · ' + escapeHtml(collector) : ''}</div>
+        <div class="featured-caption-meta">${escapeHtml(truncPlace)}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => openLightbox(img, caption, gbifUrl, 'GBIF record'));
+    featured.appendChild(card);
+  });
+
+  // Full grid (hidden until user expands)
   withImages.forEach(o => {
     const img = o.media[0].identifier;
     const inst = o.institutionCode || 'Unknown';
@@ -3370,8 +5128,36 @@ function renderGallery(allOccs, flaggedKeys) {
     btn.addEventListener('click', () => openLightbox(img, caption, gbifUrl, 'GBIF record'));
     grid.appendChild(btn);
   });
+
+  // Only offer "Show all" if there are noticeably more than featured
+  if (withImages.length > featuredList.length) {
+    showAllCount.textContent = withImages.length.toLocaleString();
+    showAllBtn.hidden = false;
+  } else {
+    showAllBtn.hidden = true;
+  }
+  fullWrap.hidden = true;
+  showAllBtn.classList.remove('expanded');
+  showAllBtn.querySelector('span:first-child').textContent = 'Show all imaged';
+
   sec.classList.add('visible');
 }
+
+// Wire the show-all toggle once (idempotent — replaced render rebuilds bodies, not the button)
+(function wireGalleryShowAll() {
+  const btn = document.getElementById('gallery-show-all');
+  const fullWrap = document.getElementById('gallery-full');
+  if (!btn || !fullWrap) return;
+  btn.addEventListener('click', () => {
+    const expanded = !fullWrap.hidden;
+    fullWrap.hidden = expanded;
+    btn.classList.toggle('expanded', !expanded);
+    btn.querySelector('span:first-child').textContent = expanded ? 'Show all imaged' : 'Hide all';
+    if (!expanded) {
+      setTimeout(() => fullWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+    }
+  });
+})();
 
 // -----------------------------------------------------------------------------
 // Lightbox
@@ -3464,12 +5250,1066 @@ async function startComparison() {
 }
 document.getElementById('compare-btn').addEventListener('click', startComparison);
 document.getElementById('compare-banner-clear').addEventListener('click', clearComparison);
+wireTimeMachine();
+
+// -----------------------------------------------------------------------------
+// Time machine: decade slider + histogram + play/pause animation
+function renderTimeMachine() {
+  const tm = document.getElementById('time-machine');
+  const occs = currentResults.all || [];
+  const dated = occs.map(o => o.year).filter(y => y && y > 1700 && y <= new Date().getFullYear() + 1);
+  if (dated.length < 5) {
+    tm.hidden = true;
+    timeWindow.start = timeWindow.end = null;
+    return;
+  }
+  const minY = Math.min(...dated);
+  const maxY = Math.max(...dated);
+  // Initialize the window to the full range on first render of a search
+  if (timeWindow.start === null || timeWindow.start < minY || timeWindow.start > maxY) timeWindow.start = minY;
+  if (timeWindow.end === null || timeWindow.end > maxY || timeWindow.end < minY) timeWindow.end = maxY;
+
+  const startEl = document.getElementById('tm-start');
+  const endEl = document.getElementById('tm-end');
+  startEl.min = endEl.min = String(minY);
+  startEl.max = endEl.max = String(maxY);
+  startEl.step = endEl.step = '1';
+  startEl.value = String(timeWindow.start);
+  endEl.value = String(timeWindow.end);
+
+  document.getElementById('tm-show-undated').checked = !!timeWindow.showUndated;
+
+  drawTmHistogram(dated, minY, maxY);
+  updateTmReadout(occs);
+  tm.hidden = false;
+}
+
+function drawTmHistogram(dated, minY, maxY) {
+  const canvas = document.getElementById('tm-histogram');
+  const wrap = canvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(rect.width, 100);
+  const h = 38;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  const span = maxY - minY || 1;
+  const buckets = Math.min(80, span + 1);
+  const counts = new Array(buckets).fill(0);
+  dated.forEach(y => {
+    const idx = Math.min(buckets - 1, Math.floor((y - minY) / span * buckets));
+    counts[idx]++;
+  });
+  const maxCount = Math.max(1, ...counts);
+  const barW = w / buckets;
+  for (let i = 0; i < buckets; i++) {
+    const bh = (counts[i] / maxCount) * (h - 4);
+    const bucketStartYear = minY + (i / buckets) * span;
+    const bucketEndYear = minY + ((i + 1) / buckets) * span;
+    const inWindow = bucketEndYear >= timeWindow.start && bucketStartYear <= timeWindow.end;
+    ctx.fillStyle = inWindow ? 'rgba(194, 65, 12, 0.55)' : 'rgba(140, 140, 140, 0.25)';
+    ctx.fillRect(i * barW + 0.5, h - bh, barW - 1, bh);
+  }
+}
+
+function updateTmReadout(occs) {
+  const total = occs.filter(o => typeof o.decimalLatitude === 'number' && typeof o.decimalLongitude === 'number').length;
+  let shown = 0;
+  let undated = 0;
+  occs.forEach(o => {
+    if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
+    if (!o.year) { undated++; if (timeWindow.showUndated) shown++; return; }
+    if (o.year >= timeWindow.start && o.year <= timeWindow.end) shown++;
+  });
+  const el = document.getElementById('tm-readout');
+  el.innerHTML = `<strong>${shown}</strong>/${total} specimens · years <strong>${timeWindow.start}</strong>&ndash;<strong>${timeWindow.end}</strong>${undated > 0 && !timeWindow.showUndated ? ` · ${undated} undated hidden` : ''}`;
+}
+
+function wireTimeMachine() {
+  const startEl = document.getElementById('tm-start');
+  const endEl = document.getElementById('tm-end');
+  const undatedEl = document.getElementById('tm-show-undated');
+  const playBtn = document.getElementById('tm-playbtn');
+  const onChange = (changedStart) => {
+    let s = parseInt(startEl.value, 10);
+    let e = parseInt(endEl.value, 10);
+    if (s > e) {
+      if (changedStart) e = s;
+      else s = e;
+      startEl.value = String(s);
+      endEl.value = String(e);
+    }
+    timeWindow.start = s;
+    timeWindow.end = e;
+    refreshTimeView();
+  };
+  startEl.addEventListener('input', () => onChange(true));
+  endEl.addEventListener('input', () => onChange(false));
+  undatedEl.addEventListener('change', () => {
+    timeWindow.showUndated = undatedEl.checked;
+    refreshTimeView();
+  });
+  playBtn.addEventListener('click', () => {
+    if (timeWindow.playing) stopTimeAnim();
+    else startTimeAnim();
+  });
+}
+
+function refreshTimeView() {
+  if (!currentResults.all || !currentResults.all.length) return;
+  const dated = currentResults.all.map(o => o.year).filter(y => y && y > 1700 && y <= new Date().getFullYear() + 1);
+  if (dated.length) {
+    drawTmHistogram(dated, Math.min(...dated), Math.max(...dated));
+  }
+  updateTmReadout(currentResults.all);
+  renderMap(currentResults.all, currentResults.flagged);
+  // Climate envelope recomputes for the current time window
+  refreshClimateEnvelope();
+}
+
+function startTimeAnim() {
+  timeWindow.playing = true;
+  document.getElementById('tm-playbtn').textContent = '⏸';
+  document.getElementById('tm-playbtn').classList.add('playing');
+  document.getElementById('tm-playbtn').setAttribute('aria-label', 'Pause timeline');
+  // Animate by sweeping a 30-year window from earliest to latest
+  const dated = (currentResults.all || []).map(o => o.year).filter(y => y && y > 1700);
+  if (dated.length === 0) { stopTimeAnim(); return; }
+  const minY = Math.min(...dated);
+  const maxY = Math.max(...dated);
+  const window = Math.max(20, Math.round((maxY - minY) * 0.18));
+  timeWindow.start = minY;
+  timeWindow.end = Math.min(maxY, minY + window);
+  let last = performance.now();
+  const step = (now) => {
+    if (!timeWindow.playing) return;
+    if (now - last >= timeWindow.speed) {
+      last = now;
+      timeWindow.start += 1;
+      timeWindow.end += 1;
+      if (timeWindow.end > maxY) {
+        timeWindow.start = minY;
+        timeWindow.end = Math.min(maxY, minY + window);
+      }
+      document.getElementById('tm-start').value = String(timeWindow.start);
+      document.getElementById('tm-end').value = String(timeWindow.end);
+      refreshTimeView();
+    }
+    timeAnimHandle = requestAnimationFrame(step);
+  };
+  timeAnimHandle = requestAnimationFrame(step);
+}
+
+function stopTimeAnim() {
+  timeWindow.playing = false;
+  if (timeAnimHandle) cancelAnimationFrame(timeAnimHandle);
+  timeAnimHandle = null;
+  const btn = document.getElementById('tm-playbtn');
+  if (btn) {
+    btn.textContent = '▶';
+    btn.classList.remove('playing');
+    btn.setAttribute('aria-label', 'Play timeline');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Climate envelope via NASA POWER climatology endpoint (free, CORS, no key)
+// We round each specimen's coords to 0.25 deg to cluster cache hits, then
+// fetch mean annual T2M (°C) and total annual PRECTOTCORR (mm). 30-year normals.
+const CLIMATE_CACHE_KEY = 'specimenfinder_climate_v1';
+function loadClimateGridCache() {
+  try { return JSON.parse(localStorage.getItem(CLIMATE_CACHE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveClimateGridCache(obj) {
+  try { localStorage.setItem(CLIMATE_CACHE_KEY, JSON.stringify(obj)); }
+  catch (e) { /* quota — drop silently */ }
+}
+
+function climateCellKey(lat, lon) {
+  const rl = Math.round(lat * 4) / 4;
+  const rL = Math.round(lon * 4) / 4;
+  return rl.toFixed(2) + ',' + rL.toFixed(2);
+}
+
+async function fetchClimatePoint(lat, lon) {
+  const url = 'https://power.larc.nasa.gov/api/temporal/climatology/point' +
+    '?parameters=T2M,PRECTOTCORR&community=AG' +
+    '&longitude=' + lon.toFixed(4) + '&latitude=' + lat.toFixed(4) + '&format=JSON';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('NASA POWER ' + r.status);
+  const data = await r.json();
+  const params = data?.properties?.parameter || {};
+  const t2m = params.T2M?.ANN;
+  const prec = params.PRECTOTCORR?.ANN;
+  if (t2m === undefined || prec === undefined) return null;
+  // NASA POWER fill value for missing land cells
+  if (t2m <= -990 || prec <= -990) return null;
+  // PRECTOTCORR in mm/day on climatology endpoint — multiply by 365 to get annual
+  return { t2m: t2m, prec: prec * 365 };
+}
+
+async function fetchClimateForOccurrences(occs, mySearchId) {
+  const grid = loadClimateGridCache();
+  const need = [];
+  const byOcc = {};
+  occs.forEach(o => {
+    if (typeof o.decimalLatitude !== 'number' || typeof o.decimalLongitude !== 'number') return;
+    if (o.decimalLatitude === 0 && o.decimalLongitude === 0) return;
+    const cell = climateCellKey(o.decimalLatitude, o.decimalLongitude);
+    byOcc[o.key] = cell;
+    if (grid[cell]) return;
+    if (!need.find(n => n.cell === cell)) need.push({ cell, lat: o.decimalLatitude, lon: o.decimalLongitude });
+  });
+
+  status(`Fetching climate normals for ${need.length} unique grid cells from NASA POWER...`);
+  const concurrency = 8;
+  let idx = 0;
+  const errors = { count: 0 };
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (idx < need.length) {
+      const item = need[idx++];
+      if (mySearchId !== searchId) return; // bail if user started a new search
+      try {
+        const c = await fetchClimatePoint(item.lat, item.lon);
+        if (c) grid[item.cell] = c;
+        else grid[item.cell] = null;
+      } catch (e) {
+        errors.count++;
+        grid[item.cell] = null;
+      }
+    }
+  }));
+  if (mySearchId !== searchId) return null;
+  saveClimateGridCache(grid);
+  if (errors.count) status(`Climate fetch: ${errors.count} cells failed — those specimens will be skipped in the envelope.`, 'info');
+
+  // Build per-occurrence map
+  climateCache = {};
+  Object.entries(byOcc).forEach(([k, cell]) => {
+    if (grid[cell]) climateCache[k] = grid[cell];
+  });
+  return climateCache;
+}
+
+function computeClimateEnvelope() {
+  if (!climateCache) { climateEnvelope = null; return; }
+  const visible = (currentResults.all || []).filter(o => {
+    if (!climateCache[o.key]) return false;
+    if (timeWindow.start === null || timeWindow.end === null) return true;
+    if (!o.year) return timeWindow.showUndated;
+    return o.year >= timeWindow.start && o.year <= timeWindow.end;
+  });
+  if (visible.length < 8) { climateEnvelope = null; return; }
+  const ts = visible.map(o => climateCache[o.key].t2m);
+  const ps = visible.map(o => climateCache[o.key].prec);
+  const tMed = median(ts);
+  const tMad = mad(ts, tMed);
+  const pMed = median(ps);
+  const pMad = mad(ps, pMed);
+  climateEnvelope = { tMed, tMad, pMed, pMad, n: visible.length };
+}
+
+function renderClimateEnvelope() {
+  const el = document.getElementById('climate-envelope');
+  if (!climateCache) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  computeClimateEnvelope();
+  if (!climateEnvelope) {
+    el.classList.add('visible');
+    el.innerHTML = '<div class="climate-envelope-title">Climate envelope</div>' +
+      '<div>Not enough specimens with climate data in the current time window for a reliable envelope.</div>';
+    return;
+  }
+  const { tMed, tMad, pMed, pMad, n } = climateEnvelope;
+  // Count climate outliers among visible specimens
+  let outliers = 0;
+  (currentResults.all || []).forEach(o => {
+    const c = climateCache[o.key];
+    if (!c) return;
+    if (timeWindow.start !== null && o.year && (o.year < timeWindow.start || o.year > timeWindow.end)) return;
+    const zt = modifiedZScore(c.t2m, tMed, tMad);
+    const zp = modifiedZScore(c.prec, pMed, pMad);
+    if (Math.abs(zt) > 3.5 || Math.abs(zp) > 3.5) outliers++;
+  });
+  el.classList.add('visible');
+  const tLow = (tMed - tMad).toFixed(1);
+  const tHigh = (tMed + tMad).toFixed(1);
+  const pLow = Math.round(pMed - pMad);
+  const pHigh = Math.round(pMed + pMad);
+  el.innerHTML = `
+    <div class="climate-envelope-title">Climate envelope <span style="font-weight:400;color:var(--text-muted);font-size:11px">(from NASA POWER 30-year normals; recomputes for the time window above)</span></div>
+    <div class="climate-stats">
+      <div class="climate-stat">
+        <div class="climate-stat-label">Mean annual temp</div>
+        <div class="climate-stat-value">${tLow} &ndash; ${tHigh} &deg;C</div>
+        <div class="climate-stat-sub">median &plusmn; MAD, n=${n}</div>
+      </div>
+      <div class="climate-stat">
+        <div class="climate-stat-label">Annual precipitation</div>
+        <div class="climate-stat-value">${pLow} &ndash; ${pHigh} mm</div>
+        <div class="climate-stat-sub">median &plusmn; MAD, n=${n}</div>
+      </div>
+      <div class="climate-stat">
+        <div class="climate-stat-label">Climate outliers</div>
+        <div class="climate-stat-value">${outliers}</div>
+        <div class="climate-stat-sub">|z| &gt; 3.5 on T or P</div>
+      </div>
+    </div>
+  `;
+}
+
+function refreshClimateEnvelope() {
+  if (!climateCache) return;
+  renderClimateEnvelope();
+}
+
+// -----------------------------------------------------------------------------
+// Collective curation: read community annotations from a GitHub Issues repo.
+// One issue per species (title contains "usageKey=N"); each annotation is a
+// comment containing a fenced JSON code block.
+// The repo URL is configurable; if the repo doesn't exist, reads return empty
+// silently so the feature degrades gracefully.
+const COMMUNITY_REPO = 'TheoryofShadows/specimen-finder-annotations';
+const COMMUNITY_LABEL = 'annotations';
+
+async function findSpeciesIssue(usageKey) {
+  // Cached in sessionStorage per usageKey to avoid repeat hits
+  try {
+    const cached = sessionStorage.getItem('cf_issue_' + usageKey);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {}
+  try {
+    const q = encodeURIComponent(`repo:${COMMUNITY_REPO} is:issue label:${COMMUNITY_LABEL} usageKey=${usageKey} in:title`);
+    const headers = communityAuthHeader();
+    const r = await fetch(`https://api.github.com/search/issues?q=${q}`, { headers });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const item = (data.items || [])[0] || null;
+    if (item) sessionStorage.setItem('cf_issue_' + usageKey, JSON.stringify({ number: item.number, url: item.html_url }));
+    return item ? { number: item.number, url: item.html_url } : null;
+  } catch (e) { return null; }
+}
+
+function parseAnnotationComment(comment) {
+  const body = comment.body || '';
+  const m = body.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (!m) return null;
+  let parsed;
+  try { parsed = JSON.parse(m[1]); } catch (e) { return null; }
+  if (!parsed.occKey || !parsed.status) return null;
+  return {
+    occKey: String(parsed.occKey),
+    status: parsed.status,
+    notes: parsed.notes || '',
+    author: comment.user?.login || 'anonymous',
+    url: comment.html_url,
+    ts: comment.created_at
+  };
+}
+
+async function fetchCommunityAnnotations(usageKey) {
+  communityAnnotations = new Map();
+  const issue = await findSpeciesIssue(usageKey);
+  if (!issue) return;
+  try {
+    const headers = communityAuthHeader();
+    const r = await fetch(`https://api.github.com/repos/${COMMUNITY_REPO}/issues/${issue.number}/comments?per_page=100`, { headers });
+    if (!r.ok) return;
+    const comments = await r.json();
+    comments.forEach(c => {
+      const a = parseAnnotationComment(c);
+      if (!a) return;
+      if (!communityAnnotations.has(a.occKey)) communityAnnotations.set(a.occKey, []);
+      communityAnnotations.get(a.occKey).push(a);
+    });
+  } catch (e) { /* network — degrade silently */ }
+}
+
+function communityAuthHeader() {
+  const pat = getStoredKey('github_pat');
+  return pat ? { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' }
+             : { 'Accept': 'application/vnd.github+json' };
+}
+
+async function ensureSpeciesIssue(species) {
+  let issue = await findSpeciesIssue(species.usageKey);
+  if (issue) return issue;
+  const pat = getStoredKey('github_pat');
+  if (!pat) throw new Error('Need a GitHub Personal Access Token to create a species thread.');
+  const headers = { ...communityAuthHeader(), 'Content-Type': 'application/json' };
+  const body = {
+    title: `Annotations: ${species.scientificName || species.canonicalName} (usageKey=${species.usageKey})`,
+    body: `Community annotations for this species. Each comment is a structured JSON block keyed by GBIF occurrence ID. Generated by Specimen Finder.\n\nGBIF species page: https://www.gbif.org/species/${species.usageKey}`,
+    labels: [COMMUNITY_LABEL]
+  };
+  const r = await fetch(`https://api.github.com/repos/${COMMUNITY_REPO}/issues`, {
+    method: 'POST', headers, body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error('GitHub: ' + (err.message || r.status));
+  }
+  const data = await r.json();
+  issue = { number: data.number, url: data.html_url };
+  sessionStorage.setItem('cf_issue_' + species.usageKey, JSON.stringify(issue));
+  return issue;
+}
+
+async function postCommunityAnnotation(species, occKey, status, notes) {
+  const pat = getStoredKey('github_pat');
+  if (!pat) throw new Error('Set a GitHub token first to share annotations.');
+  const issue = await ensureSpeciesIssue(species);
+  const payload = { occKey, status, notes, speciesKey: species.usageKey, v: 1 };
+  const body = {
+    body: `Annotation for occurrence ${occKey} — **${status}**\n\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\`\n\n[View on GBIF](https://www.gbif.org/occurrence/${occKey})`
+  };
+  const headers = { ...communityAuthHeader(), 'Content-Type': 'application/json' };
+  const r = await fetch(`https://api.github.com/repos/${COMMUNITY_REPO}/issues/${issue.number}/comments`, {
+    method: 'POST', headers, body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error('GitHub: ' + (err.message || r.status));
+  }
+  const data = await r.json();
+  const newEntry = {
+    occKey, status, notes,
+    author: data.user?.login || 'you',
+    url: data.html_url,
+    ts: data.created_at
+  };
+  if (!communityAnnotations.has(occKey)) communityAnnotations.set(occKey, []);
+  communityAnnotations.get(occKey).push(newEntry);
+  return newEntry;
+}
+
+function communityConsensus(list) {
+  if (!list || list.length === 0) return null;
+  const counts = {};
+  list.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+  let best = null, bestN = 0;
+  Object.entries(counts).forEach(([k, n]) => { if (n > bestN) { best = k; bestN = n; } });
+  return { status: best, count: bestN, total: list.length, counts };
+}
+
+// -----------------------------------------------------------------------------
+// Pronounce a scientific name via the browser's built-in SpeechSynthesis API.
+// No key, no quota — but availability varies across browsers. The button is
+// hidden when the API is unavailable.
+function pronounceScientific(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Prefer an Italian voice if present (closest phonetics to botanical Latin),
+    // then English, then default. The list may be empty on first call in some
+    // browsers — that's OK, default voice still works.
+    const voices = window.speechSynthesis.getVoices();
+    const it = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('it'));
+    const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+    if (it) utterance.voice = it;
+    else if (en) utterance.voice = en;
+    utterance.rate = 0.85;
+    utterance.pitch = 1.0;
+    const btn = document.getElementById('species-pronounce');
+    if (btn) btn.classList.add('speaking');
+    utterance.onend = () => { if (btn) btn.classList.remove('speaking'); };
+    utterance.onerror = () => { if (btn) btn.classList.remove('speaking'); };
+    window.speechSynthesis.speak(utterance);
+  } catch (e) { /* ignore */ }
+}
+
+// -----------------------------------------------------------------------------
+// Bloom calendar via iNaturalist's observation histogram. We ask for
+// "flowering" plant-phenology observations bucketed by month_of_year, which
+// gives a 12-bucket "when does this species bloom" signal.
+async function fetchPhenology(inatTaxonId) {
+  if (!inatTaxonId) return null;
+  try {
+    // term_id=12 is iNaturalist's "Plant Phenology" annotation;
+    // term_value_id=13 is "Flowering".
+    const url = 'https://api.inaturalist.org/v1/observations/histogram' +
+      '?taxon_id=' + inatTaxonId +
+      '&date_field=observed&interval=month_of_year' +
+      '&term_id=12&term_value_id=13&verifiable=true';
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const buckets = data.results?.month_of_year || {};
+    const arr = new Array(12).fill(0);
+    Object.entries(buckets).forEach(([k, v]) => {
+      const m = parseInt(k, 10) - 1;
+      if (m >= 0 && m < 12) arr[m] = v;
+    });
+    return arr;
+  } catch (e) { return null; }
+}
+
+// Look up the species' iNaturalist taxon ID by scientific name.
+// Cached per session.
+async function findInatTaxonId(scientificName) {
+  try {
+    const cached = sessionStorage.getItem('inat_tax_' + scientificName);
+    if (cached) return cached === 'null' ? null : parseInt(cached, 10);
+  } catch (e) {}
+  try {
+    const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
+      encodeURIComponent(scientificName) + '&is_active=true&per_page=5');
+    if (!r.ok) return null;
+    const data = await r.json();
+    const t = (data.results || []).find(x =>
+      x.name?.toLowerCase() === scientificName.toLowerCase()
+    );
+    const id = t?.id || null;
+    try { sessionStorage.setItem('inat_tax_' + scientificName, id ? String(id) : 'null'); } catch (e) {}
+    return id;
+  } catch (e) { return null; }
+}
+
+function renderBloomCalendar(rawCounts) {
+  if (!rawCounts || rawCounts.every(c => c === 0)) return '';
+  // For Southern Hemisphere, shift by 6 months so the user sees bloom timing
+  // in *their* seasons (Jan/Feb on the chart = SH summer = NH July/August data).
+  const counts = phenologyHemisphere === 'S'
+    ? rawCounts.slice(6).concat(rawCounts.slice(0, 6))
+    : rawCounts.slice();
+  const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+  const monthFull = ['January', 'February', 'March', 'April', 'May', 'June',
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const max = Math.max(...counts);
+  const totalObs = counts.reduce((a, b) => a + b, 0);
+  const peakThreshold = max * 0.8;
+  const peakMonths = counts
+    .map((c, i) => (c >= peakThreshold ? monthFull[i] : null))
+    .filter(Boolean);
+  const peakSummary = peakMonths.length === 1
+    ? `Peak bloom in <strong>${peakMonths[0]}</strong>`
+    : `Peak bloom from <strong>${peakMonths[0]}</strong> through <strong>${peakMonths[peakMonths.length - 1]}</strong>`;
+  const bars = counts.map((c, i) => {
+    const pct = max > 0 ? Math.max(2, Math.round((c / max) * 100)) : 0;
+    const isPeak = c >= peakThreshold && c > 0;
+    return `
+      <div class="bloom-month${isPeak ? ' peak' : ''}" title="${escapeHtml(monthFull[i])}: ${c.toLocaleString()} flowering observations">
+        <div class="bloom-bar-wrap"><div class="bloom-bar" style="height:${pct}%"></div></div>
+        <div class="bloom-month-label">${months[i]}</div>
+        <div class="bloom-count">${c >= 1000 ? Math.round(c / 100) / 10 + 'k' : c}</div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="bloom-calendar">${bars}</div>
+    <div class="bloom-summary">
+      ${peakSummary} (${phenologyHemisphere === 'S' ? 'Southern' : 'Northern'} Hemisphere). Based on ${totalObs.toLocaleString()} flowering observations from <a href="https://www.inaturalist.org" target="_blank" rel="noopener" class="knowledge-source-link" style="display:inline">iNaturalist</a> citizen scientists.
+      <span class="bloom-hemisphere" role="radiogroup" aria-label="Hemisphere">
+        <button type="button" class="${phenologyHemisphere === 'N' ? 'active' : ''}" data-hem="N" aria-checked="${phenologyHemisphere === 'N'}">Northern</button>
+        <button type="button" class="${phenologyHemisphere === 'S' ? 'active' : ''}" data-hem="S" aria-checked="${phenologyHemisphere === 'S'}">Southern</button>
+      </span>
+    </div>
+  `;
+}
+
+// Wire the hemisphere toggle via event delegation, since the bloom chart
+// re-renders on each search and we don't want to rebind every time.
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.bloom-hemisphere button');
+  if (!btn) return;
+  const hem = btn.dataset.hem;
+  if (hem !== 'N' && hem !== 'S') return;
+  phenologyHemisphere = hem;
+  try { localStorage.setItem('specimenfinder_hem', hem); } catch (ex) {}
+  if (phenologyByMonth) {
+    const bloomContent = document.getElementById('bloom-content');
+    if (bloomContent) {
+      const link = bloomContent.querySelector('a.knowledge-source-link')?.outerHTML || '';
+      bloomContent.innerHTML = renderBloomCalendar(phenologyByMonth) + link;
+    }
+  }
+});
+// Restore hemisphere preference on load
+try {
+  const h = localStorage.getItem('specimenfinder_hem');
+  if (h === 'N' || h === 'S') phenologyHemisphere = h;
+} catch (e) {}
+// Default for first-time SH users: if we already know lat is negative, default to S
+if (userLocation && userLocation.lat < 0) phenologyHemisphere = 'S';
+
+// -----------------------------------------------------------------------------
+// My garden modal — open/close + render
+function renderGardenList() {
+  const list = loadGarden();
+  const el = document.getElementById('garden-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="garden-empty">No saved species yet. Tap the heart next to any species name to save it.</div>';
+    return;
+  }
+  el.innerHTML = list.map(g => `
+    <div class="garden-item">
+      <button type="button" class="garden-item-sci" data-sci="${escapeHtml(g.sci)}">${escapeHtml(g.sci)}</button>
+      <span style="font-size:11px;color:var(--text-muted);">${escapeHtml(g.common || '')}</span>
+      <button type="button" class="garden-item-remove" data-sci="${escapeHtml(g.sci)}" aria-label="Remove from garden">Remove</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.garden-item-sci').forEach(b => {
+    b.addEventListener('click', () => {
+      closeGardenModal();
+      const sci = b.dataset.sci;
+      document.getElementById('species-input').value = sci;
+      // Switch to the name tab so the user sees the query
+      const nameTab = document.querySelector('.tab[data-tab="name"]');
+      if (nameTab) nameTab.click();
+      runSearchDirect(sci);
+    });
+  });
+  el.querySelectorAll('.garden-item-remove').forEach(b => {
+    b.addEventListener('click', () => {
+      removeFromGarden(b.dataset.sci);
+      updateGardenCount();
+      renderGardenList();
+      // Refresh the heart button on the current species banner if it's the
+      // species being removed
+      refreshFavButton();
+    });
+  });
+}
+function openGardenModal() {
+  renderGardenList();
+  document.getElementById('garden-overlay').classList.add('open');
+}
+function closeGardenModal() {
+  document.getElementById('garden-overlay').classList.remove('open');
+}
+
+function refreshFavButton() {
+  const sci = currentResults.species?.canonicalName || currentResults.species?.scientificName;
+  if (!sci) return;
+  const fav = document.getElementById('species-fav');
+  if (!fav) return;
+  const inGarden = isInGarden(sci);
+  fav.setAttribute('aria-pressed', inGarden ? 'true' : 'false');
+  fav.setAttribute('aria-label', inGarden ? 'Remove from My garden' : 'Save to My garden');
+  fav.title = inGarden ? 'In My garden — click to remove' : 'Save to My garden';
+}
+
+document.getElementById('header-garden').addEventListener('click', openGardenModal);
+document.getElementById('garden-close').addEventListener('click', closeGardenModal);
+document.getElementById('garden-overlay').addEventListener('click', e => {
+  if (e.target.id === 'garden-overlay') closeGardenModal();
+});
+document.getElementById('garden-export').addEventListener('click', () => {
+  const list = loadGarden();
+  if (list.length === 0) { alert('Save some species first.'); return; }
+  // Build a URL with ?garden=sci1|sci2|sci3 so the list can be shared.
+  const names = list.map(g => g.sci).filter(Boolean).join('|');
+  const url = location.origin + location.pathname + '?garden=' + encodeURIComponent(names);
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('garden-export').textContent = 'Copied link!';
+    setTimeout(() => { document.getElementById('garden-export').textContent = 'Export as link'; }, 1600);
+  }).catch(() => alert('Copy failed. URL: ' + url));
+});
+
+document.getElementById('species-fav').addEventListener('click', () => {
+  const sp = currentResults.species;
+  if (!sp) return;
+  const sci = sp.canonicalName || sp.scientificName;
+  if (isInGarden(sci)) {
+    removeFromGarden(sci);
+  } else {
+    const commonEl = document.getElementById('species-common');
+    addToGarden({ sci, common: (commonEl?.textContent || '').trim(), usageKey: sp.usageKey });
+  }
+  updateGardenCount();
+  refreshFavButton();
+});
+
+document.getElementById('species-pronounce').addEventListener('click', () => {
+  const sciText = document.getElementById('species-sci').textContent;
+  if (sciText) pronounceScientific(sciText);
+});
+
+// Initialise garden count + the pronounce button visibility on load
+updateGardenCount();
+if ('speechSynthesis' in window) {
+  document.getElementById('species-pronounce').hidden = false;
+}
+
+// -----------------------------------------------------------------------------
+// Dark mode — persisted in localStorage. Honours OS preference on first visit.
+const THEME_KEY = 'specimenfinder_theme';
+function applyTheme(theme) {
+  document.body.classList.toggle('dark', theme === 'dark');
+  document.getElementById('theme-icon-moon').hidden = theme === 'dark';
+  document.getElementById('theme-icon-sun').hidden = theme !== 'dark';
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+}
+function currentTheme() {
+  let stored = null;
+  try { stored = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (stored === 'dark' || stored === 'light') return stored;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+document.getElementById('header-theme').addEventListener('click', () => {
+  applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+  // Leaflet tiles need a redraw after theme flip to pick up the CSS filter
+  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(false), 50);
+});
+applyTheme(currentTheme());
+
+// -----------------------------------------------------------------------------
+// Recent searches — last 10 successful searches, kept in localStorage.
+const RECENT_KEY = 'specimenfinder_recent_v1';
+function loadRecent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function saveRecent(list) {
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); }
+  catch (e) {}
+}
+function pushRecent(query) {
+  const q = (query || '').trim();
+  if (!q) return;
+  let list = loadRecent().filter(x => x.toLowerCase() !== q.toLowerCase());
+  list.unshift(q);
+  list = list.slice(0, 10);
+  saveRecent(list);
+  renderRecent();
+}
+function renderRecent() {
+  const row = document.getElementById('recent-row');
+  const pills = document.getElementById('recent-pills');
+  const list = loadRecent();
+  if (list.length === 0) {
+    row.hidden = true;
+    pills.innerHTML = '';
+    return;
+  }
+  row.hidden = false;
+  pills.innerHTML = list.map(q =>
+    `<button type="button" class="recent-pill" data-q="${escapeHtml(q)}">${escapeHtml(q)}</button>`
+  ).join('');
+  pills.querySelectorAll('.recent-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.q;
+      document.getElementById('species-input').value = q;
+      runSearch(q);
+    });
+  });
+}
+document.getElementById('recent-clear').addEventListener('click', () => {
+  saveRecent([]);
+  renderRecent();
+});
+renderRecent();
+
+// Restore any previously-detected hardiness zone so the badge can render
+// immediately on the first search without re-prompting for location.
+(function restoreZone() {
+  const cached = loadZoneCache();
+  if (cached && cached.zone) {
+    userHardinessZone = cached.zone;
+    userLocation = { lat: cached.lat, lon: cached.lon };
+    if (cached.lat < 0) phenologyHemisphere = 'S';
+  }
+})();
+
+// -----------------------------------------------------------------------------
+// Voice search via the browser's SpeechRecognition API. Hidden when the
+// API isn't available (Safari iOS doesn't expose it, Firefox neither
+// in some builds).
+(function setupVoiceSearch() {
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('mic-btn');
+  if (!Rec || !btn) return;
+  btn.hidden = false;
+  let listening = false;
+  let recognition = null;
+  btn.addEventListener('click', () => {
+    if (listening) {
+      try { recognition.stop(); } catch (e) {}
+      return;
+    }
+    recognition = new Rec();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => {
+      listening = true;
+      btn.classList.add('listening');
+      btn.setAttribute('aria-label', 'Listening — tap to stop');
+    };
+    recognition.onresult = (e) => {
+      const text = e.results?.[0]?.[0]?.transcript || '';
+      if (text) {
+        document.getElementById('species-input').value = text;
+        runSearch(text);
+      }
+    };
+    const cleanup = () => {
+      listening = false;
+      btn.classList.remove('listening');
+      btn.setAttribute('aria-label', 'Search by voice');
+    };
+    recognition.onend = cleanup;
+    recognition.onerror = (e) => {
+      cleanup();
+      if (e.error !== 'aborted' && e.error !== 'no-speech') {
+        status(`Voice search failed: ${e.error}. Try typing instead.`, 'error');
+      }
+    };
+    try { recognition.start(); }
+    catch (e) { cleanup(); status('Voice search not available in this browser.', 'error'); }
+  });
+})();
+
+// -----------------------------------------------------------------------------
+// Hardiness zone auto-detect.
+// Geolocation → NASA POWER monthly T2M_MIN → coldest-month mean min temp →
+// USDA zone (1-13). Cached in localStorage so we only ask once.
+// The temperature thresholds follow USDA's official hardiness-zone definitions
+// (low-end mean annual extreme minimum, in °C).
+const ZONE_BREAKPOINTS_C = [
+  -51.1, -45.6, -40.0, -34.4, -28.9, -23.3, -17.8, -12.2, -6.7, -1.1, 4.4, 10.0
+];
+function tempCtoUsdaZone(tempC) {
+  // Zone N covers ZONE_BREAKPOINTS_C[N-1] to ZONE_BREAKPOINTS_C[N].
+  // Anything below zone 1 still gets zone 1; above zone 13, zone 13.
+  if (tempC < ZONE_BREAKPOINTS_C[0]) return 1;
+  for (let z = 1; z <= 12; z++) {
+    if (tempC >= ZONE_BREAKPOINTS_C[z - 1] && tempC < ZONE_BREAKPOINTS_C[z]) return z;
+  }
+  return 13;
+}
+const ZONE_CACHE_KEY = 'specimenfinder_zone_v1';
+function loadZoneCache() {
+  try { return JSON.parse(localStorage.getItem(ZONE_CACHE_KEY) || 'null'); }
+  catch (e) { return null; }
+}
+function saveZoneCache(obj) {
+  try { localStorage.setItem(ZONE_CACHE_KEY, JSON.stringify(obj)); }
+  catch (e) {}
+}
+async function detectUserZone(showStatus) {
+  // 1. Check cache
+  const cached = loadZoneCache();
+  if (cached && cached.zone && cached.lat !== undefined) {
+    userHardinessZone = cached.zone;
+    userLocation = { lat: cached.lat, lon: cached.lon };
+    return cached;
+  }
+  // 2. Request geolocation
+  if (!('geolocation' in navigator)) return null;
+  let pos;
+  try {
+    pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, maximumAge: 3600000 }));
+  } catch (e) {
+    return null; // permission denied, timeout, or unsupported
+  }
+  const lat = pos.coords.latitude, lon = pos.coords.longitude;
+  if (showStatus) status('Detecting your hardiness zone from NASA POWER climate data...');
+  // 3. Get monthly T2M_MIN from NASA POWER and take the coldest month's mean min
+  try {
+    const url = 'https://power.larc.nasa.gov/api/temporal/climatology/point' +
+      '?parameters=T2M_MIN&community=AG' +
+      '&longitude=' + lon.toFixed(3) + '&latitude=' + lat.toFixed(3) + '&format=JSON';
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const monthly = data?.properties?.parameter?.T2M_MIN || {};
+    const monthKeys = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const vals = monthKeys.map(k => monthly[k]).filter(v => typeof v === 'number' && v > -990);
+    if (vals.length === 0) return null;
+    const coldest = Math.min(...vals);
+    const zone = tempCtoUsdaZone(coldest);
+    const entry = { zone, coldestC: coldest, lat, lon, ts: Date.now() };
+    saveZoneCache(entry);
+    userHardinessZone = zone;
+    userLocation = { lat, lon };
+    if (showStatus) status(`Detected zone ${zone} for your area (coldest-month mean ${coldest.toFixed(1)} °C).`, 'done');
+    return entry;
+  } catch (e) {
+    return null;
+  }
+}
+function renderHardinessBadge(species) {
+  const el = document.getElementById('hardiness-badge');
+  if (!el) return;
+  if (!userHardinessZone) {
+    // Offer to detect — once the user clicks, we'll request geolocation.
+    // Skip the prompt if they dismissed it last time.
+    let dismissed = false;
+    try { dismissed = localStorage.getItem('specimenfinder_zone_dismissed') === '1'; } catch (e) {}
+    if (dismissed) { el.hidden = true; return; }
+    el.className = 'hardiness-badge unknown';
+    el.innerHTML = `
+      <svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+      <span><strong>Personalize for your area?</strong> Tap to check whether this species is hardy where you live.
+        <button type="button" id="hardiness-detect-btn" style="background:var(--accent);color:white;border:none;font-family:Inter,sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px;cursor:pointer;margin-left:6px;">Detect my zone</button>
+        <button type="button" id="hardiness-dismiss-btn" style="background:transparent;border:none;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;margin-left:4px;text-decoration:underline;">No thanks</button>
+      </span>
+    `;
+    el.hidden = false;
+    document.getElementById('hardiness-detect-btn').addEventListener('click', async () => {
+      const entry = await detectUserZone(true);
+      if (entry && currentResults.species) {
+        renderHardinessBadge(currentResults.species);
+      } else if (!entry) {
+        status('Could not detect your zone (location denied or no climate data).', 'error');
+        el.hidden = true;
+      }
+    });
+    document.getElementById('hardiness-dismiss-btn').addEventListener('click', () => {
+      try { localStorage.setItem('specimenfinder_zone_dismissed', '1'); } catch (e) {}
+      el.hidden = true;
+    });
+    return;
+  }
+  // Look for USDA zone chips that the care-section heuristic extracts.
+  // careChipsForCurrentSpecies is set inside renderCareGrowing when it builds
+  // the chip list, so we can read it here without re-running the regex.
+  const careText = lastCareCombined || '';
+  const usdaMatch = careText.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})(?:[ab])?\s*(?:to|[–—\-])\s*(\d{1,2})(?:[ab])?/i)
+    || careText.match(/usda\s+(?:plant\s+)?(?:hardiness\s+)?zones?\s*(\d{1,2})\b/i);
+  let html = '';
+  let cls = 'unknown';
+  if (usdaMatch) {
+    const lo = parseInt(usdaMatch[1], 10);
+    // "USDA zones 5-9" → exactly 5..9. "Hardy to zone 5" (single number) is the
+    // convention for "as cold as zone 5" — treat as 5..11 (typical garden upper).
+    const hi = usdaMatch[2] ? parseInt(usdaMatch[2], 10) : 11;
+    const u = userHardinessZone;
+    const singleZone = !usdaMatch[2]; // text said "zone 5", not "zones 5–9"
+    const rangeLabel = singleZone
+      ? `zone <strong>${lo}</strong> and warmer`
+      : `zones <strong>${lo}–${hi}</strong>`;
+    if (u >= lo && u <= hi) {
+      cls = 'fit';
+      html = `<svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` +
+        `<span><strong>Hardy in your area</strong> — you're in USDA zone <strong>${u}</strong>; this species is documented as hardy in ${rangeLabel}.</span>`;
+    } else {
+      cls = 'nofit';
+      const too = u < lo ? 'cold' : 'warm';
+      html = `<svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg>` +
+        `<span>Likely <strong>too ${too}</strong> for your area — you're in USDA zone <strong>${u}</strong>; this species is documented for ${rangeLabel}. May still survive with shelter or as an indoor plant.</span>`;
+    }
+  } else {
+    cls = 'unknown';
+    html = `<svg class="hardiness-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>` +
+      `<span>You're in USDA zone <strong>${userHardinessZone}</strong>. No hardiness data extracted from Wikipedia for this species — check the <a href="https://www.missouribotanicalgarden.org/plantfinder/plantfindersearch.aspx" target="_blank" rel="noopener">Missouri Botanical Garden</a> or your local extension office.</span>`;
+  }
+  el.className = 'hardiness-badge ' + cls;
+  el.innerHTML = html;
+  el.hidden = false;
+}
+let lastCareCombined = ''; // populated by renderCareGrowing so the hardiness badge can read it
+
+// -----------------------------------------------------------------------------
+// Similar species — siblings in the same GBIF genus, rendered as clickable pills.
+async function fetchSimilarSpecies(species) {
+  if (!species || !species.usageKey) return [];
+  try {
+    // species.parentKey points to the genus; if missing, look it up.
+    let parentKey = species.parentKey;
+    if (!parentKey) {
+      const sr = await fetch(`https://api.gbif.org/v1/species/${species.usageKey}`);
+      if (sr.ok) {
+        const sd = await sr.json();
+        parentKey = sd.parentKey;
+      }
+    }
+    if (!parentKey) return [];
+    const r = await fetch(`https://api.gbif.org/v1/species/${parentKey}/children?limit=30`);
+    if (!r.ok) return [];
+    const data = await r.json();
+    const selfCanonical = (species.canonicalName || species.scientificName || '').toLowerCase();
+    const seen = new Set([selfCanonical]);
+    const siblings = (data.results || [])
+      .filter(s => s.key !== species.usageKey)
+      .filter(s => s.rank === 'SPECIES')
+      .filter(s => s.taxonomicStatus === 'ACCEPTED' || !s.taxonomicStatus)
+      .filter(s => {
+        const c = (s.canonicalName || s.scientificName || '').toLowerCase();
+        if (!c || seen.has(c)) return false;
+        seen.add(c);
+        return true;
+      })
+      .slice(0, 12);
+    return siblings.map(s => ({
+      sci: s.canonicalName || s.scientificName,
+      common: s.vernacularName || '',
+      key: s.key
+    }));
+  } catch (e) { return []; }
+}
+function renderSimilarSpecies(list) {
+  const el = document.getElementById('similar-species');
+  if (!el || !list || list.length === 0) {
+    if (el) el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  el.innerHTML =
+    `<div class="similar-species-title">Similar species in the same genus (${list.length})</div>` +
+    `<div class="similar-species-pills">` +
+    list.map(s =>
+      `<button type="button" class="similar-pill" data-sci="${escapeHtml(s.sci)}">${escapeHtml(s.sci)}${s.common ? `<span class="similar-pill-common">${escapeHtml(s.common)}</span>` : ''}</button>`
+    ).join('') +
+    `</div>`;
+  el.querySelectorAll('.similar-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      const sci = b.dataset.sci;
+      document.getElementById('species-input').value = sci;
+      runSearchDirect(sci);
+    });
+  });
+}
+
+function communityRowHtml(occKey) {
+  const list = communityAnnotations.get(String(occKey)) || [];
+  if (list.length === 0) return '';
+  const counts = { confirmed: 0, falsepositive: 0, review: 0 };
+  list.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++; });
+  const badgeOrder = ['confirmed', 'falsepositive', 'review'];
+  const badgeLabels = { confirmed: 'confirmed real', falsepositive: 'false positive', review: 'needs review' };
+  const badges = badgeOrder
+    .filter(s => counts[s] > 0)
+    .map(s => `<span class="community-badge ${s}">${counts[s]} &middot; ${badgeLabels[s]}</span>`)
+    .join('');
+  return `
+    <div class="community-row">
+      <span class="community-row-label">Community:</span>
+      ${badges}
+      <button type="button" class="community-expand" data-occ="${escapeHtml(String(occKey))}" style="background:transparent;border:none;color:var(--accent);font-family:Inter,sans-serif;font-size:11px;font-weight:600;cursor:pointer;padding:0;">View notes &darr;</button>
+      <div class="community-detail-list" data-occ="${escapeHtml(String(occKey))}" hidden>
+        ${list.map(a => `
+          <li>
+            <span class="community-badge ${a.status}">${escapeHtml(badgeLabels[a.status] || a.status)}</span>
+            <span class="community-detail-author">@${escapeHtml(a.author)}</span>
+            ${a.notes ? '&middot; ' + escapeHtml(a.notes.length > 240 ? a.notes.slice(0, 240) + '…' : a.notes) : ''}
+            ${a.url ? `&middot; <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;">View on GitHub &rarr;</a>` : ''}
+          </li>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
 
 function render() {
   const list = document.getElementById('specimen-list');
   list.innerHTML = '';
   let items = currentResults.flagged;
-  if (activeFilter !== 'all') {
+  if (activeFilter === 'community') {
+    items = items.filter(s => communityAnnotations.has(String(s.key)));
+  } else if (activeFilter !== 'all') {
     items = items.filter(s => s.flags.some(f => f.key === activeFilter));
   }
   let sorted = [...items];
@@ -3503,6 +6343,12 @@ function render() {
     const annotation = getAnnotation(speciesKey, s.key);
     if (annotation && annotation.status) card.classList.add('annotated-' + annotation.status);
 
+    const commList = communityAnnotations.get(String(s.key)) || [];
+    const consensus = communityConsensus(commList);
+    if (consensus && consensus.status === 'falsepositive' && consensus.count >= 2) {
+      card.classList.add('community-falsepositive');
+    }
+
     const citation = `GBIF.org (${new Date().getFullYear()}). Occurrence Download. ` +
       `${s.scientificName || s.species} specimen, ${inst} #${cat}, ` +
       `collected ${year}${collector !== 'unknown collector' ? ' by ' + collector : ''}, ${truncPlace}. ` +
@@ -3525,6 +6371,7 @@ function render() {
       <div class="flags-row">
         ${s.flags.map(f => `<span class="flag-pill ${f.class}">${escapeHtml(f.text)}</span>`).join('')}
       </div>
+      ${communityRowHtml(s.key)}
       <div class="reason-text">${escapeHtml(firstEvidence?.text || '')}</div>
       ${firstPlain}
       <div class="action-row">
@@ -3565,6 +6412,7 @@ function render() {
         <button type="button" class="annotation-pill ${annotation?.status === 'falsepositive' ? 'selected falsepositive' : ''}" data-status="falsepositive">False positive</button>
         <button type="button" class="annotation-pill ${annotation?.status === 'review' ? 'selected review' : ''}" data-status="review">Needs review</button>
         <input type="text" class="annotation-notes" placeholder="Notes (optional, saved in this browser)" value="${escapeHtml(annotation?.notes || '')}" />
+        <button type="button" class="share-community-btn" data-occ="${escapeHtml(s.key)}" title="Share this annotation with the community (requires a GitHub token)">Share &rarr;</button>
         <span class="annotation-saved" aria-live="polite">Saved</span>
       </div>
     `;
@@ -3630,6 +6478,43 @@ function render() {
         flashSaved();
       });
     });
+    const commExpand = card.querySelector('.community-expand');
+    if (commExpand) {
+      commExpand.addEventListener('click', () => {
+        const detail = card.querySelector('.community-detail-list');
+        if (!detail) return;
+        const open = detail.hidden;
+        detail.hidden = !open;
+        commExpand.innerHTML = open ? 'Hide notes &uarr;' : 'View notes &darr;';
+      });
+    }
+    const shareBtn = card.querySelector('.share-community-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const current = getAnnotation(speciesKey, s.key);
+        if (!current || !current.status) {
+          alert('Pick a status (Confirmed real / False positive / Needs review) before sharing.');
+          return;
+        }
+        const pat = getStoredKey('github_pat');
+        if (!pat) {
+          if (!confirm('Sharing requires a one-time GitHub Personal Access Token (with `public_repo` scope). Open settings to add one now?')) return;
+          openKeyModal();
+          return;
+        }
+        shareBtn.classList.add('disabled');
+        shareBtn.textContent = 'Sharing...';
+        try {
+          await postCommunityAnnotation(currentResults.species, s.key, current.status, current.notes || notesInput.value.trim());
+          shareBtn.textContent = '✓ Shared';
+          setTimeout(() => render(), 400); // re-render to surface new badge
+        } catch (e) {
+          shareBtn.textContent = 'Share →';
+          shareBtn.classList.remove('disabled');
+          alert('Share failed: ' + e.message);
+        }
+      });
+    }
     let notesTimer;
     notesInput.addEventListener('input', () => {
       clearTimeout(notesTimer);
@@ -3699,7 +6584,9 @@ let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if (currentResults.all.length) renderMap(currentResults.all, currentResults.flagged);
+    if (leafletMap) leafletMap.invalidateSize(false);
+    // Time-machine histogram is canvas-based; redraw on width changes
+    if (currentResults.all && currentResults.all.length) refreshTimeView();
   }, 200);
 });
 
@@ -3713,7 +6600,19 @@ document.addEventListener('keydown', e => {
 // Shareable URL: if the page loaded with ?q=<species>, run that search.
 (function loadFromUrl() {
   try {
-    const q = new URLSearchParams(location.search).get('q');
+    const params = new URLSearchParams(location.search);
+    // Shared garden lists: ?garden=Sci1|Sci2|Sci3 — merge into the local
+    // garden (deduped) and open the garden modal so the user sees them.
+    const garden = params.get('garden');
+    if (garden) {
+      const names = garden.split('|').map(s => s.trim()).filter(Boolean);
+      names.forEach(sci => addToGarden({ sci, common: '', usageKey: null }));
+      updateGardenCount();
+      if (names.length > 0) {
+        setTimeout(() => openGardenModal(), 400);
+      }
+    }
+    const q = params.get('q');
     if (q && q.trim()) {
       document.getElementById('species-input').value = q;
       // Switch to the name tab so the user sees what's running

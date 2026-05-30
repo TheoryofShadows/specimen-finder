@@ -164,7 +164,6 @@ The user who commissioned this asked for honest self-critique from a researcher,
 specimen-finder/
 ├── index.html       # the app UI and orchestration
 ├── analysis.js      # pure-function statistical math (shared with tests)
-├── coastlines.js    # embedded world coastline polylines (~67KB, MIT)
 ├── tests.html       # browser-runnable assertions for analysis.js
 ├── README.md        # this file
 └── LICENSE          # MIT

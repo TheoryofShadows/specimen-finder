@@ -2575,6 +2575,71 @@
     color: var(--text-soft);
   }
 
+  /* Where to buy seeds / starters */
+  .buy-section {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+  }
+  .buy-section > strong {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-weight: 600;
+    font-style: normal;
+  }
+  .buy-disclaimer {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0 0 12px;
+  }
+  .buy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .buy-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .buy-card:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+  body.dark .buy-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+  .buy-card-name {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .buy-card-tag {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .buy-card:hover .buy-card-tag { color: var(--accent); }
+  .buy-footer {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .buy-footer a { color: var(--accent); font-weight: 600; }
+
   /* Community-curation badges */
   .community-row {
     margin-top: 8px;
@@ -4240,6 +4305,71 @@ function renderCareGrowing({ speciesName, wikiUrl, cultivationSection, propagati
         ${chipsHtml}
         ${bodyHtml}
         ${nativeHint}
+        <div class="buy-section">
+          <strong>Where to buy seeds or starters</strong>
+          <p class="buy-disclaimer">Search links to major seed and nursery retailers. <strong>We don't sell anything, take no commission, and don't endorse any seller.</strong> Confirm the seller is reputable, that what they're shipping really is this species, and that it's legal to import to your area before ordering.</p>
+          <div class="buy-grid">
+            <a href="https://www.etsy.com/search?q=${queryName}+seeds&ref=auto-1" target="_blank" rel="noopener" class="buy-card" data-vendor="Etsy">
+              <span class="buy-card-name">Etsy</span>
+              <span class="buy-card-tag">seeds &middot; cuttings &middot; live plants</span>
+            </a>
+            <a href="https://www.ebay.com/sch/i.html?_nkw=${queryName}+seeds" target="_blank" rel="noopener" class="buy-card" data-vendor="eBay">
+              <span class="buy-card-name">eBay</span>
+              <span class="buy-card-tag">global marketplace</span>
+            </a>
+            <a href="https://www.amazon.com/s?k=${queryName}+seeds&i=lawngarden" target="_blank" rel="noopener" class="buy-card" data-vendor="Amazon">
+              <span class="buy-card-name">Amazon Garden</span>
+              <span class="buy-card-tag">common species</span>
+            </a>
+            <a href="https://www.burpee.com/searchresults?q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Burpee">
+              <span class="buy-card-name">Burpee</span>
+              <span class="buy-card-tag">veg &middot; flowers &middot; herbs (US)</span>
+            </a>
+            <a href="https://www.johnnyseeds.com/search/?text=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Johnny's">
+              <span class="buy-card-name">Johnny's Selected Seeds</span>
+              <span class="buy-card-tag">vegetables &middot; herbs &middot; flowers</span>
+            </a>
+            <a href="https://www.rareseeds.com/catalogsearch/result/?q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Baker Creek">
+              <span class="buy-card-name">Baker Creek (rareseeds)</span>
+              <span class="buy-card-tag">heirloom &middot; rare</span>
+            </a>
+            <a href="https://www.edenbrothers.com/search?q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Eden Brothers">
+              <span class="buy-card-name">Eden Brothers</span>
+              <span class="buy-card-tag">wildflower &middot; bulb</span>
+            </a>
+            <a href="https://www.prairiemoon.com/search?q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Prairie Moon">
+              <span class="buy-card-name">Prairie Moon Nursery</span>
+              <span class="buy-card-tag">N. American natives</span>
+            </a>
+            <a href="https://www.prairienursery.com/?s=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Prairie Nursery">
+              <span class="buy-card-name">Prairie Nursery</span>
+              <span class="buy-card-tag">N. American natives</span>
+            </a>
+            <a href="https://strictlymedicinalseeds.com/?s=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Strictly Medicinal">
+              <span class="buy-card-name">Strictly Medicinal Seeds</span>
+              <span class="buy-card-tag">medicinal &middot; herbal</span>
+            </a>
+            <a href="https://www.plantdelights.com/search?type=product&q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Plant Delights">
+              <span class="buy-card-name">Plant Delights Nursery</span>
+              <span class="buy-card-tag">rare &middot; perennial</span>
+            </a>
+            <a href="https://www.logees.com/catalogsearch/result/?q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Logee's">
+              <span class="buy-card-name">Logee's</span>
+              <span class="buy-card-tag">rare tropical &middot; houseplants</span>
+            </a>
+            <a href="https://www.sheffields.com/search?keyword=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="Sheffield's">
+              <span class="buy-card-name">Sheffield's Seed Co.</span>
+              <span class="buy-card-tag">trees &middot; shrubs &middot; rare</span>
+            </a>
+            <a href="https://jlhudsonseeds.net/search.php?q=${queryName}" target="_blank" rel="noopener" class="buy-card" data-vendor="JL Hudson">
+              <span class="buy-card-name">J.L. Hudson, Seedsman</span>
+              <span class="buy-card-tag">worldwide rare</span>
+            </a>
+          </div>
+          <p class="buy-footer">
+            Looking for native plants in your specific US state? Try the <a href="https://www.audubon.org/native-plants" target="_blank" rel="noopener">Audubon Native Plants Database</a> or the <a href="https://www.wildflower.org/plants-main" target="_blank" rel="noopener">Lady Bird Johnson Wildflower Center</a> &mdash; both let you filter by region and link to local native-plant nurseries.
+          </p>
+        </div>
         <div class="care-links">
           <strong>Go deeper at authoritative growing resources:</strong>
           <ul style="list-style:disc;padding-left:20px;margin-top:6px;font-size:13px;">

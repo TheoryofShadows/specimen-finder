@@ -590,23 +590,54 @@
     transition: border-color 0.15s;
   }
   .search-input:focus { outline: none; border-color: var(--accent); }
-  .examples { margin-top: 16px; font-size: 14px; color: var(--text-soft); }
+  .examples { margin-top: 18px; font-size: 14px; color: var(--text-soft); }
+  .examples-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .examples-row strong {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-right: 4px;
+    flex: 0 0 auto;
+  }
   .example-pill {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: 100px;
-    padding: 6px 14px;
-    margin: 4px 4px 4px 0;
+    padding: 7px 14px;
     cursor: pointer;
     font-size: 13px;
     color: var(--text);
-    transition: all 0.15s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
   }
   .example-pill:hover {
     border-color: var(--accent);
     background: var(--accent-light);
     color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .example-pill-special {
+    background: linear-gradient(135deg, var(--accent), #ea580c);
+    color: white;
+    border-color: transparent;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(194, 65, 12, 0.25);
+  }
+  .example-pill-special:hover {
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(194, 65, 12, 0.35);
   }
 
   /* Modal */
@@ -1233,6 +1264,28 @@
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .disambig-show-more {
+    background: var(--bg);
+    border: 1px dashed var(--line-strong);
+    color: var(--text-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all 0.15s;
+  }
+  .disambig-show-more:hover {
+    border-color: var(--accent);
+    border-style: solid;
+    background: var(--accent-light);
+    color: var(--accent);
   }
   .disambig-item {
     display: grid;
@@ -2841,20 +2894,34 @@
         <button type="button" class="recent-clear" id="recent-clear" aria-label="Clear recent searches">Clear</button>
       </div>
       <div class="examples">
-        <strong>Everyday names &mdash; tap one to try:</strong><br/>
-        <button type="button" class="example-pill" data-species="rose">rose (genus, many species)</button>
-        <button type="button" class="example-pill" data-species="oak">oak</button>
-        <button type="button" class="example-pill" data-species="lavender">lavender</button>
-        <button type="button" class="example-pill" data-species="tulip">tulip</button>
-        <button type="button" class="example-pill" data-species="cactus">cactus</button>
-        <button type="button" class="example-pill" data-species="fern">fern</button>
-        <br/><br/>
-        <strong>Or one of these specific species:</strong><br/>
-        <button type="button" class="example-pill" data-species="pitcher plant">pitcher plant (disambiguates)</button>
-        <button type="button" class="example-pill" data-species="swamp milkweed">swamp milkweed</button>
-        <button type="button" class="example-pill" data-species="Franklinia alatamaha">Franklinia alatamaha (extinct in wild)</button>
-        <button type="button" class="example-pill" data-species="passionflower">passionflower</button>
-        <button type="button" class="example-pill" data-species="busy lizzie">busy Lizzie</button>
+        <div class="examples-row">
+          <strong>Quick actions:</strong>
+          <button type="button" class="example-pill example-pill-special" id="surprise-me">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:4px;"><path fill="currentColor" d="M19 16.9V20H22V22H17V16.9L18.5 15.4 19 16.9M21.7 4.9C22.6 5.8 22.6 7.4 21.7 8.3L19.8 10.2L13.8 4.2L15.7 2.3C16.6 1.4 18.2 1.4 19.1 2.3L21.7 4.9M3 16.2L13.1 6.1L19.1 12.1L9 22.2H3V16.2Z"/></svg>
+            Surprise me
+          </button>
+        </div>
+        <div class="examples-row">
+          <strong>Browse a group:</strong>
+          <button type="button" class="example-pill" data-species="rose">Roses</button>
+          <button type="button" class="example-pill" data-species="oak">Oaks</button>
+          <button type="button" class="example-pill" data-species="orchid">Orchids</button>
+          <button type="button" class="example-pill" data-species="cactus">Cacti</button>
+          <button type="button" class="example-pill" data-species="fern">Ferns</button>
+          <button type="button" class="example-pill" data-species="maple">Maples</button>
+          <button type="button" class="example-pill" data-species="pitcher plant">Pitcher plants</button>
+          <button type="button" class="example-pill" data-species="palm">Palms</button>
+          <button type="button" class="example-pill" data-species="moss">Mosses</button>
+          <button type="button" class="example-pill" data-species="lily">Lilies</button>
+        </div>
+        <div class="examples-row">
+          <strong>Notable species:</strong>
+          <button type="button" class="example-pill" data-species="Franklinia alatamaha">Franklinia (extinct in wild)</button>
+          <button type="button" class="example-pill" data-species="Welwitschia mirabilis">Welwitschia (2000-yr-old desert plant)</button>
+          <button type="button" class="example-pill" data-species="Rafflesia arnoldii">Rafflesia (world's largest flower)</button>
+          <button type="button" class="example-pill" data-species="Sarracenia purpurea">purple pitcher plant</button>
+          <button type="button" class="example-pill" data-species="Ginkgo biloba">Ginkgo (living fossil)</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4491,19 +4558,27 @@ function relevanceScore(query, candidate) {
 // candidate against the query so the actual best match floats to the top.
 async function resolveCommonName(query) {
   const out = [];
-  const seen = new Set();
+  const seen = new Map(); // sci(lowercase) → existing entry (so we can keep the best version)
   const push = (entry) => {
     if (!entry || !entry.scientificName) return;
     const key = entry.scientificName.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    out.push(entry);
+    const prev = seen.get(key);
+    if (!prev) {
+      seen.set(key, entry);
+      out.push(entry);
+      return;
+    }
+    // Prefer the entry with an iNat ID (we use it for phenology + photos) and
+    // the higher observation count.
+    if (!prev.inatId && entry.inatId) prev.inatId = entry.inatId;
+    if (!prev.commonName && entry.commonName) prev.commonName = entry.commonName;
+    if (entry.observationCount > (prev.observationCount || 0)) prev.observationCount = entry.observationCount;
   };
 
-  // Pass 1 — iNaturalist, species level (best matches for common-name queries)
+  // Pass 1 — iNaturalist, species level. per_page bumped to 30 (the max).
   try {
     const r = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
-      encodeURIComponent(query) + '&rank=species,subspecies,variety&is_active=true&per_page=10');
+      encodeURIComponent(query) + '&rank=species,subspecies,variety&is_active=true&per_page=30');
     if (r.ok) {
       const data = await r.json();
       (data.results || [])
@@ -4514,16 +4589,17 @@ async function resolveCommonName(query) {
           rank: t.rank,
           observationCount: t.observations_count || 0,
           iconicGroup: t.iconic_taxon_name,
-          inatId: t.id
+          inatId: t.id,
+          gbifKey: null
         }));
     }
   } catch (e) {}
 
-  // Pass 2 — iNaturalist, broaden to genus + family (catches "rose" → Rosa,
-  // "cactus" → Cactaceae, "fern" → Polypodiopsida, "oak" → Quercus).
+  // Pass 2 — iNaturalist, broaden to genus / family / order. Surfaces "rose"
+  // → Rosa, "cactus" → Cactaceae, "fern" → ferns, etc.
   try {
     const r2 = await fetch('https://api.inaturalist.org/v1/taxa?q=' +
-      encodeURIComponent(query) + '&rank=genus,family,order&is_active=true&per_page=6');
+      encodeURIComponent(query) + '&rank=genus,family,order&is_active=true&per_page=15');
     if (r2.ok) {
       const data = await r2.json();
       (data.results || [])
@@ -4534,41 +4610,117 @@ async function resolveCommonName(query) {
           rank: t.rank,
           observationCount: t.observations_count || 0,
           iconicGroup: t.iconic_taxon_name,
-          inatId: t.id
+          inatId: t.id,
+          gbifKey: null
         }));
     }
   } catch (e) {}
 
-  // Pass 3 — GBIF's species/suggest. Fuzzy + much wider corpus, useful when
-  // iNaturalist returns nothing (rare common names, regional names).
-  if (out.length === 0) {
+  // Pass 3 — GBIF's species/suggest. ALWAYS run (no longer gated on iNat
+  // being empty) because GBIF's taxonomic coverage is broader and surfaces
+  // species that iNat doesn't know about (rare cultivars, regional names).
+  try {
+    const r3 = await fetch('https://api.gbif.org/v1/species/suggest?q=' +
+      encodeURIComponent(query) + '&kingdom=Plantae&limit=50');
+    if (r3.ok) {
+      const data = await r3.json();
+      (data || []).forEach(t => push({
+        scientificName: t.canonicalName || t.scientificName || '',
+        commonName: t.vernacularName || '',
+        rank: (t.rank || '').toLowerCase(),
+        observationCount: 0,
+        iconicGroup: 'Plantae',
+        inatId: null,
+        gbifKey: t.key
+      }));
+    }
+  } catch (e) {}
+
+  // Pass 4 — when the early passes turned up a genus or family, expand it
+  // by fetching the children from GBIF. Otherwise "rose" only surfaces the
+  // single Rosa genus row, when there are 100+ named Rosa species worth
+  // offering as picks.
+  // Expand the top 3 group hits (was 2) so a query like "rose" pulls
+  // species from Rosa, Rosaceae, and any other related family.
+  const groupHits = out
+    .filter(c => ['genus', 'family'].includes((c.rank || '').toLowerCase()))
+    .slice(0, 3);
+  for (const group of groupHits) {
     try {
-      const r3 = await fetch('https://api.gbif.org/v1/species/suggest?q=' +
-        encodeURIComponent(query) + '&kingdom=Plantae&limit=8');
-      if (r3.ok) {
-        const data = await r3.json();
-        (data || []).forEach(t => push({
-          scientificName: t.canonicalName || t.scientificName || '',
-          commonName: t.vernacularName || '',
-          rank: (t.rank || '').toLowerCase(),
+      // Look up the GBIF usageKey, being strict about kingdom + rank.
+      // (Without `strict` + `rank`, "Rosa" matched a tiny doubtful Chabertia
+      // sub-genus instead of the actual rose genus.)
+      let key = group.gbifKey;
+      if (!key) {
+        const upperRank = (group.rank || '').toUpperCase();
+        const matchUrl = 'https://api.gbif.org/v1/species/match?strict=true' +
+          '&kingdom=Plantae' +
+          (upperRank ? `&rank=${upperRank}` : '') +
+          '&name=' + encodeURIComponent(group.scientificName);
+        const matchRes = await fetch(matchUrl);
+        if (matchRes.ok) {
+          const m = await matchRes.json();
+          // matchType ranges: EXACT, FUZZY, HIGHERRANK, NONE. Accept only
+          // EXACT for group expansion — fuzzy matches gave us wrong genera.
+          if (m.matchType === 'EXACT' && m.usageKey) key = m.usageKey;
+        }
+      }
+      // Fallback: use the species lookup endpoint and pick the accepted
+      // result whose canonical name matches exactly.
+      if (!key) {
+        const listRes = await fetch(`https://api.gbif.org/v1/species?name=${encodeURIComponent(group.scientificName)}&limit=20`);
+        if (listRes.ok) {
+          const lst = await listRes.json();
+          const upperRank = (group.rank || '').toUpperCase();
+          const wanted = lst.results?.find(s =>
+            s.kingdom === 'Plantae' &&
+            s.canonicalName?.toLowerCase() === group.scientificName.toLowerCase() &&
+            s.rank === upperRank &&
+            (s.taxonomicStatus === 'ACCEPTED' || !s.taxonomicStatus)
+          );
+          if (wanted) key = wanted.key;
+        }
+      }
+      if (!key) continue;
+      // /species/{key}/children returns a mess of synonyms and incertae sedis
+      // entries; /species/search?higherTaxonKey=... gives the actual accepted
+      // species under the taxon (742 real Rosa species, properly tagged).
+      const searchRes = await fetch(`https://api.gbif.org/v1/species/search?higherTaxonKey=${key}&rank=SPECIES&status=ACCEPTED&limit=150`);
+      if (!searchRes.ok) continue;
+      const searchData = await searchRes.json();
+      (searchData.results || [])
+        .filter(c => c.kingdom === 'Plantae' || !c.kingdom)
+        .slice(0, 120)
+        .forEach(c => push({
+          scientificName: c.canonicalName || c.scientificName || '',
+          commonName: c.vernacularName || '',
+          rank: 'species',
           observationCount: 0,
           iconicGroup: 'Plantae',
-          inatId: null
+          inatId: null,
+          gbifKey: c.key
         }));
-      }
     } catch (e) {}
   }
 
-  // Score every candidate by relevance to the query. Drop anything scoring
-  // zero (iNat's full-text search returns random popular plants for vague
-  // queries — those have no name overlap and shouldn't appear at all).
+  // Score every candidate and sort by relevance. Children of a matched
+  // genus get a baseline relevance boost so they don't get filtered out
+  // (their canonical names don't contain the query word).
+  const childOfHit = new Set(groupHits.map(g => g.scientificName.split(' ')[0].toLowerCase()));
   const scored = out
-    .map(c => ({ ...c, _score: relevanceScore(query, c) }))
+    .map(c => {
+      let s = relevanceScore(query, c);
+      const genusOfC = c.scientificName.split(' ')[0].toLowerCase();
+      if (c.rank === 'species' && childOfHit.has(genusOfC)) {
+        // Sibling of a query-matching genus → moderate baseline score.
+        s = Math.max(s, 6);
+      }
+      return { ...c, _score: s };
+    })
     .filter(c => c._score > 0)
-    .sort((a, b) => b._score - a._score);
-  // If scoring filtered everything out (rare), fall back to the original list
-  // so the user at least sees *something* and can pick from it.
-  return scored.length > 0 ? scored : out;
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 250);
+  return scored.length > 0 ? scored : out.slice(0, 250);
 }
 
 // Heuristic: does this query look like a Latin binomial?
@@ -4602,6 +4754,37 @@ function looksLikeScientificName(query) {
 }
 
 // Disambiguation modal
+// Build a single disambig list item — extracted so we can render in batches.
+function buildDisambigItem(c) {
+  const item = document.createElement('button');
+  item.type = 'button';
+  item.className = 'disambig-item';
+  item.style.width = '100%';
+  const rankLower = (c.rank || '').toLowerCase();
+  const isGroup = ['genus','subgenus','family','subfamily','order','suborder'].includes(rankLower);
+  const rankLabel = c.rank
+    ? (isGroup ? `${rankLower} (all species in group)` : rankLower)
+    : '';
+  const obsLabel = c.observationCount
+    ? `${c.observationCount.toLocaleString()} iNat observations`
+    : '';
+  const meta = [rankLabel, obsLabel].filter(Boolean).join(' · ');
+  item.innerHTML = `
+    <div>
+      <div class="disambig-sci">${escapeHtml(c.scientificName)}</div>
+      ${c.commonName ? `<div class="disambig-common">${escapeHtml(c.commonName)}</div>` : ''}
+      <div class="disambig-fam">${escapeHtml(meta)}</div>
+    </div>
+    <div class="disambig-arrow">&rarr;</div>
+  `;
+  item.addEventListener('click', () => {
+    closeDisambig();
+    document.getElementById('species-input').value = c.scientificName;
+    runSearchDirect(c.scientificName);
+  });
+  return item;
+}
+
 function openDisambig(candidates, originalQuery) {
   document.getElementById('disambig-title').textContent =
     `"${originalQuery}" matches ${candidates.length} plant${candidates.length === 1 ? '' : 's'}`;
@@ -4611,39 +4794,32 @@ function openDisambig(candidates, originalQuery) {
       : 'Confirm the match:';
   const list = document.getElementById('disambig-list');
   list.innerHTML = '';
-  // resolveCommonName already sorts by relevance score; keep that order, just
-  // truncate to 10 items.
+  // resolveCommonName already sorts by relevance score; show 50 at a time
+  // with a "Show 50 more" expander at the bottom for the rest.
   const sorted = [...candidates];
-  sorted.slice(0, 10).forEach(c => {
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'disambig-item';
-    item.style.width = '100%';
-    const rankLower = (c.rank || '').toLowerCase();
-    const isGroup = ['genus','subgenus','family','subfamily','order','suborder'].includes(rankLower);
-    const rankLabel = c.rank
-      ? (isGroup ? `${rankLower} (all species in group)` : rankLower)
-      : '';
-    const obsLabel = c.observationCount
-      ? `${c.observationCount.toLocaleString()} iNat observations`
-      : '';
-    const meta = [rankLabel, obsLabel].filter(Boolean).join(' · ');
-    item.innerHTML = `
-      <div>
-        <div class="disambig-sci">${escapeHtml(c.scientificName)}</div>
-        ${c.commonName ? `<div class="disambig-common">${escapeHtml(c.commonName)}</div>` : ''}
-        <div class="disambig-fam">${escapeHtml(meta)}</div>
-      </div>
-      <div class="disambig-arrow">&rarr;</div>
-    `;
-    item.addEventListener('click', () => {
-      closeDisambig();
-      document.getElementById('species-input').value = c.scientificName;
-      runSearchDirect(c.scientificName);
-    });
-    list.appendChild(item);
-  });
+  const BATCH = 50;
+  let rendered = 0;
+  const renderBatch = () => {
+    const slice = sorted.slice(rendered, rendered + BATCH);
+    slice.forEach(c => list.appendChild(buildDisambigItem(c)));
+    rendered += slice.length;
+    // Drop the existing "Show more" button (if any) and re-add at the new end
+    const existing = list.querySelector('.disambig-show-more');
+    if (existing) existing.remove();
+    if (rendered < sorted.length) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'disambig-show-more';
+      const remaining = sorted.length - rendered;
+      more.textContent = `Show ${Math.min(BATCH, remaining)} more (${remaining} remaining)`;
+      more.addEventListener('click', () => renderBatch());
+      list.appendChild(more);
+    }
+  };
+  renderBatch();
   document.getElementById('disambig-overlay').classList.add('open');
+  // Scroll the list back to the top each time we open
+  list.scrollTop = 0;
 }
 function closeDisambig() {
   document.getElementById('disambig-overlay').classList.remove('open');
@@ -6682,10 +6858,35 @@ document.getElementById('species-input').addEventListener('keypress', e => {
   if (e.key === 'Enter') runSearch();
 });
 document.querySelectorAll('.example-pill').forEach(p => {
+  if (p.id === 'surprise-me') return; // wired separately below
   p.addEventListener('click', () => {
     document.getElementById('species-input').value = p.dataset.species;
     runSearch();
   });
+});
+
+// Surprise me — pick a random species from a curated list of biologically
+// interesting and visually striking plants. Mix of common cultivars, rare
+// endemics, evolutionary oddities, and famously charismatic species.
+const SURPRISE_SPECIES = [
+  'Sarracenia purpurea','Nepenthes rajah','Drosera capensis','Dionaea muscipula',
+  'Welwitschia mirabilis','Ginkgo biloba','Wollemia nobilis','Sequoia sempervirens',
+  'Rafflesia arnoldii','Amorphophallus titanum','Victoria amazonica',
+  'Strelitzia reginae','Heliconia rostrata','Anthurium andraeanum',
+  'Adansonia digitata','Ceiba pentandra','Dragon\'s blood tree',
+  'Ophrys apifera','Phalaenopsis amabilis','Vanilla planifolia',
+  'Quercus robur','Acer palmatum','Fraxinus excelsior','Betula pendula',
+  'Lavandula angustifolia','Rosa rugosa','Echinacea purpurea','Helianthus annuus',
+  'Aloe vera','Agave americana','Echinocactus grusonii','Carnegiea gigantea',
+  'Taraxacum officinale','Asclepias incarnata','Lupinus polyphyllus',
+  'Franklinia alatamaha','Dendrocnide moroides','Hydnora africana',
+  'Selaginella lepidophylla','Mimosa pudica','Mitchella repens',
+  'Cypripedium reginae','Trillium grandiflorum','Sanguinaria canadensis'
+];
+document.getElementById('surprise-me').addEventListener('click', () => {
+  const pick = SURPRISE_SPECIES[Math.floor(Math.random() * SURPRISE_SPECIES.length)];
+  document.getElementById('species-input').value = pick;
+  runSearch();
 });
 
 let resizeTimer;

@@ -3331,7 +3331,7 @@ document.getElementById('modal-save').addEventListener('click', () => {
   closeKeyModal();
 });
 
-plantnetKey = getStoredKey('plantnet_api_key');
+plantnetKey = (getStoredKey('plantnet_api_key') || '').trim() || null;
 updateApiStatus();
 
 // Activate-on-Enter/Space for elements with role="button" that aren't native buttons
@@ -3527,7 +3527,14 @@ document.getElementById('identify-btn').addEventListener('click', async () => {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       if (res.status === 401 || res.status === 403) {
-        status('API key rejected. Click "Change key" in the header to update it.', 'error');
+        // A 401/403 here means the request reached Pl@ntNet and the key was
+        // refused server-side — making new keys won't help if the underlying
+        // account isn't activated. The single most common cause is an
+        // unconfirmed signup email, so spell that out rather than just saying
+        // "rejected".
+        status('Pl@ntNet rejected this API key. Most often the key just needs activating: confirm your Pl@ntNet signup email, then copy the key from my.plantnet.org (the short token like "2b10…", not your password). New keys can take a few minutes to go live. Click "Change key" in the header to re-paste it.', 'error');
+      } else if (res.status === 404) {
+        status('Pl@ntNet endpoint not found (404). The "all" identification project may be unavailable — try again shortly, or use the "Search by name" tab.', 'error');
       } else if (res.status === 429) {
         status('Pl@ntNet rate limit hit (500/day free tier). Try again tomorrow or use the "Search by name" tab.', 'error');
       } else {
@@ -3857,8 +3864,8 @@ function applyClimateFlags(allOccs, flagged) {
       ? (zt < 0 ? 'colder' : 'warmer')
       : (zp < 0 ? 'drier' : 'wetter');
     const text = `Climate outlier (${dominant} — ${dir})`;
-    const evidenceText = `Site climate: ${c.t2m.toFixed(1)} °C mean annual temperature, ${Math.round(c.prec)} mm annual precipitation. ` +
-      `Species envelope: ${tMed.toFixed(1)} °C ± ${tMad.toFixed(1)}, ${Math.round(pMed)} ± ${Math.round(pMad)} mm. ` +
+    const evidenceText = `Site climate: ${c.t2m.toFixed(1)} °C (${cToF(c.t2m)} °F) mean annual temperature, ${Math.round(c.prec)} mm annual precipitation. ` +
+      `Species envelope: ${tMed.toFixed(1)} °C (${cToF(tMed)} °F) ± ${tMad.toFixed(1)} °C, ${Math.round(pMed)} ± ${Math.round(pMad)} mm. ` +
       `Modified Z-scores: T=${zt.toFixed(1)}, P=${zp.toFixed(1)}. ` +
       `This specimen falls outside the species' typical climate envelope on ${dominant}.`;
     const plain = plainLanguageForZ(Math.max(Math.abs(zt), Math.abs(zp)), 'distance')
@@ -4255,6 +4262,36 @@ function renderCareGrowing({ speciesName, wikiUrl, cultivationSection, propagati
   `;
 }
 
+// Where to find seeds & plants. This tool has no shop and no backend, so rather
+// than sell anything we point at reputable seed vendors, native-plant seed
+// exchanges, and an aggregator search so the user can locate a legitimate source
+// themselves. Wild collection of seed is restricted or illegal for many species,
+// so we lead with that caveat.
+function renderSeedSources(speciesName) {
+  const q = encodeURIComponent(speciesName || '');
+  return `
+    <div class="knowledge-section">
+      <h3>Where to find seeds &amp; plants <span class="evidence-level low">curated links</span></h3>
+      <div class="knowledge-content">
+        <p style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:12px">
+          This tool doesn't sell seeds &mdash; it points you to established vendors and seed exchanges so you can buy from a legitimate source. <strong>Check legality first:</strong> collecting seed from the wild is restricted or prohibited for many native, rare, or protected species, and importing seed across borders often requires a phytosanitary certificate. Buy nursery-propagated stock, never dig or collect from protected habitat.
+        </p>
+        <div class="care-links">
+          <strong>Search seed &amp; plant sources for <em>${escapeHtml(speciesName || 'this species')}</em>:</strong>
+          <ul style="list-style:disc;padding-left:20px;margin-top:6px;font-size:13px;">
+            <li><a href="https://www.google.com/search?q=${q}+seeds+for+sale" target="_blank" rel="noopener">General seed search</a> &mdash; aggregated vendors selling this species' seed</li>
+            <li><a href="https://www.rareseeds.com/catalogsearch/result/?q=${q}" target="_blank" rel="noopener">Baker Creek Heirloom Seeds</a> &mdash; large heirloom &amp; rare seed catalog</li>
+            <li><a href="https://strictlymedicinalseeds.com/?s=${q}&post_type=product" target="_blank" rel="noopener">Strictly Medicinal Seeds</a> &mdash; medicinal, native &amp; botanical species</li>
+            <li><a href="https://www.prairiemoon.com/catalogsearch/result/?q=${q}" target="_blank" rel="noopener">Prairie Moon Nursery</a> &mdash; North American native seed &amp; plants</li>
+            <li><a href="https://www.ebay.com/sch/i.html?_nkw=${q}+seeds" target="_blank" rel="noopener">eBay seed listings</a> &mdash; specialty &amp; hard-to-find species (verify the seller)</li>
+            <li><a href="https://seedsavers.org/" target="_blank" rel="noopener">Seed Savers Exchange</a> &mdash; member-to-member seed exchange for rare varieties</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   const panel = document.getElementById('knowledge-panel');
   const pills = document.getElementById('knowledge-pills');
@@ -4266,25 +4303,41 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
 
   const wikiTitle = (speciesName || '').replace(/ /g, '_');
 
+  // Section-header patterns are intentionally start-anchored but NOT end-anchored:
+  // real plant articles use compound headings like "Distribution and habitat" or
+  // "Description and ecology", so requiring an exact full-string match left most
+  // panels empty. Matching on the leading keyword fills them far more often.
   const [usesSection, ecologySection, toxicitySection, medicinalSection, descriptionSection,
          cultivationSection, propagationSection, pestsSection,
-         vernacularNames, wikidata, inat] =
+         vernacularNames, wikidata, inat, summary] =
     await Promise.all([
-      getWikipediaSection(wikiTitle, /^(uses|economic\s+uses|human\s+uses|culinary)$/i),
-      getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology)$/i),
-      getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)$/i),
-      getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry)/i),
-      getWikipediaSection(wikiTitle, /^(description|morphology)$/i),
-      getWikipediaSection(wikiTitle, /^(cultivation|cultivars?|in\s+cultivation|garden(ing)?|growing|horticulture|care)$/i),
-      getWikipediaSection(wikiTitle, /^(propagation|reproduction)$/i),
-      getWikipediaSection(wikiTitle, /^(pests?(\s+and\s+diseases?)?|diseases?)$/i),
+      getWikipediaSection(wikiTitle, /^(uses|economic\s+uses|human\s+uses|culinary|cuisine|food)/i),
+      getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology|natural\s+history|range|conservation\s+and\s+ecology)/i),
+      getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)/i),
+      getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry|chemical)/i),
+      getWikipediaSection(wikiTitle, /^(description|morphology|characteristics|appearance|identification)/i),
+      getWikipediaSection(wikiTitle, /^(cultivation|cultivars?|in\s+cultivation|garden(ing)?|growing|horticulture|care)/i),
+      getWikipediaSection(wikiTitle, /^(propagation|reproduction)/i),
+      getWikipediaSection(wikiTitle, /^(pests?(\s+and\s+diseases?)?|diseases?)/i),
       gbifSpecies.usageKey ? getGBIFVernacularNames(gbifSpecies.usageKey) : Promise.resolve([]),
       getWikidataInfo(speciesName),
-      getINaturalistInfo(speciesName)
+      getINaturalistInfo(speciesName),
+      fetchWikipedia(wikiTitle)
     ]);
 
   // If user has started a new search while we were fetching, abort UI update
   if (mySearchId !== searchId) return;
+
+  // Fallback: when no dedicated Description / Ecology section exists, use the
+  // Wikipedia lead summary so these panels still carry useful prose instead of
+  // sitting empty. The lead paragraph almost always describes the plant and its
+  // habitat at a high level.
+  let descriptionData = descriptionSection;
+  let descriptionFromSummary = false;
+  if (!descriptionData && summary?.extract && summary.extract.length > 40) {
+    descriptionData = { text: summary.extract, sectionName: 'Summary' };
+    descriptionFromSummary = true;
+  }
 
   // Phenology — kick off once we know the iNat taxon ID. The bloom-calendar
   // section gets rendered with the rest of the panel; if the fetch takes
@@ -4335,11 +4388,12 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     { label: 'Conservation', has: !!(wikidata?.iucnStatus || inat?.extinct) },
     { label: 'Common names', has: vernacularNames.length > 0 || (wikidata?.commonNames || []).length > 0 },
     { label: 'Field observations', has: !!(inat?.observationsCount > 0) },
-    { label: 'Description', has: !!descriptionSection },
+    { label: 'Description', has: !!descriptionData },
     { label: 'Ecology', has: !!ecologySection },
     { label: 'Bloom calendar', has: !!inat?.id },
     { label: 'Documented uses', has: !!usesSection },
     { label: 'Care & growing', has: !!(cultivationSection || propagationSection || pestsSection) },
+    { label: 'Where to buy seeds', has: true },
     { label: 'Toxicity / hazards', has: !!toxicitySection },
     { label: 'Compounds studied', has: !!medicinalSection }
   ];
@@ -4377,13 +4431,13 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     `;
   }
 
-  if (descriptionSection) {
+  if (descriptionData) {
     sectionsHtml += `
       <div class="knowledge-section">
         <h3>Description <span class="evidence-level med">Wikipedia</span></h3>
         <div class="knowledge-content">
-          <p>${escapeHtml(descriptionSection.text)}</p>
-          <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(descriptionSection.sectionName)} →</a>
+          <p>${escapeHtml(descriptionData.text)}</p>
+          <a href="${wikiUrl}" target="_blank" rel="noopener" class="knowledge-source-link">Source: Wikipedia — ${escapeHtml(descriptionFromSummary ? 'article summary' : descriptionData.sectionName)} →</a>
         </div>
       </div>
     `;
@@ -4439,6 +4493,8 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
     ecologySection,
     nativeRangeCountries
   });
+
+  sectionsHtml += renderSeedSources(speciesName);
 
   sectionsHtml += `
     <div class="knowledge-section">
@@ -5799,6 +5855,12 @@ function computeClimateEnvelope() {
   climateEnvelope = { tMed, tMad, pMed, pMad, n: visible.length };
 }
 
+// Celsius → Fahrenheit. Returns a string rounded to one decimal so it pairs
+// cleanly with the °C readout (most US users expect Fahrenheit).
+function cToF(c) {
+  return (c * 9 / 5 + 32).toFixed(1);
+}
+
 function renderClimateEnvelope() {
   const el = document.getElementById('climate-envelope');
   if (!climateCache) {
@@ -5835,7 +5897,7 @@ function renderClimateEnvelope() {
       <div class="climate-stat">
         <div class="climate-stat-label">Mean annual temp</div>
         <div class="climate-stat-value">${tLow} &ndash; ${tHigh} &deg;C</div>
-        <div class="climate-stat-sub">median &plusmn; MAD, n=${n}</div>
+        <div class="climate-stat-sub">${cToF(tMed - tMad)} &ndash; ${cToF(tMed + tMad)} &deg;F &middot; median &plusmn; MAD, n=${n}</div>
       </div>
       <div class="climate-stat">
         <div class="climate-stat-label">Annual precipitation</div>
@@ -6418,7 +6480,7 @@ async function detectUserZone(showStatus) {
     saveZoneCache(entry);
     userHardinessZone = zone;
     userLocation = { lat, lon };
-    if (showStatus) status(`Detected zone ${zone} for your area (coldest-month mean ${coldest.toFixed(1)} °C).`, 'done');
+    if (showStatus) status(`Detected zone ${zone} for your area (coldest-month mean ${coldest.toFixed(1)} °C / ${cToF(coldest)} °F).`, 'done');
     return entry;
   } catch (e) {
     return null;

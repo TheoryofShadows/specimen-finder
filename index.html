@@ -3127,6 +3127,12 @@
     <input type="text" class="modal-input" id="api-key-input" placeholder="Paste your Pl@ntNet API key here" autocomplete="off" />
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">Your key is stored only in this browser, never sent anywhere except directly to Pl@ntNet. You can change or remove it anytime.</p>
 
+    <details style="margin-top: 16px;">
+      <summary style="cursor: pointer; font-size: 13px; color: var(--accent); font-weight: 600;">Advanced: use a proxy (no key needed in this browser)</summary>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 10px 0;">If you've deployed the Pl@ntNet proxy (see <code>PLANTNET-PROXY-SETUP.md</code> in the repo), paste its URL here. Photos go to the proxy, which holds the key on the server &mdash; so you can leave the key box above empty and there's no "Authorized domains" to configure.</p>
+      <input type="text" class="modal-input" id="proxy-url-input" placeholder="https://your-worker.your-name.workers.dev" autocomplete="off" />
+    </details>
+
     <hr style="margin: 22px 0 18px; border: none; border-top: 1px solid var(--line);" />
     <h2 style="font-size: 18px;">Optional: share annotations with the community</h2>
     <p>If you want to contribute your "False positive / Confirmed / Needs review" annotations to the public community record, paste a GitHub <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Personal Access Token</a> with <code>public_repo</code> scope. Reads are always public &mdash; you only need a token to <em>post</em> annotations. The token stays in your browser; it's never sent anywhere except directly to GitHub.</p>
@@ -3183,6 +3189,16 @@
 <script>
 // State
 let plantnetKey = null;
+// Photo-ID proxy. When set, the app POSTs photos to this URL — a Cloudflare
+// Worker that holds the Pl@ntNet key server-side (see cloudflare-worker/ and
+// PLANTNET-PROXY-SETUP.md) — instead of calling Pl@ntNet directly with a
+// browser key. This removes the API-key-in-browser exposure and Pl@ntNet's
+// "Authorized domains" CORS gate entirely, and means visitors need no key.
+// Leave '' to use the direct browser-key flow. The constant takes precedence;
+// a per-browser override can also be pasted in the setup modal (stored as
+// 'plantnet_proxy_url').
+const PLANTNET_PROXY_URL = '';
+let plantnetProxyUrl = null;
 let currentImageFile = null;
 let currentOrgan = 'auto';
 let currentResults = { flagged: [], all: [], stats: null, species: null };
@@ -3288,9 +3304,9 @@ function updateApiStatus() {
   const text = document.getElementById('api-status-text');
   const setup = document.getElementById('header-setup');
   const banner = document.getElementById('key-prompt-banner');
-  if (plantnetKey) {
+  if (plantnetKey || plantnetProxyUrl) {
     dot.classList.add('connected');
-    text.textContent = 'Photo ID connected';
+    text.textContent = plantnetProxyUrl ? 'Photo ID connected (proxy)' : 'Photo ID connected';
     setup.textContent = 'Change key';
     if (banner) banner.style.display = 'none';
   } else {
@@ -3304,6 +3320,8 @@ function updateApiStatus() {
 // Modals
 function openKeyModal() {
   document.getElementById('api-key-input').value = plantnetKey || '';
+  const proxyInput = document.getElementById('proxy-url-input');
+  if (proxyInput) proxyInput.value = getStoredKey('plantnet_proxy_url') || '';
   document.getElementById('github-pat-input').value = getStoredKey('github_pat') || '';
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -3323,15 +3341,21 @@ document.getElementById('modal-cancel').addEventListener('click', closeKeyModal)
 document.getElementById('about-close').addEventListener('click', closeAboutModal);
 document.getElementById('modal-save').addEventListener('click', () => {
   const key = document.getElementById('api-key-input').value.trim();
+  const proxyInput = document.getElementById('proxy-url-input');
+  const proxy = proxyInput ? proxyInput.value.trim().replace(/\/+$/, '') : '';
   const pat = document.getElementById('github-pat-input').value.trim();
   plantnetKey = key || null;
   setStoredKey(key || null, 'plantnet_api_key');
+  setStoredKey(proxy || null, 'plantnet_proxy_url');
+  // The build-time constant always wins; otherwise use what was just pasted.
+  plantnetProxyUrl = (PLANTNET_PROXY_URL || proxy || '').trim() || null;
   setStoredKey(pat || null, 'github_pat');
   updateApiStatus();
   closeKeyModal();
 });
 
 plantnetKey = (getStoredKey('plantnet_api_key') || '').trim() || null;
+plantnetProxyUrl = (PLANTNET_PROXY_URL || getStoredKey('plantnet_proxy_url') || '').trim() || null;
 updateApiStatus();
 
 // Activate-on-Enter/Space for elements with role="button" that aren't native buttons
@@ -3509,7 +3533,7 @@ async function buildMultipartBody(imageFile, organ) {
 // Identify
 document.getElementById('identify-btn').addEventListener('click', async () => {
   if (!currentImageFile) return;
-  if (!plantnetKey) { openKeyModal(); return; }
+  if (!plantnetKey && !plantnetProxyUrl) { openKeyModal(); return; }
   const btn = document.getElementById('identify-btn');
   btn.disabled = true;
   btn.textContent = 'Identifying...';
@@ -3517,8 +3541,13 @@ document.getElementById('identify-btn').addEventListener('click', async () => {
   status('Reading photo...');
   try {
     const { body, boundary } = await buildMultipartBody(currentImageFile, currentOrgan);
-    status('Sending to Pl@ntNet for identification...');
-    const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${encodeURIComponent(plantnetKey)}&include-related-images=false&no-reject=false&lang=en`;
+    const usingProxy = Boolean(plantnetProxyUrl);
+    status(usingProxy ? 'Sending photo for identification...' : 'Sending to Pl@ntNet for identification...');
+    // With the proxy the key lives server-side, so we send no key param and let
+    // the proxy inject it. Direct mode appends the browser key as before.
+    const url = usingProxy
+      ? plantnetProxyUrl
+      : `https://my-api.plantnet.org/v2/identify/all?api-key=${encodeURIComponent(plantnetKey)}&include-related-images=false&no-reject=false&lang=en`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
@@ -3527,12 +3556,17 @@ document.getElementById('identify-btn').addEventListener('click', async () => {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       if (res.status === 401 || res.status === 403) {
-        // The most common cause from a hosted (GitHub Pages) site is NOT a bad
-        // key — Pl@ntNet rejects browser requests whose Origin domain isn't in
-        // the key's "Authorized domains" list. Point users straight at that
-        // setting, since generating new keys won't fix it.
-        const host = location.hostname || 'your site domain';
-        status(`Pl@ntNet rejected this request (${res.status}). For browser/GitHub Pages use you must whitelist this site's domain on your key: go to my.plantnet.org → your API key → "Authorized domains" and add "${host}" on its own line, then save. (If you also confirmed your signup email and copied the short token, that domain step is usually the missing piece.)`, 'error');
+        if (usingProxy) {
+          // The proxy reached Pl@ntNet but the key it holds was rejected — so
+          // the fix is on the Worker, not in this browser.
+          status(`Pl@ntNet rejected the request through your proxy (${res.status}). The PLANTNET_API_KEY secret on your Cloudflare Worker is missing or wrong — re-add it in the Worker's Settings → Variables and redeploy.`, 'error');
+        } else {
+          // The most common cause from a hosted (GitHub Pages) site is NOT a bad
+          // key — Pl@ntNet rejects browser requests unless the key has "expose my
+          // API key" ticked AND this site's domain in "Authorized domains".
+          const host = location.hostname || 'your site domain';
+          status(`Pl@ntNet rejected this request (${res.status}). For browser/GitHub Pages use, on your key's settings you must (1) tick "expose my API key" and (2) add "${host}" — exactly, no https:// or path — under "Authorized domains", then press "Update key settings". Generating new keys won't fix it. (Tip: the proxy option in "Set up photo ID" avoids this entirely.)`, 'error');
+        }
       } else if (res.status === 404) {
         status('Pl@ntNet endpoint not found (404). The "all" identification project may be unavailable — try again shortly, or use the "Search by name" tab.', 'error');
       } else if (res.status === 429) {

@@ -20,8 +20,8 @@
     --bg: #fafaf7;
     --bg-card: #ffffff;
     --text: #0a0a0a;
-    --text-soft: #2f2f2f;
-    --text-muted: #5a5a5a;
+    --text-soft: #2b2b2b;
+    --text-muted: #4a4a4a;
     --line: #d8d4cc;
     --line-strong: #b8b3a8;
     --accent: #c2410c;
@@ -41,8 +41,8 @@
     --bg: #14110d;
     --bg-card: #1f1b15;
     --text: #f4ede1;
-    --text-soft: #d6cebe;
-    --text-muted: #908774;
+    --text-soft: #e0d8c8;
+    --text-muted: #b8ad97;
     --line: #312a20;
     --line-strong: #4a4233;
     --accent: #f97316;
@@ -2845,14 +2845,14 @@
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
         <div class="upload-text">Drop a photo here</div>
-        <div class="upload-hint">JPG or PNG. A clear shot of leaf, flower, fruit, or bark works best.</div>
+        <div class="upload-hint">Any photo from your camera or gallery (iPhone HEIC is fine). A clear shot of leaf, flower, fruit, or bark works best.</div>
         <div class="upload-buttons">
           <button class="upload-btn" id="camera-btn">Take photo</button>
           <button class="upload-btn secondary" id="file-btn">Upload from device</button>
         </div>
       </div>
 
-      <input type="file" id="file-input" accept="image/jpeg,image/png" style="display:none" />
+      <input type="file" id="file-input" accept="image/*" style="display:none" />
       <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" />
 
       <div class="preview-area" id="preview-area">
@@ -3451,7 +3451,7 @@ uploadZone.addEventListener('keydown', e => {
 
 function handleFile(file) {
   if (!file) return;
-  if (!file.type.startsWith('image/')) { alert('Please upload an image file (JPG or PNG).'); return; }
+  if (file.type && !file.type.startsWith('image/')) { alert('That file is not an image. Please choose a photo from your camera or gallery.'); return; }
   currentImageFile = file;
   const reader = new FileReader();
   reader.onload = e => {

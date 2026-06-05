@@ -3570,9 +3570,9 @@ document.getElementById('identify-btn').addEventListener('click', async () => {
       } else if (res.status === 404) {
         status('Pl@ntNet endpoint not found (404). The "all" identification project may be unavailable — try again shortly, or use the "Search by name" tab.', 'error');
       } else if (res.status === 429) {
-        status('Pl@ntNet rate limit hit (500/day free tier). Try again tomorrow or use the "Search by name" tab.', 'error');
+        status('Photo ID is busy right now — the free daily limit (500 identifications) has been reached. It resets tomorrow. In the meantime you can identify by name in the "Search by name" tab — that always works and needs no key.', 'error');
       } else {
-        status(`Pl@ntNet error: ${err.message || res.statusText}`, 'error');
+        status(`Photo ID couldn't complete (${res.status}${err.message ? ': ' + err.message : ''}). You can identify by name in the "Search by name" tab instead — it always works.`, 'error');
       }
       return;
     }
@@ -3580,7 +3580,10 @@ document.getElementById('identify-btn').addEventListener('click', async () => {
     status(`Got ${data.results?.length || 0} candidate identifications.`, 'done');
     showCandidates(data);
   } catch (e) {
-    status('Identification failed: ' + e.message + '. If you opened this file directly, host it on a static-page service (GitHub Pages works), or use "Search by name".', 'error');
+    const hint = plantnetProxyUrl
+      ? 'The identification service is briefly unreachable. Please try again in a moment, or identify by name in the "Search by name" tab — it always works.'
+      : 'Identification failed: ' + e.message + '. If you opened this file directly, host it on a static-page service (GitHub Pages works), or use "Search by name".';
+    status(hint, 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Identify this plant';

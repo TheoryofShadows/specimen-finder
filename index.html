@@ -3593,6 +3593,35 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Graceful handling of dead external images. Herbarium image hosts go down or
+// return 404/503 for individual records (observed live: symbiota.org returning
+// 503). Without this, the browser renders an ugly broken-image icon. We handle
+// three layouts:
+//   - image-only tiles (gallery, carousel, photo strip): remove the whole tile
+//     so the strip/grid stays clean;
+//   - the specimen detail panel: the image sits in a fixed 240px grid column, so
+//     hiding it alone would leave an empty gap — collapse the grid to one column
+//     and hide the now-dead "View photo" button on that card;
+//   - anything else: just hide the image.
+window.sfImgError = function (img) {
+  const tile = img.closest('.featured-card, .gallery-thumb, .photo-strip-thumb, .photo-strip-item');
+  if (tile) { tile.remove(); return; }
+
+  if (img.classList.contains('specimen-image')) {
+    const grid = img.closest('.details-grid');
+    if (grid) grid.style.gridTemplateColumns = '1fr';
+    const card = img.closest('.specimen-card');
+    if (card) {
+      const viewBtn = card.querySelector('.view-photo-btn');
+      if (viewBtn) viewBtn.style.display = 'none';
+    }
+    img.remove();
+    return;
+  }
+
+  img.style.display = 'none';
+};
+
 const statusPanel = document.getElementById('status-panel');
 const statusLines = document.getElementById('status-lines');
 function status(text, type = 'working') {
@@ -4060,16 +4089,46 @@ function renderMap(allOccs, flaggedOccs) {
 // Uses DOMParser (browser-native) so HTML entities decode automatically
 // (e.g. &#8260; → ⁄, &nbsp; → space) and image-caption / reference / infobox
 // containers can be removed structurally instead of fighting them with regex.
-async function getWikipediaSection(pageTitle, sectionPattern) {
+// Small fetch wrapper that retries on HTTP 429 (rate limit) with a short
+// backoff. Public APIs like Wikipedia briefly 429 under bursts; one retry
+// turns a transient failure into a success without hammering.
+async function fetchWithRetry(url, opts, retries = 2) {
+  let last;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    last = await fetch(url, opts);
+    if (last.status !== 429 || attempt === retries) return last;
+    await new Promise(res => setTimeout(res, 400 * (attempt + 1)));
+  }
+  return last;
+}
+
+// Fetch a Wikipedia article's section index ONCE. Previously every
+// getWikipediaSection() call re-fetched this same list, so the knowledge panel
+// fired eight identical requests simultaneously — which is exactly what
+// tripped Wikipedia's rate limiter (429). Fetch it once, reuse it for every
+// section pattern.
+async function fetchWikipediaSectionList(pageTitle) {
   try {
-    const secRes = await fetch('https://en.wikipedia.org/w/api.php?action=parse&page=' +
+    const r = await fetchWithRetry('https://en.wikipedia.org/w/api.php?action=parse&page=' +
       encodeURIComponent(pageTitle) + '&prop=sections&format=json&origin=*');
-    if (!secRes.ok) return null;
-    const secData = await secRes.json();
-    const sections = secData.parse?.sections || [];
+    if (!r.ok) return null;
+    const data = await r.json();
+    return data.parse?.sections || [];
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getWikipediaSection(pageTitle, sectionPattern, sectionList) {
+  try {
+    // Reuse a caller-supplied section list when available (the common path).
+    // An empty array is a valid "no sections" answer and is intentionally
+    // truthy, so we never fall back to a per-call list fetch and re-create the
+    // duplicate-request storm. Only fetch our own list when none was passed.
+    const sections = sectionList || (await fetchWikipediaSectionList(pageTitle)) || [];
     const match = sections.find(s => sectionPattern.test(s.line));
     if (!match) return null;
-    const contentRes = await fetch('https://en.wikipedia.org/w/api.php?action=parse&page=' +
+    const contentRes = await fetchWithRetry('https://en.wikipedia.org/w/api.php?action=parse&page=' +
       encodeURIComponent(pageTitle) + '&section=' + match.index +
       '&prop=text&format=json&disabletoc=1&origin=*');
     if (!contentRes.ok) return null;
@@ -4307,18 +4366,23 @@ async function loadKnowledgePanel(speciesName, gbifSpecies, mySearchId) {
   // real plant articles use compound headings like "Distribution and habitat" or
   // "Description and ecology", so requiring an exact full-string match left most
   // panels empty. Matching on the leading keyword fills them far more often.
+  // Fetch the article's section index ONCE up front, then reuse it for every
+  // section pattern below. This replaces eight identical section-list requests
+  // (the cause of the prior Wikipedia 429s) with a single shared fetch.
+  const wikiSectionList = (await fetchWikipediaSectionList(wikiTitle)) || [];
+
   const [usesSection, ecologySection, toxicitySection, medicinalSection, descriptionSection,
          cultivationSection, propagationSection, pestsSection,
          vernacularNames, wikidata, inat, summary] =
     await Promise.all([
-      getWikipediaSection(wikiTitle, /^(uses|economic\s+uses|human\s+uses|culinary|cuisine|food)/i),
-      getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology|natural\s+history|range|conservation\s+and\s+ecology)/i),
-      getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)/i),
-      getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry|chemical)/i),
-      getWikipediaSection(wikiTitle, /^(description|morphology|characteristics|appearance|identification)/i),
-      getWikipediaSection(wikiTitle, /^(cultivation|cultivars?|in\s+cultivation|garden(ing)?|growing|horticulture|care)/i),
-      getWikipediaSection(wikiTitle, /^(propagation|reproduction)/i),
-      getWikipediaSection(wikiTitle, /^(pests?(\s+and\s+diseases?)?|diseases?)/i),
+      getWikipediaSection(wikiTitle, /^(uses|economic\s+uses|human\s+uses|culinary|cuisine|food)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(ecology|habitat|distribution|biology|natural\s+history|range|conservation\s+and\s+ecology)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(toxicity|toxicology|poisoning|safety|hazards?|side\s+effects)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(medicinal|medical|pharmacology|chemistry|phytochemistry|chemical)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(description|morphology|characteristics|appearance|identification)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(cultivation|cultivars?|in\s+cultivation|garden(ing)?|growing|horticulture|care)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(propagation|reproduction)/i, wikiSectionList),
+      getWikipediaSection(wikiTitle, /^(pests?(\s+and\s+diseases?)?|diseases?)/i, wikiSectionList),
       gbifSpecies.usageKey ? getGBIFVernacularNames(gbifSpecies.usageKey) : Promise.resolve([]),
       getWikidataInfo(speciesName),
       getINaturalistInfo(speciesName),
@@ -5266,7 +5330,7 @@ function renderPhotoStrip(photos) {
     btn.type = 'button';
     btn.className = 'photo-strip-thumb';
     btn.innerHTML = `
-      <img src="${escapeHtml(p.thumb)}" alt="Living-plant photo from ${escapeHtml(p.source)}" loading="lazy" />
+      <img src="${escapeHtml(p.thumb)}" alt="Living-plant photo from ${escapeHtml(p.source)}" loading="lazy" onerror="sfImgError(this)" />
       <span class="photo-strip-credit">${escapeHtml(p.source)}</span>
     `;
     btn.addEventListener('click', () => openLightbox(p.full, p.credit, p.sourceUrl, p.source));
@@ -5435,7 +5499,7 @@ function renderGallery(allOccs, flaggedKeys) {
     card.className = 'featured-card' + (isFlagged ? ' flagged' : '');
     card.innerHTML = `
       <div class="featured-img-wrap">
-        <img src="${escapeHtml(img)}" alt="Specimen photo from ${escapeHtml(inst)}, ${escapeHtml(String(year))}" loading="lazy" />
+        <img src="${escapeHtml(img)}" alt="Specimen photo from ${escapeHtml(inst)}, ${escapeHtml(String(year))}" loading="lazy" onerror="sfImgError(this)" />
         ${tag ? `<span class="featured-tag ${tag.cls}">${escapeHtml(tag.text)}</span>` : ''}
       </div>
       <div class="featured-caption">
@@ -5462,7 +5526,7 @@ function renderGallery(allOccs, flaggedKeys) {
     btn.type = 'button';
     btn.className = 'gallery-thumb' + (isFlagged ? ' flagged' : '');
     btn.innerHTML = `
-      <img src="${escapeHtml(img)}" alt="Specimen ${escapeHtml(String(inst))} ${escapeHtml(String(year))}" loading="lazy" />
+      <img src="${escapeHtml(img)}" alt="Specimen ${escapeHtml(String(inst))} ${escapeHtml(String(year))}" loading="lazy" onerror="sfImgError(this)" />
       <span class="gallery-thumb-label">${escapeHtml(inst)} · ${escapeHtml(String(year))}</span>
     `;
     btn.addEventListener('click', () => openLightbox(img, caption, gbifUrl, 'GBIF record'));
@@ -5759,9 +5823,9 @@ function stopTimeAnim() {
 
 // -----------------------------------------------------------------------------
 // Climate envelope via NASA POWER climatology endpoint (free, CORS, no key)
-// We round each specimen's coords to 0.25 deg to cluster cache hits, then
+// We bucket each specimen's coords to whole degrees to cluster cache hits, then
 // fetch mean annual T2M (°C) and total annual PRECTOTCORR (mm). 30-year normals.
-const CLIMATE_CACHE_KEY = 'specimenfinder_climate_v1';
+const CLIMATE_CACHE_KEY = 'specimenfinder_climate_v2';
 function loadClimateGridCache() {
   try { return JSON.parse(localStorage.getItem(CLIMATE_CACHE_KEY) || '{}'); }
   catch (e) { return {}; }
@@ -5772,9 +5836,14 @@ function saveClimateGridCache(obj) {
 }
 
 function climateCellKey(lat, lon) {
-  const rl = Math.round(lat * 4) / 4;
-  const rL = Math.round(lon * 4) / 4;
-  return rl.toFixed(2) + ',' + rL.toFixed(2);
+  // Bucket to whole degrees. NASA POWER's climatology grid is ~0.5deg natively,
+  // so finer bucketing (the old 0.25deg) just issued near-duplicate requests for
+  // the same underlying grid point. Whole-degree cells collapse a continental
+  // species from hundreds of API calls to a few dozen with no meaningful loss of
+  // climate-envelope signal (the envelope is a median +/- MAD summary).
+  const rl = Math.round(lat);
+  const rL = Math.round(lon);
+  return rl + ',' + rL;
 }
 
 async function fetchClimatePoint(lat, lon) {
@@ -5807,13 +5876,29 @@ async function fetchClimateForOccurrences(occs, mySearchId) {
     if (!need.find(n => n.cell === cell)) need.push({ cell, lat: o.decimalLatitude, lon: o.decimalLongitude });
   });
 
-  status(`Fetching climate normals for ${need.length} unique grid cells from NASA POWER...`);
+  // Hard cap on how many cells we ask NASA POWER for in a single search. A
+  // climate envelope is a median +/- MAD over the species' range, so a
+  // representative sample of cells is statistically sufficient; we do NOT need
+  // every cell. Without this cap a cosmopolitan species (e.g. dandelion, ~250
+  // populated cells even at whole-degree resolution) would fire hundreds of
+  // requests at a free public API. We sample evenly across the unique-cell list
+  // (deterministic stride) so the sample spans the full geographic spread
+  // rather than just whichever cells GBIF happened to return first.
+  const MAX_CLIMATE_CELLS = 60;
+  let toFetch = need;
+  if (need.length > MAX_CLIMATE_CELLS) {
+    const stride = need.length / MAX_CLIMATE_CELLS;
+    toFetch = [];
+    for (let i = 0; i < MAX_CLIMATE_CELLS; i++) toFetch.push(need[Math.floor(i * stride)]);
+  }
+
+  status(`Fetching climate normals for ${toFetch.length} grid cells from NASA POWER...`);
   const concurrency = 8;
   let idx = 0;
   const errors = { count: 0 };
   await Promise.all(Array.from({ length: concurrency }, async () => {
-    while (idx < need.length) {
-      const item = need[idx++];
+    while (idx < toFetch.length) {
+      const item = toFetch[idx++];
       if (mySearchId !== searchId) return; // bail if user started a new search
       try {
         const c = await fetchClimatePoint(item.lat, item.lon);
@@ -6728,7 +6813,7 @@ function render() {
       </div>
       <div class="details-panel">
         <div class="details-grid">
-          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="specimen-image" alt="Specimen photo" loading="lazy" style="cursor:zoom-in" />` : '<div></div>'}
+          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="specimen-image" alt="Specimen photo" loading="lazy" style="cursor:zoom-in" onerror="sfImgError(this)" />` : '<div></div>'}
           <div>
             <div class="details-section">
               <h4>All evidence (${s.evidence.length})</h4>

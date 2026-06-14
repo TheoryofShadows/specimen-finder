@@ -89,7 +89,7 @@ No proprietary APIs. No paid keys. Specimen Finder's own code is MIT-licensed (s
 - **Photo identification** with organ hint (leaf / flower / fruit / bark / whole plant) for better accuracy.
 - **Statistical outlier detection** with the Modified Z-score / MAD method — explained inline next to each flag so the reasoning is reproducible.
 - **GBIF data-quality issues** surfaced verbatim (negated latitude, country-coordinate mismatch, etc.).
-- **Global distribution map** rendered to canvas (no external map library — works offline once loaded).
+- **Global distribution map** rendered with Leaflet over OpenStreetMap tiles, with clickable specimen popups (requires a network connection for the basemap tiles).
 - **Filter by flag type** (e.g., show only "Far from typical location" or only "Historical, not imaged").
 - **Falsification recipe per flag** — every flag tells you the concrete step to confirm or refute it.
 - **CSV export** with all flagged records and their GBIF URLs.
@@ -100,7 +100,7 @@ No proprietary APIs. No paid keys. Specimen Finder's own code is MIT-licensed (s
 - **Shareable URL** — every search updates `?q=Species+name` in the address bar, and visiting that URL re-runs the search automatically.
 - **Keyboard accessible** — tabs, organ pills, filter chips, example pills, the upload zone, and the collapsible panels are all semantic buttons with proper ARIA roles. Modals close with `Escape`.
 - **Browser-runnable tests** (`tests.html`) cover median, MAD, modified Z-score, great-circle distance, and circular longitude median — including an integration test that replicates the outlier-flag decision end-to-end.
-- **Coastlines on the global map** so dots have continental context. Coastline data is embedded (~67KB) from world-atlas 110m (MIT-licensed).
+- **Continental context on the map** comes from the OpenStreetMap basemap under each specimen marker, so dots sit on real coastlines and borders. The basemap tiles are fetched from OpenStreetMap at runtime (the map needs a network connection; the rest of search-by-name does not).
 
 ---
 
@@ -134,13 +134,13 @@ The user who commissioned this asked for honest self-critique from a researcher,
 
 **What works:** zero build step, single HTML file, no dependencies beyond fonts. Easy to read, easy to fork, easy to host anywhere. State is local-only. CORS works for all the APIs used. The code is mostly readable.
 
-**What's weak:** this is one ~1500-line HTML file. At this size it's still navigable but it would benefit from being split into separate JS modules. There are no automated tests — manual exercise on known species (Franklinia, *Sarracenia purpurea*, *Taraxacum officinale*) is what verifies the flow. Race-condition handling exists but is informal (an `id` counter). Accessibility could be much better: filter chips and organ pills should be keyboard-navigable buttons with ARIA roles, not divs. Some flag-class names are still passed unchecked into class attributes — fine because the class names are controlled by us, but it's a pattern that could regress.
+**What's weak:** this is one large single-file HTML app (~7,000 lines including CSS and JS). It's still forkable and grep-navigable, but it would benefit from being split into separate JS modules. There are no automated tests for the UI flow — manual exercise on known species (Franklinia, *Sarracenia purpurea*, *Taraxacum officinale*) is what verifies the flow. Race-condition handling exists but is informal (an `id` counter). Accessibility could be much better: filter chips and organ pills should be keyboard-navigable buttons with ARIA roles, not divs. Some flag-class names are still passed unchecked into class attributes — fine because the class names are controlled by us, but it's a pattern that could regress.
 
 ### As an end user
 
 **What works:** the "Try one of these" example pills are perfect for first-time users — pick one, see the entire flow execute. The status panel makes it visible exactly what API is being hit at each step, which builds trust. The "How would you verify or disprove this flag?" line per record is genuinely useful — it makes the tool feel like a collaborator rather than an oracle.
 
-**What's weak:** a non-botanist seeing "Modified Z-score: 4.2" has no idea what that means even with the inline explanation. A plain-language version like "this specimen is in the 99th percentile of unusual locations for this species" would be friendlier. The map is a dotted grid with no continent outlines, so a Mexican specimen is hard to tell from a Guatemalan one at a glance — adding a simple coastline overlay would dramatically improve the map without adding dependencies. Toxicity warnings are appropriately strong, but a first-time user might bounce off the heavy disclaimers; they're correct, just heavy. And: there's no way to save a search or share a URL of results — which a teacher running this in a classroom would want.
+**What's weak:** a non-botanist seeing "Modified Z-score: 4.2" has no idea what that means even with the inline explanation. A plain-language version like "this specimen is in the 99th percentile of unusual locations for this species" would be friendlier. Toxicity warnings are appropriately strong, but a first-time user might bounce off the heavy disclaimers; they're correct, just heavy.
 
 ---
 
@@ -162,11 +162,12 @@ The user who commissioned this asked for honest self-critique from a researcher,
 
 ```
 specimen-finder/
-├── index.html       # the app UI and orchestration
-├── analysis.js      # pure-function statistical math (shared with tests)
-├── tests.html       # browser-runnable assertions for analysis.js
-├── README.md        # this file
-└── LICENSE          # MIT
+├── index.html                    # the app UI and orchestration (HTML + CSS + JS)
+├── analysis.js                   # pure-function statistical math (shared with tests)
+├── tests.html                    # browser-runnable assertions for analysis.js
+├── .github/workflows/pages.yml   # GitHub Pages auto-deploy workflow
+├── README.md                     # this file
+└── LICENSE                       # MIT
 ```
 
 Open `index.html` from any static host and the tool runs. Open `tests.html` in the same way to see the math test suite — green means the scientific backbone is intact.

@@ -6,6 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Specimen Finder &mdash; Find unusual plant records in herbaria worldwide</title>
 <meta name="description" content="Identify any plant from a photo, then search 1,800+ herbaria for unusual records of that species. Free tool using GBIF and Pl@ntNet data." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c2418'/%3E%3Cpath d='M32 54C32 40 33 26 46 12C30 16 18 28 20 44C21 49 26 53 32 54Z' fill='%23c6d36e'/%3E%3C/svg%3E" />
+<link rel="canonical" href="https://theoryofshadows.github.io/specimen-finder/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Specimen Finder" />
+<meta property="og:title" content="Specimen Finder: find unusual plant records in herbaria worldwide" />
+<meta property="og:description" content="Free, no-account tool: identify a plant, map its herbarium specimens from GBIF, and flag records worth a second look." />
+<meta property="og:url" content="https://theoryofshadows.github.io/specimen-finder/" />
+<meta property="og:image" content="https://specimen-finder-pro-production.up.railway.app/img/og.png" />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1235,7 +1244,14 @@
     gap: 32px;
     margin-bottom: 28px;
   }
-  footer h4 {
+  .dym-btn {
+    font: inherit; font-size: 0.95em; margin: 2px 4px 2px 0; padding: 2px 10px;
+    border: 1px solid var(--accent); border-radius: 999px; background: transparent;
+    color: var(--accent); cursor: pointer;
+  }
+  .dym-btn:hover, .dym-btn:focus-visible { background: var(--accent); color: #fff; }
+  footer .footer-h { margin-top: 0; line-height: 1.3; }
+  footer h4, footer .footer-h {
     font-family: 'Fraunces', serif;
     font-size: 14px;
     font-weight: 600;
@@ -3076,11 +3092,11 @@
   <footer>
     <div class="footer-grid">
       <div>
-        <h4>About Specimen Finder</h4>
+        <h2 class="footer-h">About Specimen Finder</h2>
         Specimen Finder is an open tool for finding unusual plant specimen records in the world's herbaria. It uses no proprietary data &mdash; everything comes from public, citable scientific sources. Built for botanists, herbarium curators, conservation biologists, students, and anyone curious about plants.
       </div>
       <div>
-        <h4>Data sources</h4>
+        <h2 class="footer-h">Data sources</h2>
         <ul>
           <li><a href="https://www.gbif.org" target="_blank" rel="noopener">GBIF</a> &mdash; specimen records</li>
           <li><a href="https://powo.science.kew.org" target="_blank" rel="noopener">POWO (Kew)</a> &mdash; taxonomy</li>
@@ -3091,17 +3107,19 @@
         </ul>
       </div>
       <div>
-        <h4>For researchers</h4>
+        <h2 class="footer-h">For researchers</h2>
         <ul>
           <li>Every flag is reproducible</li>
           <li>Citation text per record</li>
           <li>CSV export available</li>
           <li>Direct links to source records</li>
+          <li><a href="https://specimen-finder-pro-production.up.railway.app/">Specimen Finder Pro</a> &mdash; saved searches, filters, batch species lists, Darwin Core export</li>
+          <li><a href="https://github.com/TheoryofShadows/specimen-finder/issues/new" target="_blank" rel="noopener">Report a problem</a> (GitHub)</li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      All data licensed CC BY or CC BY-NC by source institutions. Specimen Finder itself is an open tool &mdash; no accounts, no tracking, no ads. Your API key stays in your browser.
+      Specimen records come from <a href="https://www.gbif.org" target="_blank" rel="noopener">GBIF.org</a> and are published by the holding institutions under CC0, CC BY or CC BY-NC (per record). Cite as &ldquo;GBIF.org (date) GBIF Occurrence Search&rdquo; and see the <a href="https://www.gbif.org/citation-guidelines" target="_blank" rel="noopener">GBIF citation guidelines</a>. Not affiliated with GBIF. Specimen Finder itself is an open tool (<a href="https://github.com/TheoryofShadows/specimen-finder" target="_blank" rel="noopener">source</a>) &mdash; no accounts, no tracking, no ads. Your API key stays in your browser.
     </div>
   </footer>
 </div>
@@ -3639,6 +3657,102 @@ function clearStatus() { statusLines.innerHTML = ''; }
 async function fetchSpecies(name) {
   const r = await fetch('https://api.gbif.org/v1/species/match?kingdom=Plantae&name=' + encodeURIComponent(name));
   return r.json();
+}
+// Edit distance for "did you mean" suggestions.
+function editDistance(a, b) {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+const SPECIES_LEVEL = ['SPECIES', 'SUBSPECIES', 'VARIETY', 'FORM', 'INFRASPECIFIC_NAME'];
+// Suggest accepted species for a misspelt binomial: fuzzy-match the genus,
+// then rank that genus's species by epithet edit distance.
+async function spellingSuggestions(name) {
+  const words = name.trim().split(/\s+/);
+  if (words.length < 2) return [];
+  try {
+    const g = await (await fetch('https://api.gbif.org/v1/species/match?kingdom=Plantae&rank=GENUS&name=' + encodeURIComponent(words[0]))).json();
+    if (!g.usageKey || g.rank !== 'GENUS') return [];
+    const list = await (await fetch('https://api.gbif.org/v1/species/search?datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&rank=SPECIES&status=ACCEPTED&limit=1000&highertaxonKey=' + g.usageKey)).json();
+    const epithet = words[words.length > 2 && (words[1] === 'x' || words[1] === '×') ? 2 : 1].toLowerCase();
+    return (list.results || [])
+      .map(r => ({ name: r.canonicalName, ep: (r.canonicalName || '').split(' ')[1] || '' }))
+      .filter(x => x.ep)
+      .map(x => ({ ...x, d: editDistance(x.ep, epithet) }))
+      .filter(x => x.d <= Math.max(2, Math.floor(epithet.length / 3)))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 5)
+      .map(x => x.name);
+  } catch (e) { return []; }
+}
+// Resolve a typed name to an accepted GBIF plant taxon.
+// Returns { species, notes } or { suggestions } when we should not guess.
+async function resolvePlantName(name) {
+  const m = await fetchSpecies(name);
+  const words = name.trim().split(/\s+/);
+  const typed = words.slice(0, 2).join(' ');
+  const rank = (m.rank || '').toUpperCase();
+  const statusOk = /^(ACCEPTED|SYNONYM|HETEROTYPIC_SYNONYM|HOMOTYPIC_SYNONYM|PROPARTE_SYNONYM)$/.test(m.status || '');
+  const fuzzyOk = m.matchType === 'FUZZY' && statusOk &&
+    editDistance((m.canonicalName || '').split(' ').slice(0, 2).join(' '), typed) <= 3;
+  const speciesOk = SPECIES_LEVEL.includes(rank) && (m.matchType === 'EXACT' || fuzzyOk);
+  // A higher rank only when the user typed a single word that matched exactly
+  // (e.g. "Quercus"); never silently widen "Acer saccarum" to all of Acer, and
+  // never fall back to the whole plant kingdom.
+  const groupOk = m.matchType === 'EXACT' && words.length === 1 && ['GENUS', 'FAMILY'].includes(rank);
+  if (!m.usageKey || !(speciesOk || groupOk)) {
+    const suggestions = await spellingSuggestions(name);
+    if (m.matchType === 'FUZZY' && m.canonicalName && SPECIES_LEVEL.includes(rank) && !suggestions.includes(m.canonicalName)) {
+      suggestions.push(m.canonicalName);
+    }
+    return { suggestions };
+  }
+  const notes = [];
+  let species = m;
+  if (/SYNONYM/.test(m.status || '') && m.acceptedUsageKey) {
+    try {
+      const acc = await (await fetch('https://api.gbif.org/v1/species/' + m.acceptedUsageKey)).json();
+      species = { ...m, usageKey: m.acceptedUsageKey, scientificName: acc.scientificName || m.scientificName,
+        canonicalName: acc.canonicalName || m.species || m.canonicalName, status: 'ACCEPTED',
+        family: acc.family || m.family, order: acc.order || m.order, rank: acc.rank || m.rank };
+      notes.push(`${m.canonicalName || m.scientificName} is a synonym of ${species.canonicalName} in the GBIF backbone, so specimens filed under either name are included.`);
+    } catch (e) { /* keep the synonym key if the lookup fails */ }
+  }
+  if (m.matchType === 'FUZZY') notes.unshift(`Showing results for ${species.canonicalName || species.scientificName} (you typed "${name}").`);
+  if (!SPECIES_LEVEL.includes(rank)) notes.push(`"${name}" is a ${rank.toLowerCase()}: specimens cover all of its species.`);
+  return { species, notes };
+}
+// Separate likely data problems from routine notes so 285 "flags" on a
+// poorly georeferenced species don't read as 285 errors.
+function flagSummary(flagged) {
+  const ERR = new Set(['geo', 'zerozero', 'quality', 'climate']);
+  const DATE = new Set(['old', 'recent']);
+  const has = (f, set) => (f.flags || []).some(x => set.has(x.key));
+  const nErr = flagged.filter(f => has(f, ERR)).length;
+  const nDate = flagged.filter(f => !has(f, ERR) && has(f, DATE)).length;
+  const nRoutine = flagged.length - nErr - nDate;
+  return `${nErr} possible data problems (location, climate, coordinates, quality) · ${nDate} unusual dates · ${nRoutine} routine notes (no coordinates or not imaged)`;
+}
+function showSuggestions(name, suggestions) {
+  const div = document.createElement('div');
+  div.className = 'status-line';
+  const icon = '<span class="status-icon error">!</span>';
+  if (!suggestions.length) {
+    div.innerHTML = `${icon}<span>No plant species matches "${escapeHtml(name)}". Check the spelling, try the genus alone (e.g. "Trillium"), or a common name.</span>`;
+  } else {
+    div.innerHTML = `${icon}<span>No plant species matches "${escapeHtml(name)}". Did you mean: ` +
+      suggestions.map(s => `<button type="button" class="dym-btn" data-name="${escapeHtml(s)}"><em>${escapeHtml(s)}</em></button>`).join(' ') + '</span>';
+    div.querySelectorAll('.dym-btn').forEach(b => b.addEventListener('click', () => runSearchDirect(b.dataset.name)));
+  }
+  statusLines.appendChild(div);
+  statusPanel.classList.add('visible');
 }
 async function fetchOccurrences(taxonKey, limit) {
   const params = new URLSearchParams({
@@ -4868,8 +4982,11 @@ function looksLikeScientificName(query) {
   const words = trimmed.split(/\s+/);
   if (words.length < 2 || words.length > 4) return false;
   if (!/^[A-Z][a-z]+$/.test(words[0])) return false;
-  if (!/^[a-z]+$/.test(words[1])) return false;
-  if (COMMON_ENGLISH_PLANT_NOUNS.has(words[1])) return false;
+  // Hybrid marker: "Quercus × bebbiana" / "Quercus x bebbiana"
+  const ep = (words[1] === '×' || words[1] === 'x') && words[2] ? words[2] : words[1];
+  // Epithets may be hyphenated (novae-angliae) or carry the × sign (×bebbiana)
+  if (!/^×?[a-z]+(-[a-z]+)*$/.test(ep)) return false;
+  if (COMMON_ENGLISH_PLANT_NOUNS.has(ep)) return false;
   return true;
 }
 
@@ -5043,22 +5160,15 @@ async function runSearchDirect(speciesName) {
 
   try {
     status(`Resolving "${name}" against the GBIF taxonomy (plant kingdom)...`);
-    const species = await fetchSpecies(name);
+    const resolved = await resolvePlantName(name);
     if (mySearchId !== searchId) return;
-
-    if (!species.usageKey) {
-      status(`No plant match for "${name}". Check spelling, or try the scientific Latin name.`, 'error');
+    if (!resolved.species) {
+      showSuggestions(name, resolved.suggestions || []);
       return;
     }
-    if (species.matchType === 'NONE') {
-      status(`GBIF could not match "${name}" to any plant. Check spelling.`, 'error');
-      return;
-    }
-    if (species.rank && !['SPECIES','SUBSPECIES','VARIETY','FORM'].includes(species.rank)) {
-      status(`"${name}" matched GBIF only at the ${species.rank.toLowerCase()} level (${species.scientificName}). Specimens shown will cover all members of this ${species.rank.toLowerCase()}.`, 'info');
-    } else {
-      status(`Matched: ${species.scientificName} · family ${species.family || '(unknown)'}`, 'done');
-    }
+    const species = resolved.species;
+    resolved.notes.forEach(n => status(n, 'info'));
+    status(`Matched: ${species.scientificName} · family ${species.family || '(unknown)'}`, 'done');
 
     document.getElementById('species-sci').textContent = species.scientificName.replace(/^(\S+\s+\S+)\s+.*$/, '$1');
     document.getElementById('species-tax').innerHTML =
@@ -5151,7 +5261,7 @@ async function runSearchDirect(speciesName) {
     document.getElementById('stat-flagged-sub').textContent = `${Math.round(100 * flagged.length / occs.length)}% of loaded records`;
     document.getElementById('summary').classList.add('visible');
 
-    status(`Done. ${flagged.length} specimens flagged.`, 'done');
+    status(`Done. ${flagSummary(flagged)}.`, 'done');
 
     currentResults = { flagged, all: occs, stats, species };
 
@@ -5193,7 +5303,7 @@ async function runSearchDirect(speciesName) {
       renderGallery(occs, flaggedKeys2);
       buildFilters(flagged);
       render();
-      status(`Climate + community data loaded. ${flagged.length} specimens now flagged.`, 'done');
+      status(`Climate + community data loaded. ${flagSummary(flagged)}.`, 'done');
     }).catch(e => {
       if (mySearchId !== searchId) return;
       document.getElementById('climate-envelope').classList.remove('loading', 'visible');
